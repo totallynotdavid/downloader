@@ -1,0 +1,6 @@
+version: 2
+updates:
+    - package-ecosystem: 'npm'
+      directory: '/' # package.json is in the root directory
+      schedule:
+          interval: 'daily'
