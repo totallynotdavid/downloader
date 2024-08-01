@@ -7,7 +7,12 @@
         "test": "jest",
         "prettier": "prettier --write ."
     },
-    "keywords": ["imgur", "reddit", "downloader", "media"],
+    "keywords": [
+        "imgur",
+        "reddit",
+        "downloader",
+        "media"
+    ],
     "author": "David Duran <contacto@altmails.com>",
     "license": "MIT",
     "devDependencies": {
