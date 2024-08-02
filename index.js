@@ -14,6 +14,20 @@ const twitterDownloader = new TwitterDownloader();
 const pinterestDownloader = new PinterestDownloader();
 const tiktokDownloader = new TikTokDownloader();
 
+const allowedHosts = {
+    imgur: ['imgur.com', 'i.imgur.com'],
+    reddit: ['reddit.com', 'www.reddit.com'],
+    instagram: ['instagram.com', 'www.instagram.com'],
+    facebook: ['facebook.com', 'www.facebook.com', 'fb.watch'],
+    twitter: ['twitter.com', 'www.twitter.com', 'x.com', 'www.x.com'],
+    pinterest: ['pinterest.com', 'www.pinterest.com', 'pin.it'],
+    tiktok: ['tiktok.com', 'www.tiktok.com'],
+};
+
+function isAllowedHost(hostname, service) {
+    return allowedHosts[service].includes(hostname);
+}
+
 async function MediaDownloader(url, specificHost = null) {
     try {
         if (specificHost) {
@@ -23,23 +37,23 @@ async function MediaDownloader(url, specificHost = null) {
         const urlObj = new URL(url);
         const hostname = urlObj.hostname.toLowerCase();
 
-        if (hostname.includes('imgur.com')) {
+        if (isAllowedHost(hostname, 'imgur')) {
             return await imgurDownloader.getDirectUrlsAndCount(url);
-        } else if (hostname.includes('reddit.com')) {
+        } else if (isAllowedHost(hostname, 'reddit')) {
             return await redditDownloader.getDirectUrlsAndCount(url);
-        } else if (hostname.includes('instagram.com')) {
+        } else if (isAllowedHost(hostname, 'instagram')) {
             return await instagramDownloader.getDirectUrlsAndCount(url);
-        } else if (hostname.includes('facebook.com') || hostname.includes('fb.watch')) {
+        } else if (isAllowedHost(hostname, 'facebook')) {
             return await facebookDownloader.getDirectUrlsAndCount(url);
-        } else if (hostname.includes('twitter.com') || hostname.includes('x.com')) {
+        } else if (isAllowedHost(hostname, 'twitter')) {
             return await twitterDownloader.getDirectUrlsAndCount(url);
-        } else if (hostname.includes('pinterest.com') || hostname.includes('pin.it')) {
+        } else if (isAllowedHost(hostname, 'pinterest')) {
             return await pinterestDownloader.getDirectUrlsAndCount(url);
-        } else if (hostname.includes('tiktok.com')) {
+        } else if (isAllowedHost(hostname, 'tiktok')) {
             return await tiktokDownloader.getDirectUrlsAndCount(url);
         } else {
             throw new Error(
-                'Unsupported URL. Please use Imgur, Reddit, Instagram or Facebook URLs.'
+                'Unsupported URL. Please use Imgur, Reddit, Instagram, Facebook, Twitter, Pinterest, or TikTok URLs.'
             );
         }
     } catch (error) {
@@ -49,20 +63,49 @@ async function MediaDownloader(url, specificHost = null) {
 }
 
 async function processSpecificHost(url, host) {
+    const urlObj = new URL(url);
+    const hostname = urlObj.hostname.toLowerCase();
+
     switch (host.toLowerCase()) {
         case 'imgur':
-            return await imgurDownloader.getDirectUrlsAndCount(url);
+            if (isAllowedHost(hostname, 'imgur')) {
+                return await imgurDownloader.getDirectUrlsAndCount(url);
+            }
+            break;
         case 'reddit':
-            return await redditDownloader.getDirectUrlsAndCount(url);
+            if (isAllowedHost(hostname, 'reddit')) {
+                return await redditDownloader.getDirectUrlsAndCount(url);
+            }
+            break;
         case 'instagram':
-            return await instagramDownloader.getDirectUrlsAndCount(url);
+            if (isAllowedHost(hostname, 'instagram')) {
+                return await instagramDownloader.getDirectUrlsAndCount(url);
+            }
+            break;
         case 'facebook':
-            return await facebookDownloader.getDirectUrlsAndCount(url);
-        default:
-            throw new Error(
-                'Unsupported host. Please use "imgur", "reddit", "instagram" or "Facebook".'
-            );
+            if (isAllowedHost(hostname, 'facebook')) {
+                return await facebookDownloader.getDirectUrlsAndCount(url);
+            }
+            break;
+        case 'twitter':
+            if (isAllowedHost(hostname, 'twitter')) {
+                return await twitterDownloader.getDirectUrlsAndCount(url);
+            }
+            break;
+        case 'pinterest':
+            if (isAllowedHost(hostname, 'pinterest')) {
+                return await pinterestDownloader.getDirectUrlsAndCount(url);
+            }
+            break;
+        case 'tiktok':
+            if (isAllowedHost(hostname, 'tiktok')) {
+                return await tiktokDownloader.getDirectUrlsAndCount(url);
+            }
+            break;
     }
+    throw new Error(
+        'Unsupported host or URL. Please use a valid URL for the specified host.'
+    );
 }
 
 module.exports = MediaDownloader;
