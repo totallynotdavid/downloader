@@ -1,8 +1,10 @@
 const ImgurDownloader = require('./hosts/imgur');
 const RedditDownloader = require('./hosts/reddit');
+const InstagramDownloader = require('./hosts/instagram');
 
 const imgurDownloader = new ImgurDownloader();
 const redditDownloader = new RedditDownloader();
+const instagramDownloader = new InstagramDownloader();
 
 async function MediaDownloader(url, specificHost = null) {
     try {
@@ -17,8 +19,12 @@ async function MediaDownloader(url, specificHost = null) {
             return await imgurDownloader.getDirectUrlsAndCount(url);
         } else if (hostname.includes('reddit.com')) {
             return await redditDownloader.getDirectUrlsAndCount(url);
+        } else if (hostname.includes('instagram.com')) {
+            return await instagramDownloader.getDirectUrlsAndCount(url);
         } else {
-            throw new Error('Unsupported URL. Please use Imgur or Reddit URLs.');
+            throw new Error(
+                'Unsupported URL. Please use Imgur, Reddit or Instagram URLs.'
+            );
         }
     } catch (error) {
         console.error(`Failed to process URL: ${error.message}`);
@@ -32,8 +38,12 @@ async function processSpecificHost(url, host) {
             return await imgurDownloader.getDirectUrlsAndCount(url);
         case 'reddit':
             return await redditDownloader.getDirectUrlsAndCount(url);
+        case 'instagram':
+            return await instagramDownloader.getDirectUrlsAndCount(url);
         default:
-            throw new Error('Unsupported host. Please use "imgur" or "reddit".');
+            throw new Error(
+                'Unsupported host. Please use "imgur", "reddit" or "instagram".'
+            );
     }
 }
 
