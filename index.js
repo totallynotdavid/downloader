@@ -1,10 +1,12 @@
 const ImgurDownloader = require('./hosts/imgur');
 const RedditDownloader = require('./hosts/reddit');
 const InstagramDownloader = require('./hosts/instagram');
+const FacebookDownloader = require('./hosts/facebook');
 
 const imgurDownloader = new ImgurDownloader();
 const redditDownloader = new RedditDownloader();
 const instagramDownloader = new InstagramDownloader();
+const facebookDownloader = new FacebookDownloader();
 
 async function MediaDownloader(url, specificHost = null) {
     try {
@@ -21,9 +23,11 @@ async function MediaDownloader(url, specificHost = null) {
             return await redditDownloader.getDirectUrlsAndCount(url);
         } else if (hostname.includes('instagram.com')) {
             return await instagramDownloader.getDirectUrlsAndCount(url);
+        } else if (hostname.includes('facebook.com') || hostname.includes('fb.watch')) {
+            return await facebookDownloader.getDirectUrlsAndCount(url);
         } else {
             throw new Error(
-                'Unsupported URL. Please use Imgur, Reddit or Instagram URLs.'
+                'Unsupported URL. Please use Imgur, Reddit, Instagram or Facebook URLs.'
             );
         }
     } catch (error) {
@@ -40,9 +44,11 @@ async function processSpecificHost(url, host) {
             return await redditDownloader.getDirectUrlsAndCount(url);
         case 'instagram':
             return await instagramDownloader.getDirectUrlsAndCount(url);
+        case 'facebook':
+            return await facebookDownloader.getDirectUrlsAndCount(url);
         default:
             throw new Error(
-                'Unsupported host. Please use "imgur", "reddit" or "instagram".'
+                'Unsupported host. Please use "imgur", "reddit", "instagram" or "Facebook".'
             );
     }
 }
