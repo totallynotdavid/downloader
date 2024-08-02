@@ -8,3 +8,4 @@ hosts/imgur.test.js
 eslint.config.js
 prettier.config.js
 pnpm-lock.yaml
+CHANGELOG.md
