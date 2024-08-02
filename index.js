@@ -3,12 +3,14 @@ const RedditDownloader = require('./hosts/reddit');
 const InstagramDownloader = require('./hosts/instagram');
 const FacebookDownloader = require('./hosts/facebook');
 const TwitterDownloader = require('./hosts/twitter');
+const PinterestDownloader = require('./hosts/pinterest');
 
 const imgurDownloader = new ImgurDownloader();
 const redditDownloader = new RedditDownloader();
 const instagramDownloader = new InstagramDownloader();
 const facebookDownloader = new FacebookDownloader();
 const twitterDownloader = new TwitterDownloader();
+const pinterestDownloader = new PinterestDownloader();
 
 async function MediaDownloader(url, specificHost = null) {
     try {
@@ -29,6 +31,8 @@ async function MediaDownloader(url, specificHost = null) {
             return await facebookDownloader.getDirectUrlsAndCount(url);
         } else if (hostname.includes('twitter.com') || hostname.includes('x.com')) {
             return await twitterDownloader.getDirectUrlsAndCount(url);
+        } else if (hostname.includes('pinterest.com') || hostname.includes('pin.it')) {
+            return await pinterestDownloader.getDirectUrlsAndCount(url);
         } else {
             throw new Error(
                 'Unsupported URL. Please use Imgur, Reddit, Instagram or Facebook URLs.'
