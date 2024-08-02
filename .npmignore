@@ -1,0 +1,10 @@
+.github
+.changeset
+node_modules
+
+hosts/imgur.test.js
+.gitignore
+.prettierignore
+eslint.config.js
+prettier.config.js
+pnpm-lock.yaml
