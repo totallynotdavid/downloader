@@ -12,9 +12,11 @@ class FacebookDownloader {
             const selectedUrl =
                 quality === 'hd' ? mediaInfo.links.hd : mediaInfo.links.sd;
 
+            const urlArray = Array.isArray(selectedUrl) ? selectedUrl : [selectedUrl];
+
             return {
-                results_number: 1,
-                url_list: selectedUrl,
+                urls: urlArray,
+                count: urlArray.length,
             };
         } catch (error) {
             console.error('Error in getDirectUrlsAndCount:', error);
@@ -49,7 +51,6 @@ class FacebookDownloader {
             );
 
             const data = response.data;
-            console.log('Data:', data);
 
             if (!data || !data.links) {
                 throw new Error('Invalid response from server');
