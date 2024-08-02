@@ -4,14 +4,14 @@ A Node.js package to retrieve direct media URLs from Imgur, Reddit, Instagram, F
 
 ## Installation
 
-`npm install media_downloader`
+`npm i @totallynodavid/downloader`
 
 ## Usage
 
 Basic usage:
 
 ```javascript
-const MediaDownloader = require('media_downloader');
+const MediaDownloader = require('@totallynodavid/downloader');
 
 MediaDownloader('https://imgur.com/gallery/example')
     .then(result => console.log(result))
