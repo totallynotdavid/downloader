@@ -32,8 +32,8 @@ The package returns a Promise that resolves to:
 
 ```json
 {
-    urls: string[],  // Array of direct media URLs
-    count: number    // Number of media files found
+    urls: string[],
+    count: number
 }
 ```
 
