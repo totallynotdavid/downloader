@@ -1,6 +1,6 @@
 # Media Downloader
 
-A Node.js package to retrieve direct media URLs from Imgur and Reddit.
+A Node.js package to retrieve direct media URLs from Imgur, Reddit, Instagram, Facebook (video), Twitter, Pinterest, and TikTok.
 
 ## Installation
 
@@ -8,30 +8,27 @@ A Node.js package to retrieve direct media URLs from Imgur and Reddit.
 
 ## Usage
 
+Basic usage:
+
 ```javascript
 const MediaDownloader = require('media_downloader');
 
-// Basic usage
 MediaDownloader('https://imgur.com/gallery/example')
     .then(result => console.log(result))
     .catch(error => console.error(error));
-
-// Specify host
-MediaDownloader('https://example.com/some-url', 'imgur')
-    .then(result => console.log(result))
-    .catch(error => console.error(error));
 ```
 
-You can also request an specific host modules directly:
+Advanced usage:
 
 ```javascript
-MediaDownloader(url[, specificHost]);
+MediaDownloader(url, specificHost, quality);
 ```
 
--   `url` (string): Host to process.
--   `specificHost` (string, optional): Force using a specific host module. Currently supported: 'imgur', 'reddit'.
+-   `url` (string): URL of the media to process.
+-   `specificHost` (string, optional): Force a specific host module. Supported for all the hosts.
+-   `quality` (string, optional): Media quality. Supported for Facebook videos: 'sd', 'hd'.
 
-Returns a Promise resolving to:
+The package returns a Promise that resolves to:
 
 ```json
 {
@@ -40,7 +37,4 @@ Returns a Promise resolving to:
 }
 ```
 
-We currently support these hosts:
-
--   Imgur
--   Reddit
+If you need help, please [open an issue](https://github.com/totallynotdavid/media_downloader/issues). Happy downloading!
