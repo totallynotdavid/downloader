@@ -1,6 +1,13 @@
 const axios = require('axios');
 const https = require('https');
 
+/*
+ * Facebook Downloader
+ *
+ * @test cases
+ * - https://www.facebook.com/1551UNMSM/videos/2126724314377208 - video
+ * - https://www.facebook.com/share/v/Hr3BZV9JjaKPy28P/ - same video as above but share short link
+ */
 class FacebookDownloader {
     constructor() {
         this.BASE_URL = 'https://104.21.70.90/api/ajaxSearch/facebook';
@@ -26,9 +33,7 @@ class FacebookDownloader {
 
     async getMediaInfo(url) {
         try {
-            const agent = new https.Agent({
-                rejectUnauthorized: false,
-            });
+            const agent = new https.Agent();
 
             const response = await axios.post(
                 this.BASE_URL,
