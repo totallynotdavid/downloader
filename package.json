@@ -1,7 +1,7 @@
 {
-    "name": "media_downloader",
+    "name": "@totallynodavid/downloader",
     "version": "2.0.0",
-    "description": "",
+    "description": "A Node.js package to retrieve direct media URLs from popular social platforms.",
     "main": "index.js",
     "scripts": {
         "clean": "shx rm -rf node_modules && shx rm pnpm-lock.yaml",
