@@ -49,6 +49,7 @@ class ImgurDownloader {
         return response;
     }
 
+    // eslint-disable-next-line no-unused-vars
     parseMediaInfo(data, url) {
         if (data.data.is_album) {
             return this.parseAlbumInfo(data.data);

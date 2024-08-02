@@ -60,7 +60,7 @@ class TiktokDownloader {
     async getMediaInfo(url) {
         try {
             const tiktokRegex =
-                /https:\/\/(?:m|www|vm|vt|lite)?\.?tiktok\.com\/((?:.*\b(?:(?:usr|v|embed|user|video|photo)\/|\?shareId=|\&item_id=)(\d+))|\w+)/;
+                /https:\/\/(?:m|www|vm|vt|lite)?\.?tiktok\.com\/((?:.*\b(?:(?:usr|v|embed|user|video|photo)\/|\?shareId=|\&item_id=)(\d+))|\w+)/; // eslint-disable-line no-useless-escape
             if (!tiktokRegex.test(url)) {
                 throw new Error('Invalid TikTok URL');
             }
@@ -154,6 +154,7 @@ class TiktokDownloader {
 
             return {status: 'success', request, cookie};
         } catch (error) {
+            console.error('Error in getRequest:', error);
             return {status: 'error', message: 'Failed to get the request form!'};
         }
     }
@@ -173,6 +174,7 @@ class TiktokDownloader {
             const music = $('audio > source').attr('src');
             return {status: 'success', result: music};
         } catch (error) {
+            console.error('Error in getMusic:', error);
             return {status: 'error'};
         }
     }
