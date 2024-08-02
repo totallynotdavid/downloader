@@ -25,7 +25,7 @@ MediaDownloader('https://example.com/some-url', 'imgur')
 You can also request an specific host modules directly:
 
 ```javascript
-`MediaDownloader(url[, specificHost])`;
+MediaDownloader(url[, specificHost]);
 ```
 
 -   `url` (string): Host to process.
