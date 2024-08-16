@@ -1,25 +1,30 @@
 const axios = require('axios');
-const https = require('https');
+const querystring = require('querystring');
+const https = require('node:https');
+
+const agent = new https.Agent();
 
 /*
- * Facebook Downloader
+ * FacebookDownloader class for retrieving direct video URLs from Facebook videos
  *
- * @test cases
- * - https://www.facebook.com/1551UNMSM/videos/2126724314377208 - video
- * - https://www.facebook.com/share/v/Hr3BZV9JjaKPy28P/ - same video as above but share short link
+ * Example URLs:
+ * - https://www.facebook.com/1551UNMSM/videos/2126724314377208 (standard video URL)
+ * - https://www.facebook.com/share/v/Hr3BZV9JjaKPy28P/ (short share link for the same video)
  */
 class FacebookDownloader {
     constructor() {
-        this.BASE_URL = 'https://104.21.70.90/api/ajaxSearch/facebook';
+        // Base URL for the x2download API
+        // Note: Using IP address to avoid ENOTFOUND errors
+        // TODO: Implement DNS lookup to get the current IP for x2download.app
+        this.BASE_URL = 'https://172.67.222.44/api/ajaxSearch/facebook';
     }
 
     async getDirectUrlsAndCount(url, quality = 'sd') {
         try {
             const mediaInfo = await this.getMediaInfo(url);
-            const selectedUrl =
+            const selectedUrls =
                 quality === 'hd' ? mediaInfo.links.hd : mediaInfo.links.sd;
-
-            const urlArray = Array.isArray(selectedUrl) ? selectedUrl : [selectedUrl];
+            const urlArray = Array.isArray(selectedUrls) ? selectedUrls : [selectedUrls];
 
             return {
                 urls: urlArray,
@@ -33,51 +38,53 @@ class FacebookDownloader {
 
     async getMediaInfo(url) {
         try {
-            const agent = new https.Agent();
-
-            const response = await axios.post(
-                this.BASE_URL,
-                `q=${encodeURIComponent(url)}`,
-                {
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                        'User-Agent':
-                            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36 Edg/129.0.0.0',
-                        Origin: 'https://x2download.app',
-                        Referer: 'https://x2download.app/es17/download-video-facebook',
-                        Host: 'x2download.app',
-                    },
-                    httpsAgent: agent,
-                    timeout: 10000,
-                    validateStatus: function (status) {
-                        return status >= 200 && status < 300;
-                    },
-                }
-            );
-
-            const data = response.data;
-
-            if (!data || !data.links) {
-                throw new Error('Invalid response from server');
-            }
-
-            return {
-                title: data.title,
-                duration: data.duration,
-                thumbnail: data.thumbnail,
-                links: {
-                    hd: data.links.hd,
-                    sd: data.links.sd,
-                },
-            };
+            const encodedUrl = querystring.escape(url);
+            const response = await this.makeRequest(encodedUrl);
+            return this.parseResponse(response.data);
         } catch (error) {
             console.error('Error in getMediaInfo:', error);
-            if (error.response) {
-                console.error('Response status:', error.response.status);
-                console.error('Response data:', error.response.data);
-            }
             throw new Error(`Error fetching Facebook data: ${error.message}`);
         }
+    }
+
+    async makeRequest(encodedUrl, retries = 3) {
+        try {
+            return await axios({
+                method: 'post',
+                url: this.BASE_URL,
+                headers: {
+                    Host: 'x2download.app',
+                    'User-Agent':
+                        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36 Edg/129.0.0.0',
+                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                },
+                data: `q=${encodedUrl}`,
+                httpsAgent: agent,
+                timeout: 10000,
+            });
+        } catch (error) {
+            if (retries > 0) {
+                console.warn(`Request failed, retrying... (${retries} attempts left)`);
+                return this.makeRequest(encodedUrl, retries - 1);
+            }
+            throw error;
+        }
+    }
+
+    parseResponse(data) {
+        if (!data || !data.links || (!data.links.hd && !data.links.sd)) {
+            throw new Error('Invalid response from server');
+        }
+
+        return {
+            title: data.title,
+            duration: data.duration,
+            thumbnail: data.thumbnail,
+            links: {
+                hd: data.links.hd,
+                sd: data.links.sd,
+            },
+        };
     }
 }
 
