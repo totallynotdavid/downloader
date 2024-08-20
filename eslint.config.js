@@ -1,15 +1,21 @@
 const globals = require('globals');
 const eslint = require('@eslint/js');
+const prettier = require('eslint-config-prettier');
 const prettierPlugin = require('eslint-plugin-prettier');
-const jestPlugin = require('eslint-plugin-jest');
+const typescriptPlugin = require('@typescript-eslint/eslint-plugin');
+const typescriptParser = require('@typescript-eslint/parser');
 
 module.exports = [
     eslint.configs.recommended,
     {
-        files: ['**/*.js'],
+        files: ['**/*.{js,ts,tsx}'],
         languageOptions: {
             ecmaVersion: 'latest',
             sourceType: 'module',
+            parser: typescriptParser,
+            parserOptions: {
+                ecmaFeatures: {jsx: true},
+            },
             globals: {
                 ...globals.browser,
                 ...globals.es2021,
@@ -17,8 +23,8 @@ module.exports = [
             },
         },
         plugins: {
+            '@typescript-eslint': typescriptPlugin,
             prettier: prettierPlugin,
-            jest: jestPlugin,
         },
         rules: {
             'linebreak-style': ['error', 'unix'],
@@ -26,14 +32,8 @@ module.exports = [
             'multiline-ternary': ['error', 'always-multiline'],
             'no-multi-spaces': ['error'],
             'prettier/prettier': 'error',
-        },
-    },
-    {
-        files: ['**/*.test.js', '**/*.spec.js'],
-        languageOptions: {
-            globals: {
-                ...globals.jest,
-            },
+            ...typescriptPlugin.configs['recommended'].rules,
+            ...prettier.rules,
         },
     },
     {
