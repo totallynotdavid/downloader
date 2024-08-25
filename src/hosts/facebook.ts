@@ -1,25 +1,49 @@
-const axios = require('axios');
-const querystring = require('querystring');
-const https = require('node:https');
+import axios, {AxiosResponse} from 'axios';
+import * as querystring from 'querystring';
+import * as https from 'https';
 
 const agent = new https.Agent();
 
-/*
- * FacebookDownloader class for retrieving direct video URLs from Facebook videos
+interface MediaInfo {
+    title: string;
+    duration: string;
+    thumbnail: string;
+    links: {
+        hd: string | string[];
+        sd: string | string[];
+    };
+}
+
+interface DirectUrlsAndCount {
+    urls: string[];
+    count: number;
+}
+
+type Quality = 'sd' | 'hd';
+
+/**
+ * Extracts direct download URLs for Facebook videos using the internal x2download API.
+ * Supports both standard video URLs and short share links.
+ * Provides options for HD and SD quality downloads.
  *
- * Example URLs:
- * - https://www.facebook.com/1551UNMSM/videos/2126724314377208 (standard video URL)
- * - https://www.facebook.com/share/v/Hr3BZV9JjaKPy28P/ (short share link for the same video)
+ * @testCases
+ * https://www.facebook.com/1551UNMSM/videos/2126724314377208 (standard video URL)
+ * https://www.facebook.com/share/v/Hr3BZV9JjaKPy28P/ (short share link for the same video)
  */
 class FacebookDownloader {
+    private readonly BASE_URL: string;
+
     constructor() {
         // Base URL for the x2download API
-        // Note: Using IP address to avoid ENOTFOUND errors
+        // Note: Using direct IP address to avoid ENOTFOUND errors
         // TODO: Implement DNS lookup to get the current IP for x2download.app
         this.BASE_URL = 'https://172.67.222.44/api/ajaxSearch/facebook';
     }
 
-    async getDirectUrlsAndCount(url, quality = 'sd') {
+    async getDirectUrlsAndCount(
+        url: string,
+        quality: Quality = 'sd'
+    ): Promise<DirectUrlsAndCount> {
         try {
             const mediaInfo = await this.getMediaInfo(url);
             const selectedUrls =
@@ -31,23 +55,30 @@ class FacebookDownloader {
                 count: urlArray.length,
             };
         } catch (error) {
-            console.error('Error in getDirectUrlsAndCount:', error);
-            throw new Error(`Failed to process Facebook URL: ${error.message}`);
+            this.handleError('getDirectUrlsAndCount', error);
+            throw new Error(
+                `Failed to process Facebook URL: ${this.getErrorMessage(error)}`
+            );
         }
     }
 
-    async getMediaInfo(url) {
+    private async getMediaInfo(url: string): Promise<MediaInfo> {
         try {
             const encodedUrl = querystring.escape(url);
             const response = await this.makeRequest(encodedUrl);
             return this.parseResponse(response.data);
         } catch (error) {
-            console.error('Error in getMediaInfo:', error);
-            throw new Error(`Error fetching Facebook data: ${error.message}`);
+            this.handleError('getMediaInfo', error);
+            throw new Error(
+                `Error fetching Facebook data: ${this.getErrorMessage(error)}`
+            );
         }
     }
 
-    async makeRequest(encodedUrl, retries = 3) {
+    private async makeRequest(
+        encodedUrl: string,
+        retries: number = 3
+    ): Promise<AxiosResponse> {
         try {
             return await axios({
                 method: 'post',
@@ -71,7 +102,7 @@ class FacebookDownloader {
         }
     }
 
-    parseResponse(data) {
+    private parseResponse(data: any): MediaInfo {
         if (!data || !data.links || (!data.links.hd && !data.links.sd)) {
             throw new Error('Invalid response from server');
         }
@@ -86,6 +117,18 @@ class FacebookDownloader {
             },
         };
     }
+
+    private handleError(methodName: string, error: unknown): void {
+        console.error(`Error in ${methodName}:`, error);
+        if (axios.isAxiosError(error)) {
+            console.error(`Axios error details: ${JSON.stringify(error.response?.data)}`);
+        }
+    }
+
+    private getErrorMessage(error: unknown): string {
+        if (error instanceof Error) return error.message;
+        return String(error);
+    }
 }
 
-module.exports = FacebookDownloader;
+export default FacebookDownloader;

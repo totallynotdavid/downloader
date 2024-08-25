@@ -4,9 +4,11 @@
     "description": "A Node.js package to retrieve direct media URLs from popular social platforms.",
     "main": "index.js",
     "scripts": {
-        "clean": "shx rm -rf node_modules && shx rm pnpm-lock.yaml",
-        "lint": "eslint --fix --color .",
-        "prettier": "prettier --write ."
+        "build": "tsc",
+        "dev": "ts-node -r tsconfig-paths/register src/test.ts",
+        "clean": "shx rm -rf dist node_modules pnpm-lock.yaml",
+        "lint": "eslint --fix --color src/**/*.ts",
+        "prettier": "prettier --write src/**/*.ts"
     },
     "keywords": [
         "imgur",
@@ -22,13 +24,19 @@
     "author": "David Duran <contacto@altmails.com>",
     "license": "MIT",
     "dependencies": {
+        "@types/jsdom": "^21.1.7",
         "axios": "^1.7.4",
         "cheerio": "1.0.0",
+        "isomorphic-dompurify": "^2.14.0",
+        "jsdom": "^24.1.1",
         "qs": "^6.13.0"
     },
     "devDependencies": {
         "@changesets/cli": "^2.27.7",
         "@eslint/js": "^9.9.0",
+        "@types/cheerio": "^0.22.35",
+        "@types/node": "^22.4.1",
+        "@types/qs": "^6.9.15",
         "@typescript-eslint/eslint-plugin": "^8.2.0",
         "@typescript-eslint/parser": "^8.2.0",
         "eslint": "^9.9.0",
@@ -36,8 +44,10 @@
         "eslint-plugin-prettier": "^5.2.1",
         "globals": "^15.9.0",
         "prettier": "^3.3.3",
+        "resolve-tspaths": "^0.8.19",
         "shx": "^0.3.4",
         "ts-node": "^10.9.2",
+        "tsconfig-paths": "^4.2.0",
         "typescript": "^5.5.4"
     }
 }
