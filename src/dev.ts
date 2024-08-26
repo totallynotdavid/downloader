@@ -1,7 +1,12 @@
 import MediaDownloader from './index';
 
-const url: string = 'https://www.youtube.com/watch?v=PEECtnSQ6CY';
+interface DownloaderResult {
+    urls: string[];
+    count: number;
+}
+
+const url: string = 'https://www.facebook.com/share/v/Hr3BZV9JjaKPy28P/';
 
 MediaDownloader(url)
-    .then((result: any) => console.log(result))
+    .then((result: DownloaderResult) => console.log(result))
     .catch((error: Error) => console.error(error));

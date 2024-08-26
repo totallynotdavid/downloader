@@ -12,6 +12,7 @@
         "resolveJsonModule": true,
         "declaration": true,
         "moduleResolution": "node",
+        "removeComments": true,
         "paths": {
             "@/*": ["./src/*"]
         }

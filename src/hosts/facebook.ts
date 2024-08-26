@@ -14,6 +14,19 @@ interface MediaInfo {
     };
 }
 
+interface ApiResponse {
+    status: string;
+    p: string;
+    links: {
+        hd: string;
+        sd: string;
+    };
+    duration: string;
+    title: string;
+    thumbnail: string;
+    urlHD: string;
+}
+
 interface DirectUrlsAndCount {
     urls: string[];
     count: number;
@@ -102,7 +115,7 @@ class FacebookDownloader {
         }
     }
 
-    private parseResponse(data: any): MediaInfo {
+    private parseResponse(data: ApiResponse): MediaInfo {
         if (!data || !data.links || (!data.links.hd && !data.links.sd)) {
             throw new Error('Invalid response from server');
         }
