@@ -14,7 +14,7 @@ class TiktokDownloaderError extends Error {
  *
  * @testCases
  * video: https://www.tiktok.com/@stayc_official/video/7136124191849417985
- *  short url: https://vm.tiktok.com/ZMrcQFHjd/
+ * short url: https://vm.tiktok.com/ZMrcQFHjd/
  * gallery: https://www.tiktok.com/@stressheadd/photo/7374028202378890528
  */
 class TiktokDownloader {
