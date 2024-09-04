@@ -1,23 +1,9 @@
 import axios, {AxiosResponse} from 'axios';
-import * as cheerio from 'cheerio';
 import qs from 'qs';
 import vm from 'node:vm';
-
-interface Headers {
-    [key: string]: string;
-}
-
-interface MediaInfo {
-    results_number: number;
-    url_list: string[];
-}
-
-interface ApiResponse {
-    status: string;
-    p: string;
-    v: string;
-    data: string;
-}
+import * as cheerio from 'cheerio';
+import {DownloaderOptions, DownloaderResult} from '@/types';
+import {Headers, MediaInfo, ApiResponse} from '@/types/instagram';
 
 /**
  * Extracts direct media URLs for Instagram media using
@@ -95,7 +81,6 @@ class InstagramDownloader {
         const result: string[] = [];
 
         $('.download-items').each((_, element) => {
-            // Check if it's a video (reel)
             const videoDownloadLink = $(element)
                 .find('.download-items__btn:not(.dl-thumb) > a')
                 .attr('href');
@@ -134,7 +119,7 @@ class InstagramDownloader {
         };
     }
 
-    async getMediaInfo(url: string): Promise<MediaInfo> {
+    private async getMediaInfo(url: string): Promise<MediaInfo> {
         try {
             const params = {
                 q: url,
@@ -151,6 +136,8 @@ class InstagramDownloader {
                 }
             );
             const responseData: string = response.data.data;
+
+            console.log('responseData:', responseData)
 
             if (!responseData) {
                 return {results_number: 0, url_list: []};
@@ -172,12 +159,39 @@ class InstagramDownloader {
         }
     }
 
-    async getDirectUrls(url: string): Promise<{urls: string[]; count: number}> {
-        const result = await this.getMediaInfo(url);
-        return {
-            urls: result.url_list,
-            count: result.results_number,
-        };
+    async getDirectUrls(
+        url: string,
+        options: DownloaderOptions = {}
+    ): Promise<DownloaderResult> {
+        try {
+            const result = await this.getMediaInfo(url);
+            let urls = result.url_list;
+
+            // Apply quality filter if specified
+            if (options.quality && options.quality !== 'highest') {
+                // TODO: handle multiple qualities
+                urls = urls.slice(0, 1);
+            }
+
+            return {
+                urls,
+            };
+        } catch (error) {
+            console.error(`Failed to process Instagram URL: ${(error as Error).message}`);
+            return {urls: []};
+        }
+    }
+
+    async getMetadata(url: string): Promise<Record<string, string>> {
+        try {
+            // TODO: add metadata
+            return {url};
+        } catch (error) {
+            console.error(
+                `Failed to fetch Instagram metadata: ${(error as Error).message}`
+            );
+            return {};
+        }
     }
 }
 
