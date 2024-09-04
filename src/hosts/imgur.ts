@@ -1,26 +1,6 @@
 import axios from 'axios';
-import {DownloaderOptions, DownloaderResult} from '@/types';
-
-interface ParsedUrl {
-    type: 'image' | 'album';
-    id: string;
-}
-
-interface ImgurApiResponse {
-    data: ImgurApiData;
-    success: boolean;
-    status: number;
-}
-
-interface ImgurApiData {
-    link?: string;
-    images?: {link: string}[];
-    is_album?: boolean;
-    title?: string;
-    description?: string;
-    datetime?: number;
-    views?: number;
-}
+import {DownloaderResult} from '@/types';
+import {ClassifiedImgurLink, ImgurApiResponse, ImgurApiData} from '@/types/imgur';
 
 /*
  * Handles downloading and parsing of Imgur media content.
@@ -40,23 +20,20 @@ class ImgurDownloader {
         this.clientId = '546c25a59c58ad7';
     }
 
-    async getDirectUrls(
-        url: string,
-        options: DownloaderOptions
-    ): Promise<DownloaderResult> {
-        const {type, id} = this.parseUrl(url);
+    async getDirectUrls(url: string): Promise<DownloaderResult> {
+        const {type, id} = this.classifyImgurLink(url);
         const response = await this.fetchMediaInfo(type, id);
         const urls = this.extractUrls(response.data);
         return {urls};
     }
 
     async getMetadata(url: string): Promise<Record<string, unknown>> {
-        const {type, id} = this.parseUrl(url);
+        const {type, id} = this.classifyImgurLink(url);
         const response = await this.fetchMediaInfo(type, id);
         return this.extractMetadata(response.data);
     }
 
-    private parseUrl(url: string): ParsedUrl {
+    private classifyImgurLink(url: string): ClassifiedImgurLink {
         const urlObj = new URL(url);
         const pathParts = urlObj.pathname.split('/').filter(Boolean);
 
@@ -87,14 +64,22 @@ class ImgurDownloader {
         return [];
     }
 
-    private extractMetadata(data: ImgurApiData): Record<string, unknown> {
+    private extractMetadata(data: ImgurApiData): Record<string, string> {
+        let titulo = data.title || '';
+
+        if (data.description) {
+            titulo += ` - ${data.description}`;
+        }
+
+        if (data.is_album) {
+            titulo += ` (Álbum)`;
+        }
+
+        titulo += ` [${data.views} vistas]`;
+
         return {
-            title: data.title,
-            description: data.description,
-            datetime: data.datetime,
-            views: data.views,
-            is_album: data.is_album,
-            image_count: data.images?.length ?? 1,
+            titulo: titulo.trim(),
+            url: data.link ?? '',
         };
     }
 }
