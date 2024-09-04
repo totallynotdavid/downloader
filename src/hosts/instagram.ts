@@ -13,7 +13,6 @@ import {Headers, MediaInfo, ApiResponse} from '@/types/instagram';
  * image (return 1 img): https://www.instagram.com/p/C-KmYkCsSr5/
  * gallery (return 10 imgs): https://www.instagram.com/p/C-4D2GJo9Cd/
  * reel (return 1 mp4): https://www.instagram.com/p/C-4BsEyOPQY/
- *
  */
 class InstagramDownloader {
     private readonly BASE_URL: string;
@@ -76,7 +75,7 @@ class InstagramDownloader {
         return sandbox.result;
     }
 
-    private parseHtml(html: string): MediaInfo {
+    private parseHtml(html: string, options: DownloaderOptions = {}): MediaInfo {
         const $ = cheerio.load(html);
         const result: string[] = [];
 
@@ -88,19 +87,42 @@ class InstagramDownloader {
             if (videoDownloadLink) {
                 result.push(videoDownloadLink);
             } else {
-                const highestQualityOption = $(element)
+                let qualityOptions = $(element)
                     .find('.photo-option select option')
-                    .first()
-                    .attr('value');
+                    .map((_, option) => ({
+                        url: $(option).attr('value'),
+                        dimensions: $(option).text().trim(),
+                    }))
+                    .get();
 
-                const imageDownloadLink = $(element)
-                    .find('.download-items__btn > a')
-                    .attr('href');
+                // We sort them from highest to lowest resolution
+                qualityOptions.sort((a, b) => {
+                    const [aWidth, aHeight] = a.dimensions.split('x').map(Number);
+                    const [bWidth, bHeight] = b.dimensions.split('x').map(Number);
+                    return bWidth * bHeight - aWidth * aHeight;
+                });
 
-                if (highestQualityOption) {
-                    result.push(highestQualityOption);
-                } else if (imageDownloadLink) {
-                    result.push(imageDownloadLink);
+                const qualityLabels = ['1080p', '720p', '480p', '360p', '240p'];
+                qualityOptions = qualityOptions.map((option, index) => ({
+                    ...option,
+                    quality: qualityLabels[index] || `${index + 1}p`,
+                }));
+
+                let selectedOption;
+                if (options.quality && options.quality !== 'highest') {
+                    selectedOption = qualityOptions.find(
+                        option => option.quality === options.quality
+                    );
+                }
+
+                if (!selectedOption) {
+                    selectedOption = qualityOptions[0];
+                }
+
+                if (selectedOption) {
+                    result.push(selectedOption.url);
+                } else {
+                    console.warn('No suitable quality option found');
                 }
             }
         });
@@ -115,11 +137,11 @@ class InstagramDownloader {
 
         return {
             results_number: result.length,
-            url_list: result,
+            url_list: result.filter(url => url !== undefined),
         };
     }
 
-    private async getMediaInfo(url: string): Promise<MediaInfo> {
+    private async getMediaInfo(url: string): Promise<string> {
         try {
             const params = {
                 q: url,
@@ -137,22 +159,17 @@ class InstagramDownloader {
             );
             const responseData: string = response.data.data;
 
-            console.log('responseData:', responseData)
-
             if (!responseData) {
-                return {results_number: 0, url_list: []};
+                throw new Error('Empty response data');
             }
 
-            let htmlContent: string;
             if (responseData.trim().startsWith('var')) {
-                htmlContent = this.executeJavaScript(responseData);
+                return this.executeJavaScript(responseData);
             } else if (responseData.trim().startsWith('<ul class="download-box">')) {
-                htmlContent = responseData;
+                return responseData;
             } else {
-                console.error('Unexpected response format');
-                return {results_number: 0, url_list: []};
+                throw new Error('Unexpected response format');
             }
-            return this.parseHtml(htmlContent);
         } catch (error) {
             console.error('Error fetching Instagram data:', error);
             throw error;
@@ -164,18 +181,21 @@ class InstagramDownloader {
         options: DownloaderOptions = {}
     ): Promise<DownloaderResult> {
         try {
-            const result = await this.getMediaInfo(url);
-            let urls = result.url_list;
+            const htmlContent = await this.getMediaInfo(url);
+            const parsedResult = this.parseHtml(htmlContent, options);
+            const urls = parsedResult.url_list;
 
-            // Apply quality filter if specified
-            if (options.quality && options.quality !== 'highest') {
-                // TODO: handle multiple qualities
-                urls = urls.slice(0, 1);
+            if (options.includeMetadata) {
+                const metadata = await this.getMetadata(url);
+                return {
+                    urls,
+                    metadata,
+                };
+            } else {
+                return {
+                    urls,
+                };
             }
-
-            return {
-                urls,
-            };
         } catch (error) {
             console.error(`Failed to process Instagram URL: ${(error as Error).message}`);
             return {urls: []};
@@ -185,7 +205,7 @@ class InstagramDownloader {
     async getMetadata(url: string): Promise<Record<string, string>> {
         try {
             // TODO: add metadata
-            return {url};
+            return {url, title: ''};
         } catch (error) {
             console.error(
                 `Failed to fetch Instagram metadata: ${(error as Error).message}`
