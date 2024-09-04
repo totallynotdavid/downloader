@@ -1,9 +1,5 @@
 import MediaDownloader from './index';
-
-interface DownloaderResult {
-    urls: string[];
-    count: number;
-}
+import {DownloaderResult} from '@/types';
 
 const url: string = 'https://www.facebook.com/share/v/Hr3BZV9JjaKPy28P/';
 
