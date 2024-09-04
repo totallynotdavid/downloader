@@ -1,38 +1,19 @@
 import axios, {AxiosResponse} from 'axios';
 import {DownloaderOptions, DownloaderResult} from '@/types';
+import {RedditPost, RedditApiResponse} from '@/types/reddit';
 
-interface RedditPost {
-    data: {
-        is_gallery?: boolean;
-        gallery_data?: {
-            items: Array<{media_id: string}>;
-        };
-        is_video?: boolean;
-        media?: {
-            reddit_video?: {
-                fallback_url: string;
-            };
-        };
-        secure_media?: {
-            oembed?: {
-                thumbnail_url: string;
-            };
-        };
-        url?: string;
-        title?: string;
-        author?: string;
-        created_utc?: number;
-        subreddit?: string;
-        score?: number;
-    };
-}
-
-interface RedditApiResponse {
-    data: {
-        children: RedditPost[];
-    };
-}
-
+/**
+ * Extracts direct media URLs from Reddit posts and comments.
+ * Supports various content types including images, videos, galleries, and external links.
+ * Utilizes Reddit's JSON API to fetch post data.
+ *
+ * @testCases
+ * single image: https://www.reddit.com/r/unixporn/comments/12ruaq1/xperia_10_iii_w_sailfish_w_arch_my_mobile_office/
+ * gallery: https://www.reddit.com/r/cats/comments/1dsdwbc/_/
+ * native video: https://www.reddit.com/r/blackmagicfuckery/comments/12sex2d/pool_black_magic/
+ * native video: https://www.reddit.com/r/interestingasfuck/comments/1drzauu/the_chinese_tianlong3_rocket_accidentally/
+ * youtube thumbnail: https://www.reddit.com/r/neverchangejapan/comments/12spx82/ningen_isu_ringo_no_namida_a_metal_song_about_an/
+ */
 class RedditDownloader {
     constructor() {}
 
@@ -128,15 +109,26 @@ class RedditDownloader {
         return mediaUrls;
     }
 
-    private extractMetadata(postData: RedditPost['data']): Record<string, unknown> {
+    private extractMetadata(postData: RedditPost['data']): Record<string, string> {
+        const titleParts: string[] = [postData.title ?? ''];
+
+        if (postData.subreddit) {
+            titleParts.push(`r/${postData.subreddit}`);
+        }
+
+        if (postData.author) {
+            titleParts.push(`u/${postData.author}`);
+        }
+
+        if (postData.score !== undefined) {
+            titleParts.push(`Votos: ${postData.score}`);
+        }
+
+        const formattedTitle = titleParts.join(' | ');
+
         return {
-            title: postData.title,
-            author: postData.author,
-            created_utc: postData.created_utc,
-            subreddit: postData.subreddit,
-            score: postData.score,
-            is_gallery: postData.is_gallery,
-            is_video: postData.is_video,
+            title: formattedTitle,
+            url: postData.url ?? '',
         };
     }
 }
