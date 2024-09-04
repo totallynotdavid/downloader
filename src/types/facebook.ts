@@ -1,4 +1,7 @@
 export interface MediaInfo {
+    status: string;
+    p: string;
+    urlHD: string;
     title: string;
     duration: string;
     thumbnail: string;
