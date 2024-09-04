@@ -1,38 +1,10 @@
+import https from 'node:https';
 import axios, {AxiosResponse} from 'axios';
 import * as querystring from 'querystring';
-import * as https from 'https';
+import {Downloader, DownloaderOptions, DownloaderResult} from '@/types';
+import {MediaInfo, ApiResponse} from '@/types/facebook';
 
 const agent = new https.Agent();
-
-interface MediaInfo {
-    title: string;
-    duration: string;
-    thumbnail: string;
-    links: {
-        hd: string | string[];
-        sd: string | string[];
-    };
-}
-
-interface ApiResponse {
-    status: string;
-    p: string;
-    links: {
-        hd: string;
-        sd: string;
-    };
-    duration: string;
-    title: string;
-    thumbnail: string;
-    urlHD: string;
-}
-
-interface DirectUrlsAndCount {
-    urls: string[];
-    count: number;
-}
-
-type Quality = 'sd' | 'hd';
 
 /**
  * Extracts direct download URLs for Facebook videos using the internal x2download API.
@@ -43,7 +15,7 @@ type Quality = 'sd' | 'hd';
  * https://www.facebook.com/1551UNMSM/videos/2126724314377208 (standard video URL)
  * https://www.facebook.com/share/v/Hr3BZV9JjaKPy28P/ (short share link for the same video)
  */
-class FacebookDownloader {
+class FacebookDownloader implements Downloader {
     private readonly BASE_URL: string;
 
     constructor() {
@@ -55,22 +27,39 @@ class FacebookDownloader {
 
     async getDirectUrls(
         url: string,
-        quality: Quality = 'sd'
-    ): Promise<DirectUrlsAndCount> {
+        options: DownloaderOptions = {}
+    ): Promise<DownloaderResult> {
         try {
             const mediaInfo = await this.getMediaInfo(url);
+            const quality = options.quality === 'highest' ? 'hd' : 'sd';
             const selectedUrls =
                 quality === 'hd' ? mediaInfo.links.hd : mediaInfo.links.sd;
             const urlArray = Array.isArray(selectedUrls) ? selectedUrls : [selectedUrls];
 
             return {
                 urls: urlArray,
-                count: urlArray.length,
             };
         } catch (error) {
             this.handleError('getDirectUrls', error);
             throw new Error(
                 `Failed to process Facebook URL: ${this.getErrorMessage(error)}`
+            );
+        }
+    }
+
+    async getMetadata(url: string): Promise<Record<string, string>> {
+        try {
+            const mediaInfo = await this.getMediaInfo(url);
+            return {
+                url: url,
+                title: mediaInfo.title,
+                duration: mediaInfo.duration,
+                thumbnail: mediaInfo.thumbnail,
+            };
+        } catch (error) {
+            this.handleError('getMetadata', error);
+            throw new Error(
+                `Failed to get metadata for Facebook URL: ${this.getErrorMessage(error)}`
             );
         }
     }
