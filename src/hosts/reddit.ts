@@ -1,4 +1,5 @@
 import axios, {AxiosResponse} from 'axios';
+import {DownloaderOptions, DownloaderResult} from '@/types';
 
 interface RedditPost {
     data: {
@@ -18,6 +19,11 @@ interface RedditPost {
             };
         };
         url?: string;
+        title?: string;
+        author?: string;
+        created_utc?: number;
+        subreddit?: string;
+        score?: number;
     };
 }
 
@@ -27,38 +33,50 @@ interface RedditApiResponse {
     };
 }
 
-interface UrlResult {
-    urls: string[];
-    count: number;
-}
-
-/**
- * Extracts direct media URLs from Reddit posts and comments.
- * Supports various content types including images, videos, galleries, and external links.
- * Utilizes Reddit's JSON API to fetch post data.
- *
- * @testCases
- * single image: https://www.reddit.com/r/unixporn/comments/12ruaq1/xperia_10_iii_w_sailfish_w_arch_my_mobile_office/
- * gallery: https://www.reddit.com/r/cats/comments/1dsdwbc/_/
- * native video: https://www.reddit.com/r/blackmagicfuckery/comments/12sex2d/pool_black_magic/
- * native video: https://www.reddit.com/r/interestingasfuck/comments/1drzauu/the_chinese_tianlong3_rocket_accidentally/
- * youtube thumbnail: https://www.reddit.com/r/neverchangejapan/comments/12spx82/ningen_isu_ringo_no_namida_a_metal_song_about_an/
- */
 class RedditDownloader {
     constructor() {}
 
-    async getDirectUrlsAndCount(redditUrl: string): Promise<UrlResult> {
+    async getDirectUrls(
+        redditUrl: string,
+        options: DownloaderOptions
+    ): Promise<DownloaderResult> {
         try {
             const urls = await this.getMediaInfo(redditUrl);
-            return {
-                urls: urls,
-                count: urls.length,
-            };
+            const result: DownloaderResult = {urls};
+
+            if (options.includeMetadata) {
+                const metadata = await this.getMetadata(redditUrl);
+                result.metadata = metadata;
+            }
+
+            return result;
         } catch (error) {
             if (error instanceof Error) {
                 throw new Error(`Failed to process URL: ${error.message}`);
             } else {
                 throw new Error('An unknown error occurred');
+            }
+        }
+    }
+
+    async getMetadata(redditUrl: string): Promise<Record<string, unknown>> {
+        const url = redditUrl.endsWith('.json') ? redditUrl : `${redditUrl}.json`;
+
+        try {
+            const response: AxiosResponse<RedditApiResponse[]> = await axios.get(url);
+            if (response.data?.[0]?.data?.children?.[0]?.data) {
+                const postData = response.data[0].data.children[0].data;
+                return this.extractMetadata(postData);
+            } else {
+                throw new Error('Unexpected response structure');
+            }
+        } catch (error) {
+            if (error instanceof Error) {
+                throw new Error(`Error fetching Reddit metadata: ${error.message}`);
+            } else {
+                throw new Error(
+                    'An unknown error occurred while fetching Reddit metadata'
+                );
             }
         }
     }
@@ -108,6 +126,18 @@ class RedditDownloader {
         }
 
         return mediaUrls;
+    }
+
+    private extractMetadata(postData: RedditPost['data']): Record<string, unknown> {
+        return {
+            title: postData.title,
+            author: postData.author,
+            created_utc: postData.created_utc,
+            subreddit: postData.subreddit,
+            score: postData.score,
+            is_gallery: postData.is_gallery,
+            is_video: postData.is_video,
+        };
     }
 }
 
