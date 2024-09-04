@@ -39,7 +39,7 @@ class TiktokDownloader {
         }
     }
 
-    async getDirectUrlsAndCount(url: string): Promise<{urls: string[]; count: number}> {
+    async getDirectUrls(url: string): Promise<{urls: string[]; count: number}> {
         try {
             const mediaInfo = await this.getMediaInfo(url);
             return {

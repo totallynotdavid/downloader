@@ -29,7 +29,7 @@ class PinterestDownloader {
     private readonly COOKIE_URL: string =
         'https://getindevice.com/pinterest-video-downloader/';
 
-    public async getDirectUrlsAndCount(url: string): Promise<DownloadResult> {
+    public async getDirectUrls(url: string): Promise<DownloadResult> {
         try {
             const mediaInfo: MediaInfo = await this.getMediaInfo(url);
 
@@ -48,7 +48,7 @@ class PinterestDownloader {
                 count: urlArray.length,
             };
         } catch (error) {
-            console.error('Error in getDirectUrlsAndCount:', error);
+            console.error('Error in getDirectUrls:', error);
             throw new Error(
                 `Failed to process Pinterest URL: ${(error as Error).message}`
             );

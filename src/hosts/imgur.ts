@@ -1,4 +1,5 @@
 import axios from 'axios';
+import {DownloaderOptions, DownloaderResult} from '@/types';
 
 interface ParsedUrl {
     type: 'image' | 'album';
@@ -15,6 +16,10 @@ interface ImgurApiData {
     link?: string;
     images?: {link: string}[];
     is_album?: boolean;
+    title?: string;
+    description?: string;
+    datetime?: number;
+    views?: number;
 }
 
 /*
@@ -35,11 +40,20 @@ class ImgurDownloader {
         this.clientId = '546c25a59c58ad7';
     }
 
-    async getDirectUrlsAndCount(url: string): Promise<{urls: string[]; count: number}> {
+    async getDirectUrls(
+        url: string,
+        options: DownloaderOptions
+    ): Promise<DownloaderResult> {
         const {type, id} = this.parseUrl(url);
         const response = await this.fetchMediaInfo(type, id);
         const urls = this.extractUrls(response.data);
-        return {urls, count: urls.length};
+        return {urls};
+    }
+
+    async getMetadata(url: string): Promise<Record<string, unknown>> {
+        const {type, id} = this.parseUrl(url);
+        const response = await this.fetchMediaInfo(type, id);
+        return this.extractMetadata(response.data);
     }
 
     private parseUrl(url: string): ParsedUrl {
@@ -71,6 +85,17 @@ class ImgurDownloader {
             return [data.link];
         }
         return [];
+    }
+
+    private extractMetadata(data: ImgurApiData): Record<string, unknown> {
+        return {
+            title: data.title,
+            description: data.description,
+            datetime: data.datetime,
+            views: data.views,
+            is_album: data.is_album,
+            image_count: data.images?.length ?? 1,
+        };
     }
 }
 

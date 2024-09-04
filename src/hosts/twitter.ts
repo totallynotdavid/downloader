@@ -10,12 +10,12 @@ interface MediaInfo {
     media: MediaItem[];
 }
 
-interface GetDirectUrlsAndCountOptions {
+interface getDirectUrlsOptions {
     buffer?: boolean;
     text?: boolean;
 }
 
-interface GetDirectUrlsAndCountResult {
+interface getDirectUrlsResult {
     urls: string[];
     count: number;
     buffers?: (Buffer | null)[];
@@ -48,17 +48,17 @@ class TwitterDownloader {
         this.BASE_URL = 'https://api.vxtwitter.com';
     }
 
-    public async getDirectUrlsAndCount(
+    public async getDirectUrls(
         url: string,
-        options: GetDirectUrlsAndCountOptions = {}
-    ): Promise<GetDirectUrlsAndCountResult> {
+        options: getDirectUrlsOptions = {}
+    ): Promise<getDirectUrlsResult> {
         try {
             const mediaInfo = await this.getMediaInfo(url);
             const media = mediaInfo.media;
 
             const urlArray = media.map(item => item.url);
 
-            const result: GetDirectUrlsAndCountResult = {
+            const result: getDirectUrlsResult = {
                 urls: urlArray,
                 count: urlArray.length,
             };
@@ -89,7 +89,7 @@ class TwitterDownloader {
 
             return result;
         } catch (error) {
-            console.error('Error in getDirectUrlsAndCount:', error);
+            console.error('Error in getDirectUrls:', error);
             throw new Error(
                 `Failed to process Twitter URL: ${error instanceof Error ? error.message : String(error)}`
             );

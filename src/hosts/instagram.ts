@@ -172,7 +172,7 @@ class InstagramDownloader {
         }
     }
 
-    async getDirectUrlsAndCount(url: string): Promise<{urls: string[]; count: number}> {
+    async getDirectUrls(url: string): Promise<{urls: string[]; count: number}> {
         const result = await this.getMediaInfo(url);
         return {
             urls: result.url_list,

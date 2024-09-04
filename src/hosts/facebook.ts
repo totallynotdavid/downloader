@@ -53,7 +53,7 @@ class FacebookDownloader {
         this.BASE_URL = 'https://172.67.222.44/api/ajaxSearch/facebook';
     }
 
-    async getDirectUrlsAndCount(
+    async getDirectUrls(
         url: string,
         quality: Quality = 'sd'
     ): Promise<DirectUrlsAndCount> {
@@ -68,7 +68,7 @@ class FacebookDownloader {
                 count: urlArray.length,
             };
         } catch (error) {
-            this.handleError('getDirectUrlsAndCount', error);
+            this.handleError('getDirectUrls', error);
             throw new Error(
                 `Failed to process Facebook URL: ${this.getErrorMessage(error)}`
             );

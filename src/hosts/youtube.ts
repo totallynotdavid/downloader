@@ -20,7 +20,7 @@ class YouTubeDownloader {
     private readonly SUPPORTED_SERVERS = ['en', 'id', 'es'] as const;
     private readonly DEFAULT_TIMEOUT = 10000; // 10 seconds
 
-    async getDirectUrlsAndCount(url: string): Promise<DownloaderResult> {
+    async getDirectUrls(url: string): Promise<DownloaderResult> {
         try {
             if (!this.isValidYoutubeUrl(url)) {
                 throw new Error('Invalid YouTube URL');
