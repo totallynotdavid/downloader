@@ -7,12 +7,17 @@ export type QualityType =
     | '480p'
     | '360p'
     | '240p'
-    | '144p';
+    | '144p'
+    | 'HD'
+    | 'SD';
 
-export function mapQualityToSite(quality: QualityType, site: HostType): string {
+export function mapQualityToSite(quality: QualityType, site: HostType): QualityType {
     switch (site) {
         case 'facebook':
-            return quality === 'highest' || quality === '1080p' || quality === '720p'
+            return quality === 'highest' ||
+                quality === '1080p' ||
+                quality === '720p' ||
+                quality === 'HD'
                 ? 'HD'
                 : 'SD';
         case 'youtube':
