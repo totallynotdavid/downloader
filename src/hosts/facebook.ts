@@ -1,10 +1,9 @@
 import https from 'node:https';
-import axios, {AxiosResponse} from 'axios';
+import axios, {AxiosInstance} from 'axios';
 import * as querystring from 'querystring';
 import {Downloader, DownloaderOptions, DownloaderResult} from '@/types';
 import {MediaInfo, ApiResponse} from '@/types/facebook';
-
-const agent = new https.Agent();
+import {mapQualityToSite, QualityType} from '@/utils/mapQualityToSite';
 
 /**
  * Extracts direct download URLs for Facebook videos using the internal x2download API.
@@ -17,119 +16,82 @@ const agent = new https.Agent();
  */
 class FacebookDownloader implements Downloader {
     private readonly BASE_URL: string;
+    private readonly axiosInstance: AxiosInstance;
 
     constructor() {
         // Base URL for the x2download API
         // Note: Using direct IP address to avoid ENOTFOUND errors
         // TODO: Implement DNS lookup to get the current IP for x2download.app
         this.BASE_URL = 'https://172.67.222.44/api/ajaxSearch/facebook';
+
+        this.axiosInstance = axios.create({
+            httpsAgent: new https.Agent({keepAlive: true}),
+            timeout: 10000,
+            headers: {
+                Host: 'x2download.app',
+                'User-Agent':
+                    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36 Edg/129.0.0.0',
+                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+            },
+        });
     }
 
     async getDirectUrls(
         url: string,
         options: DownloaderOptions = {}
     ): Promise<DownloaderResult> {
-        try {
-            const mediaInfo = await this.getMediaInfo(url);
-            const quality = options.quality === 'highest' ? 'hd' : 'sd';
-            const selectedUrls =
-                quality === 'hd' ? mediaInfo.links.hd : mediaInfo.links.sd;
-            const urlArray = Array.isArray(selectedUrls) ? selectedUrls : [selectedUrls];
+        const mediaInfo = await this.getMediaInfo(url);
+        const quality = mapQualityToSite(
+            (options.quality as QualityType) || 'highest',
+            'facebook'
+        );
+        const selectedUrls = mediaInfo.links[quality.toLowerCase() as 'hd' | 'sd'] || [];
 
-            return {
-                urls: urlArray,
-            };
-        } catch (error) {
-            this.handleError('getDirectUrls', error);
-            throw new Error(
-                `Failed to process Facebook URL: ${this.getErrorMessage(error)}`
-            );
+        const result: DownloaderResult = {
+            urls: Array.isArray(selectedUrls) ? selectedUrls : [selectedUrls],
+        };
+
+        if (options.includeMetadata) {
+            result.metadata = await this.getMetadata(url);
         }
+
+        return result;
     }
 
     async getMetadata(url: string): Promise<Record<string, string>> {
-        try {
-            const mediaInfo = await this.getMediaInfo(url);
-            return {
-                url: url,
-                title: mediaInfo.title,
-                duration: mediaInfo.duration,
-                thumbnail: mediaInfo.thumbnail,
-            };
-        } catch (error) {
-            this.handleError('getMetadata', error);
-            throw new Error(
-                `Failed to get metadata for Facebook URL: ${this.getErrorMessage(error)}`
-            );
-        }
+        const mediaInfo = await this.getMediaInfo(url);
+        return {
+            url,
+            title: mediaInfo.title,
+            duration: mediaInfo.duration,
+            thumbnail: mediaInfo.thumbnail,
+        };
     }
 
     private async getMediaInfo(url: string): Promise<MediaInfo> {
-        try {
-            const encodedUrl = querystring.escape(url);
-            const response = await this.makeRequest(encodedUrl);
-            return this.parseResponse(response.data);
-        } catch (error) {
-            this.handleError('getMediaInfo', error);
-            throw new Error(
-                `Error fetching Facebook data: ${this.getErrorMessage(error)}`
-            );
-        }
-    }
-
-    private async makeRequest(
-        encodedUrl: string,
-        retries: number = 3
-    ): Promise<AxiosResponse> {
-        try {
-            return await axios({
-                method: 'post',
-                url: this.BASE_URL,
-                headers: {
-                    Host: 'x2download.app',
-                    'User-Agent':
-                        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36 Edg/129.0.0.0',
-                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-                },
-                data: `q=${encodedUrl}`,
-                httpsAgent: agent,
-                timeout: 10000,
-            });
-        } catch (error) {
-            if (retries > 0) {
-                console.warn(`Request failed, retrying... (${retries} attempts left)`);
-                return this.makeRequest(encodedUrl, retries - 1);
-            }
-            throw error;
-        }
+        const encodedUrl = querystring.escape(url);
+        const response = await this.axiosInstance.post(this.BASE_URL, `q=${encodedUrl}`);
+        return this.parseResponse(response.data);
     }
 
     private parseResponse(data: ApiResponse): MediaInfo {
-        if (!data || !data.links || (!data.links.hd && !data.links.sd)) {
+        if (!data) {
+            throw new Error('No data received from server');
+        }
+
+        if (data.status !== 'ok' || (!data?.links?.hd && !data?.links?.sd)) {
             throw new Error('Invalid response from server');
         }
 
         return {
-            title: data.title,
+            status: data.status,
+            p: data.p,
+            urlHD: data.urlHD,
+            links: data.links,
             duration: data.duration,
+            title: data.title,
             thumbnail: data.thumbnail,
-            links: {
-                hd: data.links.hd,
-                sd: data.links.sd,
-            },
         };
-    }
-
-    private handleError(methodName: string, error: unknown): void {
-        console.error(`Error in ${methodName}:`, error);
-        if (axios.isAxiosError(error)) {
-            console.error(`Axios error details: ${JSON.stringify(error.response?.data)}`);
-        }
-    }
-
-    private getErrorMessage(error: unknown): string {
-        if (error instanceof Error) return error.message;
-        return String(error);
     }
 }
 
