@@ -1,126 +1,138 @@
-# Media Downloader
+# @totallynodavid/downloader
 
-A Node.js package to easily retrieve direct media URLs and metadata from various social media platforms.
+[![npm version](https://img.shields.io/npm/v/@totallynodavid/downloader.svg)](https://www.npmjs.com/package/@totallynodavid/downloader)
+[![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue.svg)](https://www.typescriptlang.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## Supported Platforms
+@totallynodavid/downloader is a high-performance Node.js package for backend use. It helps you get direct media URLs and metadata from various social media platforms. You'll know what to do with it. :)
 
--   Facebook
--   Imgur
--   Instagram
--   Pinterest
--   Reddit
--   TikTok
--   Twitter
--   YouTube
+## Getting Started
 
-## Installation
+First, install the package:
 
-```
+```bash
 npm install @totallynodavid/downloader
+# or
+yarn add @totallynodavid/downloader
 ```
 
-## Basic Usage
+Then, use it in your project:
 
-```javascript
-const MediaDownloader = require('@totallynodavid/downloader');
+```typescript
+import {MediaDownloader, DownloadOptions} from '@totallynodavid/downloader';
 
-MediaDownloader('https://www.youtube.com/watch?v=dQw4w9WgXcQ')
-    .then(result => console.log(result))
-    .catch(error => console.error(error));
-```
+const downloader = new MediaDownloader();
 
-This will return an object with the direct URL(s):
-
-```javascript
-{
-    urls: ['https://youtube.com/video.mp4'];
-}
-```
-
-## Advanced Usage
-
-### Quality Selection
-
-You can specify the desired quality across all supported platforms:
-
-```javascript
-MediaDownloader('https://www.facebook.com/example/videos/123456789', {
+const options: DownloadOptions = {
     quality: '720p',
-})
+};
+
+downloader
+    .getMediaInfo('https://www.youtube.com/watch?v=dQw4w9WgXcQ', options)
     .then(result => console.log(result))
     .catch(error => console.error(error));
 ```
 
-### Size Limit (YouTube)
+## What can it do?
 
-For YouTube, you can set a maximum file size:
+-   ⚡ Get direct media URLs super fast
+-   🌐 Works with major platforms (Facebook, YouTube, Instagram, and more)
+-   ℹ️ Gives you useful info like title, duration, and thumbnail if available
+-   🔢 Can handle multiple URLs at once
+-   🎛️ Lets you choose video quality (when the platform supports it)
+-   📜 TypeScript support with full type definitions
+-   🔌 Designed for seamless integration into backend systems
 
-```javascript
-MediaDownloader('https://www.youtube.com/watch?v=dQw4w9WgXcQ', {
-    quality: '1080p',
-    maxSize: 16, // 16 MB limit
-})
-    .then(result => console.log(result))
-    .catch(error => console.error(error));
-```
+Here's what platforms we (currently) support and what you can do with them:
 
-### Audio-Only (YouTube)
+| Platform    | Direct URLs | Metadata | Multiple Qualities | Audio-Only |
+| ----------- | ----------- | -------- | ------------------ | ---------- |
+| Facebook\*  | ✅          | ✅       | ✅ (HD & SD)       | ❌         |
+| Imgur       | ✅          | ✅       | ❌                 | ❌         |
+| Instagram\* | ✅          | ✅       | ✅                 | ❌         |
+| Pinterest\* | ✅          | ✅       | ❌                 | ❌         |
+| Reddit      | ✅          | ✅       | ❌                 | ❌         |
+| TikTok\*    | ✅          | ✅       | ❌                 | ❌         |
+| Twitter\*   | ✅          | ✅       | ❌                 | ❌         |
+| YouTube     | ✅          | ✅       | ✅                 | ✅         |
 
-Extract audio from YouTube videos:
+> [!NOTE]  
+> For platforms marked with \*, we don't talk to them directly. Instead, we use other services to get the media URLs. You can find more details about these services in the [src/hosts](src/hosts) directory.
 
-```javascript
-MediaDownloader('https://www.youtube.com/watch?v=dQw4w9WgXcQ', {
-    preferAudio: true,
-})
-    .then(result => console.log(result))
-    .catch(error => console.error(error));
-```
+When you use the downloader, you'll get back an object with direct URLs and metadata. It looks something like this:
 
-### Include Metadata
-
-Retrieve additional metadata about the media:
-
-```javascript
-MediaDownloader('https://www.twitter.com/user/status/123456', {
-    includeMetadata: true,
-})
-    .then(result => console.log(result))
-    .catch(error => console.error(error));
-```
-
-This will return an object with both URLs and basic metadata:
-
-```javascript
+```json
 {
-  urls: ['https://twitter.com/video.mp4'],
-  metadata: {
-    title: 'Tweet Title',
-    url: 'https://www.twitter.com/user/status/123456'
-  }
+    "urls": [
+        {
+            "url": "https://rr4---sn-q4flrnek.googlevideo.com/videoplayback?...",
+            "quality": "720p",
+            "format": "mp4",
+            "size": 18.2 // Size in MB
+        }
+    ],
+    "metadata": {
+        "title": "Rick Astley - Never Gonna Give You Up (Official Music Video)",
+        "duration": 213, // Duration in seconds
+        "thumbnail": "https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg",
+        "platform": "youtube",
+        "views": 1234567890,
+        "likes": 9876543
+    }
 }
 ```
 
-## Platform-Specific Support
+## How to use it
 
-| Platform  | Direct URLs | URL | Title | Multiple Qualities | Audio-Only |
-| --------- | ----------- | --- | ----- | ------------------ | ---------- |
-| Facebook  | ✅          | ✅  | ❌    | ✅ (HD & SD)       | ❌         |
-| Imgur     | ✅          | ✅  | ✅    | ❌                 | ❌         |
-| Instagram | ✅          | ✅  | ❌    | ✅                 | ❌         |
-| Pinterest | ✅          | ✅  | ✅    | ❌                 | ❌         |
-| Reddit    | ✅          | ✅  | ✅    | ❌                 | ❌         |
-| TikTok    | ✅          | ✅  | ✅    | ❌                 | ❌         |
-| Twitter   | ✅          | ✅  | ✅    | ❌                 | ❌         |
-| YouTube   | ✅          | ✅  | ✅    | ✅                 | ✅         |
+The main class you'll use is `MediaDownloader`. Here's how to set it up:
 
-## Notes
+```typescript
+constructor(config?: DownloaderConfig)
+```
 
--   Quality and size options are primarily supported for YouTube and partially for Facebook.
--   The package automatically determines the appropriate host based on the URL.
--   If a specified quality is unavailable, the package will fall back to the closest available quality.
+You can pass in some options when you create it:
 
-## Need Help?
+| Option          | Type   | Default | What it does                                 |
+| --------------- | ------ | ------- | -------------------------------------------- |
+| `cacheTimeout`  | number | 3600    | How long to keep stuff in cache (in seconds) |
+| `maxConcurrent` | number | 5       | How many requests to make at once            |
 
-If you encounter any issues or have questions, please [open an issue](https://github.com/totallynotdavid/media_downloader/issues) on our GitHub repository.
+When you're getting media info, you can also set some options:
 
-Happy downloading!
+| Option        | Type    | Default   | What it does                         |
+| ------------- | ------- | --------- | ------------------------------------ |
+| `quality`     | string  | 'highest' | What quality you want (like `720p`)  |
+| `preferAudio` | boolean | false     | If you want just audio when possible |
+
+The main methods you'll use are:
+
+-   `getMediaInfo(url: string, options?: DownloadOptions): Promise<MediaInfo>`: Get info for one URL
+-   `batchGetMediaInfo(urls: string[], options?: DownloadOptions): Promise<MediaInfo[]>`: Get info for multiple URLs at once
+
+## Advanced usage
+
+If you want to get info for a bunch of URLs at once, you can do that too:
+
+```typescript
+const urls = [
+    'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+    'https://www.instagram.com/p/ABC123/',
+    'https://twitter.com/user/status/123456789',
+];
+
+downloader
+    .batchGetMediaInfo(urls, {quality: '1080p'})
+    .then(results => console.log(results))
+    .catch(error => console.error(error));
+```
+
+> [!WARNING]  
+> Be careful with this! It's up to you to make sure you're not hitting rate limits for the platforms you're using.
+
+## Need help?
+
+If something's not working right or you're confused, [open an issue](https://github.com/totallynotdavid/media_downloader/issues) on the GitHub page for this package. I'll do my best to help out.
+
+## License
+
+This project is under the MIT License. Check out the [LICENSE](LICENSE) file for all the legal details.
