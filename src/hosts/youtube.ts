@@ -1,10 +1,6 @@
 import https from 'node:https';
 import querystring from 'querystring';
-
-interface DownloaderResult {
-    urls: string[];
-    count: number;
-}
+import {DownloaderResult, DownloaderOptions, Downloader} from '@/types';
 
 /**
  * A utility class for extracting direct download URLs from YouTube videos.
@@ -16,11 +12,14 @@ interface DownloaderResult {
  * https://www.youtube.com/watch?v=Yvts2CHLOlU (length = 9 min.)
  * https://www.youtube.com/watch?v=cvVtbenDZxA (length = 4 min.)
  */
-class YouTubeDownloader {
+class YouTubeDownloader implements Downloader {
     private readonly SUPPORTED_SERVERS = ['en', 'id', 'es'] as const;
     private readonly DEFAULT_TIMEOUT = 10000; // 10 seconds
 
-    async getDirectUrls(url: string): Promise<DownloaderResult> {
+    async getDirectUrls(
+        url: string,
+        options: DownloaderOptions = {}
+    ): Promise<DownloaderResult> {
         try {
             if (!this.isValidYoutubeUrl(url)) {
                 throw new Error('Invalid YouTube URL');
@@ -28,22 +27,54 @@ class YouTubeDownloader {
 
             const cookies = await this.fetchCookies();
             const videoId = this.extractVideoId(url);
-            const downloadUrls = await this.getDownloadUrls(videoId, cookies);
+            const downloadUrls = await this.getDownloadUrls(videoId, cookies, options);
 
             return {
                 urls: downloadUrls,
-                count: downloadUrls.length,
             };
         } catch (error) {
             console.error(
                 'YouTube Downloader error:',
                 error instanceof Error ? error.message : 'Unknown error'
             );
-            return {urls: [], count: 0};
+            return {urls: []};
         }
     }
 
-    private async getDownloadUrls(videoId: string, cookies: string[]): Promise<string[]> {
+    async getMetadata(url: string): Promise<Record<string, unknown>> {
+        if (!this.isValidYoutubeUrl(url)) {
+            throw new Error('Invalid YouTube URL');
+        }
+
+        const videoId = this.extractVideoId(url);
+        const cookies = await this.fetchCookies();
+        const postData = querystring.stringify({
+            vid: videoId,
+            k_query: `https://www.youtube.com/watch?v=${videoId}`,
+            k_page: 'home',
+            hl: this.SUPPORTED_SERVERS[0],
+            q_auto: 0,
+        });
+
+        const response = await this.makeHttpRequest<any>(
+            'www.y2mate.com',
+            '/mates/analyzeV2/ajax',
+            'POST',
+            postData,
+            cookies
+        );
+
+        return {
+            title: response.title || 'Unknown Title',
+            url: `https://www.youtube.com/watch?v=${videoId}`,
+        };
+    }
+
+    private async getDownloadUrls(
+        videoId: string,
+        cookies: string[],
+        options: DownloaderOptions
+    ): Promise<string[]> {
         const postData = querystring.stringify({
             vid: videoId,
             k_query: `https://www.youtube.com/watch?v=${videoId}`,
@@ -61,24 +92,56 @@ class YouTubeDownloader {
         );
 
         const downloadUrls: string[] = [];
+        const formats = options.preferAudio ? ['mp3'] : ['mp4', 'mp3'];
 
-        for (const format of ['mp4', 'mp3']) {
+        for (const format of formats) {
             for (const key in response.links[format]) {
                 const item = response.links[format][key];
                 if (item.f === format) {
-                    const convertResponse = await this.convertMedia(
-                        videoId,
-                        item.k,
-                        cookies
-                    );
-                    if (convertResponse.dlink) {
-                        downloadUrls.push(convertResponse.dlink);
+                    if (this.isQualityAcceptable(item.q, options.quality)) {
+                        const convertResponse = await this.convertMedia(
+                            videoId,
+                            item.k,
+                            cookies
+                        );
+                        if (
+                            convertResponse.dlink &&
+                            (!options.maxSize ||
+                                this.isWithinSizeLimit(
+                                    convertResponse.size,
+                                    options.maxSize
+                                ))
+                        ) {
+                            downloadUrls.push(convertResponse.dlink);
+                            if (options.preferAudio) return downloadUrls; // Return immediately for audio-only preference
+                        }
                     }
                 }
             }
         }
 
         return downloadUrls;
+    }
+
+    private isQualityAcceptable(itemQuality: string, requestedQuality?: string): boolean {
+        if (!requestedQuality || requestedQuality === 'highest') return true;
+        const qualityMap: Record<string, number> = {
+            '144p': 1,
+            '240p': 2,
+            '360p': 3,
+            '480p': 4,
+            '720p': 5,
+            '1080p': 6,
+            '1440p': 7,
+            '2160p': 8,
+        };
+        return qualityMap[itemQuality] <= qualityMap[requestedQuality];
+    }
+
+    private isWithinSizeLimit(size: string, maxSize?: number): boolean {
+        if (!maxSize) return true;
+        const sizeInMB = parseFloat(size);
+        return !isNaN(sizeInMB) && sizeInMB <= maxSize;
     }
 
     private async convertMedia(

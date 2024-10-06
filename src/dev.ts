@@ -1,8 +1,20 @@
 import MediaDownloader from './index';
-import {DownloaderResult} from '@/types';
+import {DownloaderResult, DownloaderOptions} from '@/types';
 
-const url: string = 'https://www.facebook.com/share/v/Hr3BZV9JjaKPy28P/';
+const url: string = 'https://www.instagram.com/p/C-4D2GJo9Cd/';
 
-MediaDownloader(url)
-    .then((result: DownloaderResult) => console.log(result))
-    .catch((error: Error) => console.error(error));
+const options: DownloaderOptions = {
+    includeMetadata: true,
+    quality: 'highest',
+    preferAudio: true,
+    maxSize: 16,
+};
+
+MediaDownloader(url, options)
+    .then((result: DownloaderResult) => {
+        console.log('Result:');
+        console.log(JSON.stringify(result, null, 2));
+    })
+    .catch((error: Error) => {
+        console.error('Error:', error.message);
+    });

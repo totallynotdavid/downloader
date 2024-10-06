@@ -1,34 +1,6 @@
 import axios, {AxiosResponse} from 'axios';
-
-interface MediaItem {
-    url: string;
-    type: string;
-}
-
-interface MediaInfo {
-    text: string;
-    media: MediaItem[];
-}
-
-interface getDirectUrlsOptions {
-    buffer?: boolean;
-    text?: boolean;
-}
-
-interface getDirectUrlsResult {
-    urls: string[];
-    count: number;
-    buffers?: (Buffer | null)[];
-    text?: string;
-}
-
-interface VxTwitterApiResponse {
-    text: string;
-    media_extended: {
-        url: string;
-        type: string;
-    }[];
-}
+import {Downloader, DownloaderOptions, DownloaderResult, Metadata} from '@/types';
+import {MediaInfo, VxTwitterApiResponse} from '@/types/twitter';
 
 /**
  * Downloads and extracts media from Twitter posts using the internal vxtwitter.com API.
@@ -41,7 +13,7 @@ interface VxTwitterApiResponse {
  * video: https://twitter.com/ridd_design/status/1827005484156538976
  *
  */
-class TwitterDownloader {
+class TwitterDownloader implements Downloader {
     private readonly BASE_URL: string;
 
     constructor() {
@@ -50,41 +22,21 @@ class TwitterDownloader {
 
     public async getDirectUrls(
         url: string,
-        options: getDirectUrlsOptions = {}
-    ): Promise<getDirectUrlsResult> {
+        options: DownloaderOptions = {}
+    ): Promise<DownloaderResult> {
         try {
             const mediaInfo = await this.getMediaInfo(url);
             const media = mediaInfo.media;
 
             const urlArray = media.map(item => item.url);
 
-            const result: getDirectUrlsResult = {
+            const result: DownloaderResult = {
                 urls: urlArray,
-                count: urlArray.length,
             };
 
-            if (options.buffer) {
-                result.buffers = await Promise.all(
-                    media.map(async item => {
-                        try {
-                            const response: AxiosResponse<ArrayBuffer> = await axios.get(
-                                item.url,
-                                {
-                                    responseType: 'arraybuffer',
-                                    timeout: 10000, // 10 seconds timeout
-                                }
-                            );
-                            return Buffer.from(response.data);
-                        } catch (error) {
-                            console.warn('Error getting buffer:', error);
-                            return null;
-                        }
-                    })
-                );
-            }
-
-            if (options.text) {
-                result.text = mediaInfo.text;
+            // Twitter doesn't support quality selection or size limits
+            if (options.quality || options.maxSize) {
+                console.warn('Twitter does not support quality selection or size limits');
             }
 
             return result;
@@ -92,6 +44,21 @@ class TwitterDownloader {
             console.error('Error in getDirectUrls:', error);
             throw new Error(
                 `Failed to process Twitter URL: ${error instanceof Error ? error.message : String(error)}`
+            );
+        }
+    }
+
+    public async getMetadata(url: string): Promise<Metadata> {
+        try {
+            const mediaInfo = await this.getMediaInfo(url);
+            return {
+                title: mediaInfo.text,
+                url: url,
+            };
+        } catch (error) {
+            console.error('Error in getMetadata:', error);
+            throw new Error(
+                `Failed to get Twitter metadata: ${error instanceof Error ? error.message : String(error)}`
             );
         }
     }

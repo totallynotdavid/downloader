@@ -1,12 +1,6 @@
 import axios, {AxiosResponse, AxiosRequestConfig} from 'axios';
 import * as cheerio from 'cheerio';
-
-class TiktokDownloaderError extends Error {
-    constructor(message: string) {
-        super(message);
-        this.name = 'TiktokDownloaderError';
-    }
-}
+import {Downloader, DownloaderResult} from '@/types';
 
 /**
  * Downloads and extracts media from TikTok videos using the internal API of musicaldown.
@@ -17,7 +11,7 @@ class TiktokDownloaderError extends Error {
  * short url: https://vm.tiktok.com/ZMrcQFHjd/
  * gallery: https://www.tiktok.com/@stressheadd/photo/7374028202378890528
  */
-class TiktokDownloader {
+class TiktokDownloader implements Downloader {
     private readonly BASE_URL = 'https://musicaldown.com';
     private readonly API_URL = `${this.BASE_URL}/download`;
     private readonly AXIOS_TIMEOUT = 10000;
@@ -39,26 +33,46 @@ class TiktokDownloader {
         }
     }
 
-    async getDirectUrls(url: string): Promise<{urls: string[]; count: number}> {
+    async getDirectUrls(url: string): Promise<DownloaderResult> {
         try {
             const mediaInfo = await this.getMediaInfo(url);
             return {
                 urls: mediaInfo,
-                count: mediaInfo.length,
             };
         } catch (error) {
-            throw new TiktokDownloaderError(
-                `Failed to process TikTok URL: ${(error as Error).message}`
-            );
+            console.error(`Failed to process TikTok URL: ${(error as Error).message}`);
+            return {urls: []};
+        }
+    }
+
+    async getMetadata(url: string): Promise<Record<string, string>> {
+        try {
+            const response = await this.axiosWithRetry({
+                method: 'get',
+                url: url,
+                headers: {
+                    'User-Agent':
+                        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                },
+            });
+
+            const $ = cheerio.load(response.data);
+            const title = $('title').text();
+
+            return {
+                title: title,
+                url: url,
+            };
+        } catch (error) {
+            console.error(`Failed to fetch metadata: ${(error as Error).message}`);
+            return {url: url};
         }
     }
 
     private async getMediaInfo(url: string): Promise<string[]> {
         const request = await this.getRequest(url);
         if (request.status !== 'success' || !request.request || !request.cookie) {
-            throw new TiktokDownloaderError(
-                request.message || 'Failed to get request data'
-            );
+            throw new Error(request.message || 'Failed to get request data');
         }
 
         const response = await this.axiosWithRetry({
@@ -104,7 +118,7 @@ class TiktokDownloader {
 
             const cookie = response.headers['set-cookie']?.[0]?.split(';')[0];
             if (!cookie) {
-                throw new TiktokDownloaderError('Cookie not found in response headers');
+                throw new Error('Cookie not found in response headers');
             }
 
             const $ = cheerio.load(response.data);

@@ -1,16 +1,13 @@
-import axios, {AxiosResponse} from 'axios';
 import crypto from 'node:crypto';
+import axios, {AxiosResponse} from 'axios';
+import {DownloaderResult, DownloaderOptions, Metadata} from '@/types';
 
 interface MediaInfo {
     medias: {
         videoAvailable: boolean;
         url: string;
     }[];
-}
-
-interface DownloadResult {
-    urls: string[];
-    count: number;
+    title?: string;
 }
 
 /**
@@ -29,7 +26,10 @@ class PinterestDownloader {
     private readonly COOKIE_URL: string =
         'https://getindevice.com/pinterest-video-downloader/';
 
-    public async getDirectUrls(url: string): Promise<DownloadResult> {
+    public async getDirectUrls(
+        url: string,
+        options: DownloaderOptions = {}
+    ): Promise<DownloaderResult> {
         try {
             const mediaInfo: MediaInfo = await this.getMediaInfo(url);
 
@@ -43,15 +43,31 @@ class PinterestDownloader {
                 urlArray.push(imageMedia.url);
             }
 
-            return {
+            const result: DownloaderResult = {
                 urls: urlArray,
-                count: urlArray.length,
             };
+
+            if (options.includeMetadata) {
+                result.metadata = await this.getMetadata(url);
+            }
+
+            return result;
         } catch (error) {
             console.error('Error in getDirectUrls:', error);
-            throw new Error(
-                `Failed to process Pinterest URL: ${(error as Error).message}`
-            );
+            return {urls: []};
+        }
+    }
+
+    public async getMetadata(url: string): Promise<Metadata> {
+        try {
+            const mediaInfo: MediaInfo = await this.getMediaInfo(url);
+            return {
+                title: mediaInfo.title || '',
+                url: url,
+            };
+        } catch (error) {
+            console.error('Error in getMetadata:', error);
+            return {title: '', url: url};
         }
     }
 
