@@ -86,7 +86,6 @@ class YouTubeHandler implements PlatformHandler {
                     fileName,
                     config
                 );
-                logger.info(`File downloaded to: ${localPath}`);
             } catch (error) {
                 logger.error(`Error downloading file: ${error}`);
             }
@@ -164,7 +163,7 @@ class YouTubeHandler implements PlatformHandler {
         cookies: string[]
     ) {
         const mediaUrls: any[] = [];
-        const formats = options.preferAudio ? ['mp3'] : ['mp4', 'mp3'];
+        const formats = options.preferAudio ? ['mp3'] : ['mp4'];
 
         for (const format of formats) {
             if (analysisData.links[format]) {
