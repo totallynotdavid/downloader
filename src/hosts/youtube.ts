@@ -139,7 +139,10 @@ class YouTubeHandler implements PlatformHandler {
                     },
                 }
             );
-
+            logger.debug(
+                'Analyze video response:',
+                JSON.stringify(response.data, null, 2)
+            );
             return response.data;
         } catch (error: any) {
             if (error.response) {

@@ -1,10 +1,12 @@
 import {createLogger, format, transports, Logger} from 'winston';
 import path from 'path';
 
-const {combine, timestamp, printf, colorize, errors} = format;
+const {combine, timestamp, printf, colorize, errors, splat} = format;
 
-const customFormat = printf(({level, message, timestamp, stack}) => {
-    return `${timestamp} [${level}]: ${stack || message}`;
+const customFormat = printf(({level, message, timestamp, stack, ...meta}) => {
+    const baseMessage = stack || message;
+    const metaString = meta && Object.keys(meta).length ? JSON.stringify(meta) : '';
+    return `${timestamp} [${level}]: ${baseMessage} ${metaString}`;
 });
 
 const logger: Logger = createLogger({
@@ -13,11 +15,11 @@ const logger: Logger = createLogger({
         colorize(),
         timestamp({format: 'YYYY-MM-DD HH:mm:ss'}),
         errors({stack: true}),
+        splat(),
         customFormat
     ),
     transports: [
         new transports.Console(),
-
         new transports.File({
             filename: path.join(__dirname, '../../logs/error.log'),
             level: 'error',
