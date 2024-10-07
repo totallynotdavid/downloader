@@ -17,7 +17,7 @@ export class Downloader {
         const config = {...defaultConfig, ...configOverrides};
         logger.info('Downloader initialized with config:', config);
 
-        const handlerFactory = new HandlerFactory();
+        const handlerFactory = new HandlerFactory(config);
         this.mediaInfoFetcher =
             mediaInfoFetcher || new MediaInfoFetcher(handlerFactory, config);
         this.batchProcessor =

@@ -26,8 +26,6 @@
     "dependencies": {
         "axios": "^1.7.7",
         "cheerio": "1.0.0",
-        "debug": "^4.3.7",
-        "http-proxy-agent": "^7.0.2",
         "p-limit": "^3.1.0",
         "qs": "^6.13.0",
         "winston": "^3.15.0"
@@ -36,7 +34,6 @@
         "@changesets/cli": "^2.27.9",
         "@eslint/js": "^9.9.0",
         "@types/cheerio": "^0.22.35",
-        "@types/debug": "^4.1.12",
         "@types/node": "^22.7.4",
         "@types/qs": "^6.9.15",
         "@typescript-eslint/eslint-plugin": "^8.8.0",

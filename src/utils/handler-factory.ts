@@ -1,4 +1,6 @@
-import {PlatformHandler} from '@/types';
+import {PlatformHandler, DownloaderConfig} from '@/types';
+import {HttpClient} from '@/utils/http-client';
+import {FileDownloader} from '@/utils/file-downloader';
 import FacebookHandler from '@/hosts/facebook';
 import ImgurHandler from '@/hosts/imgur';
 import InstagramHandler from '@/hosts/instagram';
@@ -10,10 +12,15 @@ import YouTubeHandler from '@/hosts/youtube';
 
 export class HandlerFactory {
     private handlers: Map<string, PlatformHandler>;
+    private httpClient: HttpClient;
+    private fileDownloader: FileDownloader;
 
-    constructor() {
+    constructor(config: DownloaderConfig) {
+        this.httpClient = new HttpClient(config);
+        this.fileDownloader = new FileDownloader(config);
+
         this.handlers = new Map<string, PlatformHandler>([
-            ['youtube', new YouTubeHandler()],
+            ['youtube', new YouTubeHandler(this.httpClient, this.fileDownloader)],
             ['facebook', new FacebookHandler()],
             ['instagram', new InstagramHandler()],
             ['twitter', new TwitterHandler()],
