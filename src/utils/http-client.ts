@@ -8,6 +8,8 @@ import logger from '@/utils/logger';
  */
 export class HttpClient {
     private axiosInstance: AxiosInstance;
+    private defaultUserAgent: string =
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36';
 
     /**
      * Constructs a new HttpClient instance with the provided downloader configuration.
@@ -16,6 +18,9 @@ export class HttpClient {
     constructor(config: DownloaderConfig) {
         const axiosConfig: AxiosRequestConfig = {
             timeout: 10000, // 10 seconds timeout
+            headers: {
+                'User-Agent': this.defaultUserAgent,
+            },
         };
 
         if (config.proxy) {
@@ -64,7 +69,10 @@ export class HttpClient {
     ): Promise<AxiosResponse<T>> {
         logger(`HTTP GET: ${url}`);
         try {
-            const response = await this.axiosInstance.get<T>(url, options);
+            const response = await this.axiosInstance.get<T>(
+                url,
+                this.mergeOptions(options)
+            );
             return response;
         } catch (error: any) {
             logger(`GET request failed for ${url}: ${error.message}`);
@@ -86,7 +94,11 @@ export class HttpClient {
     ): Promise<AxiosResponse<T>> {
         logger(`HTTP POST: ${url}`);
         try {
-            const response = await this.axiosInstance.post<T>(url, data, options);
+            const response = await this.axiosInstance.post<T>(
+                url,
+                data,
+                this.mergeOptions(options)
+            );
             return response;
         } catch (error: any) {
             logger(`POST request failed for ${url}: ${error.message}`);
@@ -107,14 +119,33 @@ export class HttpClient {
     ): Promise<AxiosResponse<any>> {
         logger(`HTTP STREAM: ${url}`);
         try {
-            const response = await this.axiosInstance.get(url, {
-                ...options,
-                responseType: 'stream',
-            });
+            const response = await this.axiosInstance.get(
+                url,
+                this.mergeOptions({
+                    ...options,
+                    responseType: 'stream',
+                })
+            );
             return response;
         } catch (error: any) {
             logger(`STREAM request failed for ${url}: ${error.message}`);
             throw error;
         }
+    }
+
+    /**
+     * Merges the provided options with the default options, ensuring the User-Agent is set.
+     * @param options Optional Axios request configuration.
+     * @returns Merged Axios request configuration.
+     */
+    private mergeOptions(options?: AxiosRequestConfig): AxiosRequestConfig {
+        return {
+            ...options,
+            headers: {
+                ...options?.headers,
+                'User-Agent':
+                    (options?.headers?.['User-Agent'] as string) || this.defaultUserAgent,
+            },
+        };
     }
 }

@@ -3,10 +3,12 @@ import {HttpClient} from '@/utils/http-client';
 import {downloadFile} from '@/utils/file-downloader';
 import logger from '@/utils/logger';
 import {MediaNotFoundError} from '@/types/errors';
+import https from 'https';
 
 class YouTubeHandler implements PlatformHandler {
     private readonly API_BASE_URL = 'https://www.y2mate.com/mates';
     private readonly VIDEO_URL_BASE = 'https://www.youtube.com/watch?v=';
+    private readonly DEFAULT_TIMEOUT = 10000; // 10 seconds
 
     async getMediaInfo(
         url: string,
@@ -19,7 +21,8 @@ class YouTubeHandler implements PlatformHandler {
 
         const httpClient = new HttpClient(config);
         const videoId = this.extractVideoId(url);
-        const analysisData = await this.analyzeVideo(httpClient, videoId);
+        const cookies = await this.fetchCookies();
+        const analysisData = await this.analyzeVideo(httpClient, videoId, cookies);
 
         if (!analysisData || !analysisData.links) {
             throw new MediaNotFoundError('Failed to retrieve video information');
@@ -29,7 +32,8 @@ class YouTubeHandler implements PlatformHandler {
             httpClient,
             videoId,
             analysisData,
-            options
+            options,
+            cookies
         );
         let localPath: string | undefined;
 
@@ -59,7 +63,35 @@ class YouTubeHandler implements PlatformHandler {
         };
     }
 
-    private async analyzeVideo(httpClient: HttpClient, videoId: string) {
+    private async fetchCookies(): Promise<string[]> {
+        return new Promise((resolve, reject) => {
+            const req = https.get('https://www.y2mate.com/en872', res => {
+                const cookiesArray = res.headers['set-cookie'];
+                resolve(
+                    cookiesArray || [
+                        '_gid=GA1.2.2055666962.1683248123',
+                        '_ga=GA1.1.1570308475.1683248122',
+                        '_ga_K8CD7CY0TZ=GS1.1.1683248122.1.1.1683248164.0.0.0',
+                        'prefetchAd_3381349=true',
+                    ]
+                );
+            });
+
+            req.on('error', e =>
+                reject(new Error(`Failed to fetch cookies: ${e.message}`))
+            );
+            req.setTimeout(this.DEFAULT_TIMEOUT, () => {
+                req.destroy();
+                reject(new Error('Request to fetch cookies timed out'));
+            });
+        });
+    }
+
+    private async analyzeVideo(
+        httpClient: HttpClient,
+        videoId: string,
+        cookies: string[]
+    ) {
         const postData = new URLSearchParams({
             vid: videoId,
             k_query: `${this.VIDEO_URL_BASE}${videoId}`,
@@ -69,10 +101,15 @@ class YouTubeHandler implements PlatformHandler {
         }).toString();
 
         const response = await httpClient.post(
-            `${this.API_BASE_URL}/analyzeV2/ajax`,
+            `${this.API_BASE_URL}/en948/analyzeV2/ajax`,
             postData,
             {
-                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    Cookie: cookies.join('; '),
+                    'User-Agent':
+                        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36',
+                },
             }
         );
 
@@ -83,7 +120,8 @@ class YouTubeHandler implements PlatformHandler {
         httpClient: HttpClient,
         videoId: string,
         analysisData: any,
-        options: Required<DownloadOptions>
+        options: Required<DownloadOptions>,
+        cookies: string[]
     ) {
         const mediaUrls = [];
         const formats = options.preferAudio ? ['mp3'] : ['mp4', 'mp3'];
@@ -97,7 +135,8 @@ class YouTubeHandler implements PlatformHandler {
                             const convertResponse = await this.convertMedia(
                                 httpClient,
                                 videoId,
-                                item.k
+                                item.k,
+                                cookies
                             );
                             if (convertResponse.dlink) {
                                 mediaUrls.push({
@@ -119,13 +158,23 @@ class YouTubeHandler implements PlatformHandler {
         return mediaUrls;
     }
 
-    private async convertMedia(httpClient: HttpClient, videoId: string, key: string) {
+    private async convertMedia(
+        httpClient: HttpClient,
+        videoId: string,
+        key: string,
+        cookies: string[]
+    ) {
         const postData = new URLSearchParams({vid: videoId, k: key}).toString();
         const response = await httpClient.post(
-            `${this.API_BASE_URL}/convertV2/index`,
+            `${this.API_BASE_URL}/en948/convertV2/index`,
             postData,
             {
-                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    Cookie: cookies.join('; '),
+                    'User-Agent':
+                        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36',
+                },
             }
         );
         return response.data;
