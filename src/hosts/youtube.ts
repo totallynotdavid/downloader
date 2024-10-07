@@ -139,9 +139,6 @@ class YouTubeHandler implements PlatformHandler {
                     },
                 }
             );
-            logger.info(
-                'Analyze video response:', response.data
-            );
             return response.data;
         } catch (error: any) {
             if (error.response) {
@@ -184,11 +181,15 @@ class YouTubeHandler implements PlatformHandler {
 
                         if (convertResponse.dlink) {
                             let sizeMB = 0;
-                            if (convertResponse.size) {
-                                const sizeMatch =
-                                    convertResponse.size.match(/([\d.]+)\s*MB/i);
+                            let sizeStr = bestItem.size || '';
+                            if (sizeStr) {
+                                const sizeMatch = sizeStr.match(/([\d.]+)\s*MB/i);
                                 if (sizeMatch) {
                                     sizeMB = parseFloat(sizeMatch[1]);
+                                } else if (sizeStr.match(/([\d.]+)\s*KB/i)) {
+                                    sizeMB =
+                                        parseFloat(sizeStr.match(/([\d.]+)\s*KB/i)[1]) /
+                                        1024;
                                 }
                             }
 
