@@ -16,8 +16,8 @@ export interface MediaInfo {
         quality: string;
         format: string;
         size: number;
+        localPath?: string;
     }>;
-    localPath?: string;
     metadata: {
         title: string;
         author: string;

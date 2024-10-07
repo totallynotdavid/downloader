@@ -133,7 +133,7 @@ export default class RedditHandler implements PlatformHandler {
                 ? this.getVideoQuality(mediaUrl)
                 : 'original';
 
-            const urlInfo = {
+            const urlInfo: MediaInfo['urls'][number] = {
                 url: mediaUrl,
                 quality,
                 format,
