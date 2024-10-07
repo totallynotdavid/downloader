@@ -23,10 +23,10 @@ export class HandlerFactory {
             ['youtube', new YouTubeHandler(this.httpClient, this.fileDownloader)],
             ['facebook', new FacebookHandler(this.httpClient, this.fileDownloader)],
             ['instagram', new InstagramHandler(this.httpClient, this.fileDownloader)],
-            ['twitter', new TwitterHandler()],
+            ['twitter', new TwitterHandler(this.httpClient, this.fileDownloader)],
             ['tiktok', new TikTokHandler(this.httpClient, this.fileDownloader)],
             ['pinterest', new PinterestHandler(this.httpClient, this.fileDownloader)],
-            ['reddit', new RedditHandler()],
+            ['reddit', new RedditHandler(this.httpClient, this.fileDownloader)],
             ['imgur', new ImgurHandler(this.httpClient, this.fileDownloader)],
         ]);
     }

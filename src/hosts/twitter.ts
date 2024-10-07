@@ -1,54 +1,32 @@
-import {DownloaderConfig, DownloadOptions, MediaInfo, PlatformHandler} from '../types';
-import {HttpClient} from '../utils/http-client';
-import {MediaNotFoundError, DownloadError} from '../types/errors';
-import logger from '../utils/logger';
-import {downloadFile} from '../utils/file-downloader';
+import {DownloaderConfig, DownloadOptions, MediaInfo, PlatformHandler} from '@/types';
+import {TwitterApiResponse, TwitterMediaItem} from '@/types/twitter';
+import {HttpClient} from '@/utils/http-client';
+import {FileDownloader} from '@/utils/file-downloader';
+import {MediaNotFoundError, DownloadError} from '@/types/errors';
+import logger from '@/utils/logger';
+import path from 'path';
 
-/**
- * TwitterHandler implements the PlatformHandler interface to handle media extraction from Twitter URLs.
- * It utilizes the vxtwitter.com API to retrieve media information and direct URLs.
- */
 export default class TwitterHandler implements PlatformHandler {
-    private readonly BASE_URL: string;
-    private readonly httpClient: HttpClient;
+    private readonly BASE_URL: string = 'https://api.vxtwitter.com';
 
-    constructor() {
-        this.BASE_URL = 'https://api.vxtwitter.com';
-        this.httpClient = new HttpClient({});
-    }
+    constructor(
+        private httpClient: HttpClient,
+        private fileDownloader: FileDownloader
+    ) {}
 
-    /**
-     * Checks if the provided URL is a valid Twitter URL.
-     * @param url The URL to validate.
-     * @returns True if valid, false otherwise.
-     */
     public isValidUrl(url: string): boolean {
         return /twitter\.com|x\.com/.test(url);
     }
 
-    /**
-     * Retrieves media information from a Twitter post.
-     * @param url The Twitter post URL.
-     * @param options Download options.
-     * @param config Downloader configuration.
-     * @returns MediaInfo object containing media URLs and metadata.
-     */
     public async getMediaInfo(
         url: string,
         options: Required<DownloadOptions>,
         config: DownloaderConfig
     ): Promise<MediaInfo> {
         try {
-            const mediaInfo = await this.getMediaInfoFromApi(url, config);
+            const mediaInfo = await this.getMediaInfoFromApi(url);
 
-            const mediaUrls = mediaInfo.media.map(
-                (mediaItem: {url: string; type: string}) => ({
-                    url: mediaItem.url,
-                    quality: 'unknown',
-                    format: mediaItem.type,
-                    size: 0, // Size is unknown at this point
-                })
-            );
+            const mediaUrls = this.processMediaItems(mediaInfo.media_extended);
 
             const result: MediaInfo = {
                 urls: mediaUrls,
@@ -61,15 +39,10 @@ export default class TwitterHandler implements PlatformHandler {
                 },
             };
 
-            // If downloadMedia is true, download the media files
             if (options.downloadMedia) {
-                // You can implement the downloading logic here using your existing downloadFile function
-                // For each media URL, download the file and store the local paths
-                const downloadDir = config.downloadDir || './downloads';
                 result.localPath = await this.downloadMediaFiles(
                     mediaUrls,
-                    downloadDir,
-                    config
+                    config.downloadDir
                 );
             }
 
@@ -86,19 +59,10 @@ export default class TwitterHandler implements PlatformHandler {
         }
     }
 
-    /**
-     * Helper function to fetch media information from the vxtwitter API.
-     * @param url The Twitter post URL.
-     * @param config Downloader configuration.
-     * @returns Parsed media information.
-     */
-    private async getMediaInfoFromApi(
-        url: string,
-        config: DownloaderConfig
-    ): Promise<any> {
+    private async getMediaInfoFromApi(url: string): Promise<TwitterApiResponse> {
         try {
             const apiURL = `${this.BASE_URL}${new URL(url).pathname}`;
-            const response = await this.httpClient.get(apiURL);
+            const response = await this.httpClient.get<TwitterApiResponse>(apiURL);
 
             const data = response.data;
 
@@ -117,21 +81,33 @@ export default class TwitterHandler implements PlatformHandler {
         }
     }
 
-    /**
-     * Downloads media files and returns the local path where they are stored.
-     * @param mediaUrls Array of media URLs to download.
-     * @param downloadDir Directory to save the downloaded media files.
-     * @param config Downloader configuration.
-     * @returns Local path to the downloaded media files.
-     */
+    private processMediaItems(mediaItems: TwitterMediaItem[]): MediaInfo['urls'] {
+        return mediaItems.map(mediaItem => ({
+            url: mediaItem.url,
+            quality: 'original',
+            format: this.getFileExtension(mediaItem.url),
+            size: 0, // Size is unknown at this point
+        }));
+    }
+
+    private getFileExtension(url: string): string {
+        const extension = path.extname(url).toLowerCase().slice(1);
+        return extension || 'unknown';
+    }
+
     private async downloadMediaFiles(
-        mediaUrls: Array<{url: string; quality: string; format: string; size: number}>,
-        downloadDir: string,
-        config: DownloaderConfig
+        mediaUrls: MediaInfo['urls'],
+        downloadDir: string
     ): Promise<string> {
-        const mediaUrl = mediaUrls[0].url;
-        const fileName = `twitter_media_${Date.now()}.${mediaUrls[0].format}`;
-        const localPath = await downloadFile(mediaUrl, downloadDir, fileName, config);
-        return localPath;
+        const downloads = mediaUrls.map((media, index) =>
+            this.fileDownloader.downloadFile(
+                media.url,
+                downloadDir,
+                `twitter_media_${Date.now()}_${index + 1}.${media.format}`
+            )
+        );
+
+        const localPaths = await Promise.all(downloads);
+        return localPaths.join(', ');
     }
 }
