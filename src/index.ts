@@ -1,2 +1,2 @@
 export {Downloader} from '@/downloader';
-export * from '@/types';
+export {DownloaderConfig, DownloadOptions, MediaInfo} from '@/types';
