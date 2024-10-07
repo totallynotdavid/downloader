@@ -101,7 +101,7 @@ class YouTubeHandler implements PlatformHandler {
         }).toString();
 
         const response = await httpClient.post(
-            `${this.API_BASE_URL}/en948/analyzeV2/ajax`,
+            `${this.API_BASE_URL}/analyzeV2/ajax`,
             postData,
             {
                 headers: {
