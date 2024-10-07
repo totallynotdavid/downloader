@@ -11,6 +11,6 @@ const options: DownloadOptions = {
 };
 
 downloader
-    .getMediaInfo('https://www.youtube.com/watch?v=dQw4w9WgXcQ', options)
+    .getMediaInfo('https://www.facebook.com/1551UNMSM/videos/2126724314377208', options)
     .then(result => console.log(result))
     .catch(error => console.error(error));

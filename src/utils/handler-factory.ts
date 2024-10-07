@@ -21,13 +21,13 @@ export class HandlerFactory {
 
         this.handlers = new Map<string, PlatformHandler>([
             ['youtube', new YouTubeHandler(this.httpClient, this.fileDownloader)],
-            ['facebook', new FacebookHandler()],
-            ['instagram', new InstagramHandler()],
+            ['facebook', new FacebookHandler(this.httpClient, this.fileDownloader)],
+            ['instagram', new InstagramHandler(this.httpClient, this.fileDownloader)],
             ['twitter', new TwitterHandler()],
-            ['tiktok', new TikTokHandler()],
-            ['pinterest', new PinterestHandler()],
+            ['tiktok', new TikTokHandler(this.httpClient, this.fileDownloader)],
+            ['pinterest', new PinterestHandler(this.httpClient, this.fileDownloader)],
             ['reddit', new RedditHandler()],
-            ['imgur', new ImgurHandler()],
+            ['imgur', new ImgurHandler(this.httpClient, this.fileDownloader)],
         ]);
     }
 

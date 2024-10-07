@@ -1,8 +1,8 @@
-import {DownloaderConfig, DownloadOptions, MediaInfo, PlatformHandler} from '../types';
-import {MediaNotFoundError, RateLimitError, DownloadError} from '../types/errors';
-import {HttpClient} from '../utils/http-client';
-import {downloadFile} from '../utils/file-downloader';
-import logger from '../utils/logger';
+import {DownloaderConfig, DownloadOptions, MediaInfo, PlatformHandler} from '@/types';
+import {MediaNotFoundError, RateLimitError, DownloadError} from '@/types/errors';
+import {HttpClient} from '@/utils/http-client';
+import {FileDownloader} from '@/utils/file-downloader';
+import logger from '@/utils/logger';
 import crypto from 'node:crypto';
 
 interface PinterestMediaInfo {
@@ -19,31 +19,23 @@ export default class PinterestHandler implements PlatformHandler {
     private readonly COOKIE_URL: string =
         'https://getindevice.com/pinterest-video-downloader/';
 
-    /**
-     * Checks if the provided URL is a valid Pinterest URL.
-     * @param url The URL to check.
-     * @returns True if valid, false otherwise.
-     */
+    constructor(
+        private httpClient: HttpClient,
+        private fileDownloader: FileDownloader
+    ) {}
+
     public isValidUrl(url: string): boolean {
         return /pinterest\.com\/pin\/\d+/i.test(url);
     }
 
-    /**
-     * Fetches media information from a Pinterest URL.
-     * @param url The Pinterest media URL.
-     * @param options Download options.
-     * @param config Downloader configuration.
-     * @returns MediaInfo object containing media details.
-     */
     public async getMediaInfo(
         url: string,
         options: Required<DownloadOptions>,
         config: DownloaderConfig
     ): Promise<MediaInfo> {
         try {
-            const mediaInfo = await this.fetchMediaInfo(url, config);
+            const mediaInfo = await this.fetchMediaInfo(url);
 
-            // Process mediaInfo to fit the MediaInfo type expected
             const videoMedia = mediaInfo.medias.find(media => media.videoAvailable);
             const imageMedia = mediaInfo.medias.find(media => !media.videoAvailable);
 
@@ -60,7 +52,7 @@ export default class PinterestHandler implements PlatformHandler {
                     url: videoMedia.url,
                     quality: 'unknown',
                     format: 'mp4',
-                    size: 0, // Size is unknown
+                    size: 0,
                 });
             } else if (imageMedia) {
                 urls.push({
@@ -75,23 +67,21 @@ export default class PinterestHandler implements PlatformHandler {
                 urls,
                 metadata: {
                     title: mediaInfo.title || '',
-                    author: '', // Pinterest API doesn't provide author info
+                    author: '',
                     platform: 'Pinterest',
                     views: undefined,
                     likes: undefined,
                 },
             };
 
-            // If downloadMedia is true, download the media
             if (options.downloadMedia) {
-                const downloadUrl = urls[0].url; // Download the first available media
+                const downloadUrl = urls[0].url;
                 const extension = videoMedia ? 'mp4' : 'jpg';
                 const fileName = `pinterest_${crypto.randomBytes(8).toString('hex')}.${extension}`;
-                const localPath = await downloadFile(
+                const localPath = await this.fileDownloader.downloadFile(
                     downloadUrl,
                     config.downloadDir || './downloads',
-                    fileName,
-                    config
+                    fileName
                 );
                 result.localPath = localPath;
             }
@@ -109,21 +99,11 @@ export default class PinterestHandler implements PlatformHandler {
         }
     }
 
-    /**
-     * Internal method to fetch media information using the getindevice.com API.
-     * @param url The Pinterest media URL.
-     * @param config Downloader configuration.
-     * @returns PinterestMediaInfo object.
-     */
-    private async fetchMediaInfo(
-        url: string,
-        config: DownloaderConfig
-    ): Promise<PinterestMediaInfo> {
-        const httpClient = new HttpClient(config);
+    private async fetchMediaInfo(url: string): Promise<PinterestMediaInfo> {
         try {
-            const cookies = await this.getCookies(httpClient);
+            const cookies = await this.getCookies();
 
-            const response = await httpClient.post<PinterestMediaInfo>(
+            const response = await this.httpClient.post<PinterestMediaInfo>(
                 this.BASE_URL,
                 new URLSearchParams({
                     url: url,
@@ -159,14 +139,9 @@ export default class PinterestHandler implements PlatformHandler {
         }
     }
 
-    /**
-     * Retrieves cookies required for authentication.
-     * @param httpClient The HttpClient instance.
-     * @returns Array of cookies.
-     */
-    private async getCookies(httpClient: HttpClient): Promise<string[]> {
+    private async getCookies(): Promise<string[]> {
         try {
-            const response = await httpClient.get(this.COOKIE_URL);
+            const response = await this.httpClient.get(this.COOKIE_URL);
             const setCookie = response.headers['set-cookie'];
             if (!setCookie) {
                 throw new Error('No cookies received from the server.');
@@ -178,10 +153,6 @@ export default class PinterestHandler implements PlatformHandler {
         }
     }
 
-    /**
-     * Generates a secure random token string.
-     * @returns A base64 encoded token string.
-     */
     private generateSecureToken(): string {
         return crypto.randomBytes(16).toString('base64');
     }

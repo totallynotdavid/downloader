@@ -1,9 +1,10 @@
 import {DownloaderConfig, DownloadOptions, MediaInfo, PlatformHandler} from '@/types';
 import {HttpClient} from '@/utils/http-client';
+import {FileDownloader} from '@/utils/file-downloader';
 import {MediaNotFoundError} from '@/types/errors';
-import {downloadFile} from '@/utils/file-downloader';
 import path from 'node:path';
 import logger from '@/utils/logger';
+import {ImgurApiData, ImgurApiResponse} from '@/types/imgur';
 
 /**
  * ImgurHandler is responsible for handling media retrieval from Imgur links.
@@ -17,9 +18,11 @@ import logger from '@/utils/logger';
  */
 export default class ImgurHandler implements PlatformHandler {
     private readonly clientId: string;
-    private httpClient!: HttpClient;
 
-    constructor() {
+    constructor(
+        private httpClient: HttpClient,
+        private fileDownloader: FileDownloader
+    ) {
         this.clientId = '546c25a59c58ad7';
     }
 
@@ -45,8 +48,6 @@ export default class ImgurHandler implements PlatformHandler {
         options: Required<DownloadOptions>,
         config: DownloaderConfig
     ): Promise<MediaInfo> {
-        this.httpClient = new HttpClient(config);
-
         const {type, id} = this.classifyImgurLink(url);
         const data = await this.fetchMediaInfo(type, id);
 
@@ -67,11 +68,10 @@ export default class ImgurHandler implements PlatformHandler {
         let localPath: string | undefined;
         if (options.downloadMedia) {
             const fileName = `${metadata.title || 'imgur_media'}.${urls[0].format}`;
-            localPath = await downloadFile(
+            localPath = await this.fileDownloader.downloadFile(
                 urls[0].url,
-                config.downloadDir || './downloads',
-                fileName,
-                config
+                config.downloadDir,
+                fileName
             );
         }
 
@@ -186,80 +186,4 @@ export default class ImgurHandler implements PlatformHandler {
         const parsed = path.parse(new URL(url).pathname);
         return parsed.ext.replace('.', '') || 'unknown';
     }
-}
-
-/**
- * Interfaces for Imgur API response and data.
- */
-interface ImgurApiResponse {
-    data: ImgurApiData;
-    success: boolean;
-    status: number;
-}
-
-interface ImgurApiData {
-    id: string;
-    title: string;
-    description: string;
-    datetime: number;
-    type: string;
-    animated: boolean;
-    width: number;
-    height: number;
-    size: number;
-    views: number;
-    bandwidth: number;
-    vote: any;
-    favorite: boolean;
-    nsfw: boolean;
-    section: any;
-    account_url: string;
-    account_id: number;
-    is_ad: boolean;
-    in_most_viral: boolean;
-    has_sound: boolean;
-    tags: any[];
-    ad_type: number;
-    ad_url: string;
-    edited: string;
-    in_gallery: boolean;
-    link: string;
-    comment_count: number;
-    favorite_count: number;
-    ups: number;
-    downs: number;
-    points: number;
-    score: number;
-    is_album: boolean;
-    images_count?: number;
-    images?: ImgurImageData[];
-}
-
-interface ImgurImageData {
-    id: string;
-    title: string;
-    description: string;
-    datetime: number;
-    type: string;
-    animated: boolean;
-    width: number;
-    height: number;
-    size: number;
-    views: number;
-    bandwidth: number;
-    vote: any;
-    favorite: boolean;
-    nsfw: boolean;
-    section: any;
-    account_url: any;
-    account_id: any;
-    is_ad: boolean;
-    in_most_viral: boolean;
-    has_sound: boolean;
-    tags: any[];
-    ad_type: number;
-    ad_url: string;
-    edited: string;
-    in_gallery: boolean;
-    link: string;
 }

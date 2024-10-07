@@ -1,8 +1,8 @@
 import {DownloaderConfig, DownloadOptions, MediaInfo, PlatformHandler} from '@/types';
 import {DownloadError, MediaNotFoundError, RateLimitError} from '@/types/errors';
 import {HttpClient} from '@/utils/http-client';
+import {FileDownloader} from '@/utils/file-downloader';
 import logger from '@/utils/logger';
-import {downloadFile} from '@/utils/file-downloader';
 import * as cheerio from 'cheerio';
 
 /**
@@ -14,6 +14,11 @@ import * as cheerio from 'cheerio';
 export default class TikTokHandler implements PlatformHandler {
     private readonly BASE_URL = 'https://musicaldown.com';
     private readonly API_URL = `${this.BASE_URL}/download`;
+
+    constructor(
+        private httpClient: HttpClient,
+        private fileDownloader: FileDownloader
+    ) {}
 
     /**
      * Checks if the provided URL is a valid TikTok URL.
@@ -40,16 +45,14 @@ export default class TikTokHandler implements PlatformHandler {
         logger.info(`TikTokHandler: Fetching media info for URL: ${url}`);
 
         try {
-            const httpClient = new HttpClient(config);
-
             // Prepare request data by fetching initial form and cookie
-            const {cookie, requestData} = await this.getRequestData(httpClient, url);
+            const {cookie, requestData} = await this.getRequestData(url);
 
             // Fetch media URLs from musicaldown.com
-            const mediaUrls = await this.getMediaUrls(httpClient, requestData, cookie);
+            const mediaUrls = await this.getMediaUrls(requestData, cookie);
 
             // Fetch metadata from the TikTok page
-            const metadata = await this.getMetadata(httpClient, url);
+            const metadata = await this.getMetadata(url);
 
             // Build the MediaInfo object
             const mediaInfo: MediaInfo = {
@@ -68,11 +71,10 @@ export default class TikTokHandler implements PlatformHandler {
                 const media = mediaInfo.urls[0];
                 const fileExtension = media.format || 'mp4';
                 const fileName = `${metadata.title || 'tiktok_media'}.${fileExtension}`;
-                const localPath = await downloadFile(
+                const localPath = await this.fileDownloader.downloadFile(
                     media.url,
                     config.downloadDir || './downloads',
-                    fileName,
-                    config
+                    fileName
                 );
                 mediaInfo.localPath = localPath;
             }
@@ -91,16 +93,14 @@ export default class TikTokHandler implements PlatformHandler {
 
     /**
      * Prepares the request data required by musicaldown.com to process the TikTok URL.
-     * @param httpClient The HTTP client instance.
      * @param url The TikTok video URL.
      * @returns An object containing the request data and cookie.
      */
     private async getRequestData(
-        httpClient: HttpClient,
         url: string
     ): Promise<{cookie: string; requestData: any}> {
         try {
-            const response = await httpClient.get(this.BASE_URL, {
+            const response = await this.httpClient.get(this.BASE_URL, {
                 headers: {
                     Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
                     'Upgrade-Insecure-Requests': '1',
@@ -137,13 +137,11 @@ export default class TikTokHandler implements PlatformHandler {
 
     /**
      * Fetches media URLs by submitting the request data to musicaldown.com.
-     * @param httpClient The HTTP client instance.
      * @param requestData The request data to submit.
      * @param cookie The session cookie.
      * @returns An array of media URL objects.
      */
     private async getMediaUrls(
-        httpClient: HttpClient,
         requestData: any,
         cookie: string
     ): Promise<
@@ -155,7 +153,7 @@ export default class TikTokHandler implements PlatformHandler {
         }>
     > {
         try {
-            const response = await httpClient.post(
+            const response = await this.httpClient.post(
                 this.API_URL,
                 new URLSearchParams(requestData),
                 {
@@ -233,16 +231,14 @@ export default class TikTokHandler implements PlatformHandler {
 
     /**
      * Fetches metadata from the TikTok page.
-     * @param httpClient The HTTP client instance.
      * @param url The TikTok video URL.
      * @returns An object containing metadata like title and author.
      */
     private async getMetadata(
-        httpClient: HttpClient,
         url: string
     ): Promise<{title: string; author: string; views?: number; likes?: number}> {
         try {
-            const response = await httpClient.get(url, {
+            const response = await this.httpClient.get(url, {
                 headers: {
                     'User-Agent':
                         'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
