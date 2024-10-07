@@ -1,6 +1,7 @@
 export interface DownloaderConfig {
     downloadDir: string;
     proxy?: string;
+    concurrencyLimit?: number;
 }
 
 export interface DownloadOptions {
