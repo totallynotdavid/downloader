@@ -4,7 +4,7 @@ import {HttpClient} from '@/utils/http-client';
 import {FileDownloader} from '@/utils/file-downloader';
 import {MediaNotFoundError, DownloadError} from '@/types/errors';
 import logger from '@/utils/logger';
-import path from 'path';
+import path from 'node:path';
 
 export default class TwitterHandler implements PlatformHandler {
     private readonly BASE_URL: string = 'https://api.vxtwitter.com';

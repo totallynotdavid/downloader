@@ -3,7 +3,6 @@ import {HttpClient} from '@/utils/http-client';
 import {FileDownloader} from '@/utils/file-downloader';
 import {MediaNotFoundError} from '@/types/errors';
 import logger from '@/utils/logger';
-import path from 'path';
 
 export default class RedditHandler implements PlatformHandler {
     constructor(
