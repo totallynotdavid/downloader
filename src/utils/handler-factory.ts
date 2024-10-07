@@ -9,22 +9,28 @@ import TwitterHandler from '@/hosts/twitter';
 import YouTubeHandler from '@/hosts/youtube';
 
 export class HandlerFactory {
-    private handlers: PlatformHandler[];
+    private handlers: Map<string, PlatformHandler>;
 
     constructor() {
-        this.handlers = [
-            new YouTubeHandler(),
-            new FacebookHandler(),
-            new InstagramHandler(),
-            new TwitterHandler(),
-            new TikTokHandler(),
-            new PinterestHandler(),
-            new RedditHandler(),
-            new ImgurHandler(),
-        ];
+        this.handlers = new Map<string, PlatformHandler>([
+            ['youtube', new YouTubeHandler()],
+            ['facebook', new FacebookHandler()],
+            ['instagram', new InstagramHandler()],
+            ['twitter', new TwitterHandler()],
+            ['tiktok', new TikTokHandler()],
+            ['pinterest', new PinterestHandler()],
+            ['reddit', new RedditHandler()],
+            ['imgur', new ImgurHandler()],
+        ]);
     }
 
     getHandlerForUrl(url: string): PlatformHandler | null {
-        return this.handlers.find(handler => handler.isValidUrl(url)) || null;
+        const hostname = new URL(url).hostname.toLowerCase();
+        for (const [key, handler] of this.handlers.entries()) {
+            if (hostname.includes(key) && handler.isValidUrl(url)) {
+                return handler;
+            }
+        }
+        return null;
     }
 }

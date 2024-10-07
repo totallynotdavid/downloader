@@ -16,13 +16,8 @@ export class HttpClient {
             headers: {
                 'User-Agent': this.defaultUserAgent,
             },
+            ...(config.proxy && {proxy: this.parseProxy(config.proxy)}),
         };
-
-        if (config.proxy) {
-            const proxyConfig = this.parseProxy(config.proxy);
-            axiosConfig.proxy = proxyConfig;
-            logger.info(`Using proxy: ${config.proxy}`);
-        }
 
         this.axiosInstance = axios.create(axiosConfig);
     }
@@ -47,21 +42,33 @@ export class HttpClient {
         }
     }
 
+    private async request<T = any>(
+        method: 'get' | 'post' | 'stream',
+        url: string,
+        options?: AxiosRequestConfig,
+        data?: any
+    ): Promise<AxiosResponse<T>> {
+        logger.info(`HTTP ${method.toUpperCase()}: ${url}`);
+        try {
+            const mergedOptions = this.mergeOptions(options);
+            if (method === 'stream') {
+                mergedOptions.responseType = 'stream';
+            }
+            const response = await (method === 'post'
+                ? this.axiosInstance.post<T>(url, data, mergedOptions)
+                : this.axiosInstance.get<T>(url, mergedOptions));
+            return response;
+        } catch (error) {
+            logger.error(`${method.toUpperCase()} request failed for ${url}: ${error}`);
+            throw error;
+        }
+    }
+
     public async get<T = any>(
         url: string,
         options?: AxiosRequestConfig
     ): Promise<AxiosResponse<T>> {
-        logger.info(`HTTP GET: ${url}`);
-        try {
-            const response = await this.axiosInstance.get<T>(
-                url,
-                this.mergeOptions(options)
-            );
-            return response;
-        } catch (error) {
-            logger.error(`GET request failed for ${url}: ${error}`);
-            throw error;
-        }
+        return this.request<T>('get', url, options);
     }
 
     public async post<T = any>(
@@ -69,38 +76,14 @@ export class HttpClient {
         data?: any,
         options?: AxiosRequestConfig
     ): Promise<AxiosResponse<T>> {
-        logger.info(`HTTP POST: ${url}`);
-        try {
-            const response = await this.axiosInstance.post<T>(
-                url,
-                data,
-                this.mergeOptions(options)
-            );
-            return response;
-        } catch (error) {
-            logger.error(`POST request failed for ${url}: ${error}`);
-            throw error;
-        }
+        return this.request<T>('post', url, options, data);
     }
 
     public async stream(
         url: string,
         options?: AxiosRequestConfig
     ): Promise<AxiosResponse<any>> {
-        logger.info(`HTTP STREAM: ${url}`);
-        try {
-            const response = await this.axiosInstance.get(
-                url,
-                this.mergeOptions({
-                    ...options,
-                    responseType: 'stream',
-                })
-            );
-            return response;
-        } catch (error) {
-            logger.error(`STREAM request failed for ${url}: ${error}`);
-            throw error;
-        }
+        return this.request('stream', url, options);
     }
 
     private mergeOptions(options?: AxiosRequestConfig): AxiosRequestConfig {

@@ -5,31 +5,37 @@ import {DownloaderConfig} from '@/types';
 import {HttpClient} from '@/utils/http-client';
 import logger from '@/utils/logger';
 
-async function createDirectory(dir: string): Promise<void> {
-    await fs.promises.mkdir(dir, {recursive: true});
-}
+export class FileDownloader {
+    private httpClient: HttpClient;
 
-export async function downloadFile(
-    url: string,
-    downloadDir: string,
-    fileName: string,
-    config: DownloaderConfig
-): Promise<string> {
-    try {
-        const httpClient = new HttpClient(config);
-        const response = await httpClient.stream(url);
+    constructor(private config: DownloaderConfig) {
+        this.httpClient = new HttpClient(config);
+    }
 
-        const fullPath = path.resolve(downloadDir, fileName);
-        await createDirectory(downloadDir);
+    private async createDirectory(dir: string): Promise<void> {
+        await fs.promises.mkdir(dir, {recursive: true});
+    }
 
-        const writer = fs.createWriteStream(fullPath);
+    public async downloadFile(
+        url: string,
+        downloadDir: string,
+        fileName: string
+    ): Promise<string> {
+        try {
+            const response = await this.httpClient.stream(url);
 
-        await pipeline(response.data, writer);
+            const fullPath = path.resolve(downloadDir, fileName);
+            await this.createDirectory(downloadDir);
 
-        logger.info(`Download completed: ${fullPath}`);
-        return fullPath;
-    } catch (error) {
-        logger.error(`Error downloading file from ${url}: ${error}`);
-        throw error;
+            const writer = fs.createWriteStream(fullPath);
+
+            await pipeline(response.data, writer);
+
+            logger.info(`Download completed: ${fullPath}`);
+            return fullPath;
+        } catch (error) {
+            logger.error(`Error downloading file from ${url}: ${error}`);
+            throw error;
+        }
     }
 }
