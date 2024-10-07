@@ -1,27 +1,36 @@
-import {QualityType} from '@/utils/mapQualityToSite';
-import {HostType} from '@/utils/determineSite';
+export interface DownloaderConfig {
+    downloadDir?: string;
+    proxy?: string;
+}
 
-export interface DownloaderOptions {
-    includeMetadata?: boolean;
-    quality?: QualityType;
-    maxSize?: number;
+export interface DownloadOptions {
+    quality?: string;
+    downloadMedia?: boolean;
     preferAudio?: boolean;
 }
 
-export interface Metadata {
-    title?: string;
-    url: string;
-    [key: string]: unknown;
+export interface MediaInfo {
+    urls: Array<{
+        url: string;
+        quality: string;
+        format: string;
+        size: number;
+    }>;
+    localPath?: string;
+    metadata: {
+        title: string;
+        author: string;
+        platform: string;
+        views?: number;
+        likes?: number;
+    };
 }
 
-export interface DownloaderResult {
-    urls: string[];
-    metadata?: Record<string, unknown>;
+export interface PlatformHandler {
+    getMediaInfo(
+        url: string,
+        options: Required<DownloadOptions>,
+        config: DownloaderConfig
+    ): Promise<MediaInfo>;
+    isValidUrl(url: string): boolean;
 }
-
-export interface Downloader {
-    getDirectUrls: (url: string, options: DownloaderOptions) => Promise<DownloaderResult>;
-    getMetadata: (url: string) => Promise<Record<string, unknown>>;
-}
-
-export {HostType, QualityType};

@@ -1,20 +1,16 @@
-import MediaDownloader from './index';
-import {DownloaderResult, DownloaderOptions} from '@/types';
+import {Downloader, DownloadOptions} from '@/index';
 
-const url: string = 'https://www.instagram.com/p/C-4D2GJo9Cd/';
+const downloader = new Downloader({
+    downloadDir: './storage',
+});
 
-const options: DownloaderOptions = {
-    includeMetadata: true,
-    quality: 'highest',
-    preferAudio: true,
-    maxSize: 16,
+const options: DownloadOptions = {
+    quality: '720p',
+    downloadMedia: true,
+    preferAudio: false,
 };
 
-MediaDownloader(url, options)
-    .then((result: DownloaderResult) => {
-        console.log('Result:');
-        console.log(JSON.stringify(result, null, 2));
-    })
-    .catch((error: Error) => {
-        console.error('Error:', error.message);
-    });
+downloader
+    .getMediaInfo('https://www.youtube.com/watch?v=dQw4w9WgXcQ', options)
+    .then(result => console.log(result))
+    .catch(error => console.error(error));

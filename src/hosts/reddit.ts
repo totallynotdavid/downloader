@@ -1,136 +1,178 @@
-import axios, {AxiosResponse} from 'axios';
-import {DownloaderOptions, DownloaderResult} from '@/types';
-import {RedditPost, RedditApiResponse} from '@/types/reddit';
+import {DownloaderConfig, DownloadOptions, MediaInfo, PlatformHandler} from '@/types';
+import {HttpClient} from '@/utils/http-client';
+import {MediaNotFoundError} from '@/types/errors';
+import logger from '@/utils/logger';
 
-/**
- * Extracts direct media URLs from Reddit posts and comments.
- * Supports various content types including images, videos, galleries, and external links.
- * Utilizes Reddit's JSON API to fetch post data.
- *
- * @testCases
- * single image: https://www.reddit.com/r/unixporn/comments/12ruaq1/xperia_10_iii_w_sailfish_w_arch_my_mobile_office/
- * gallery: https://www.reddit.com/r/cats/comments/1dsdwbc/_/
- * native video: https://www.reddit.com/r/blackmagicfuckery/comments/12sex2d/pool_black_magic/
- * native video: https://www.reddit.com/r/interestingasfuck/comments/1drzauu/the_chinese_tianlong3_rocket_accidentally/
- * youtube thumbnail: https://www.reddit.com/r/neverchangejapan/comments/12spx82/ningen_isu_ringo_no_namida_a_metal_song_about_an/
- */
-class RedditDownloader {
-    constructor() {}
+export default class RedditHandler implements PlatformHandler {
+    private readonly HTTP_CLIENT: HttpClient;
 
-    async getDirectUrls(
-        redditUrl: string,
-        options: DownloaderOptions
-    ): Promise<DownloaderResult> {
+    constructor() {
+        this.HTTP_CLIENT = new HttpClient({});
+    }
+
+    /**
+     * Checks if the provided URL is a valid Reddit URL.
+     * @param url The media URL.
+     * @returns Boolean indicating if the URL is valid for this handler.
+     */
+    public isValidUrl(url: string): boolean {
+        return /^https?:\/\/(www\.)?reddit\.com\/.+/i.test(url);
+    }
+
+    /**
+     * Fetches media information from a Reddit post URL.
+     * @param url The Reddit post URL.
+     * @param options Download options.
+     * @param config Downloader configuration.
+     * @returns MediaInfo object containing media URLs and metadata.
+     */
+    public async getMediaInfo(
+        url: string,
+        options: Required<DownloadOptions>,
+        config: DownloaderConfig
+    ): Promise<MediaInfo> {
         try {
-            const urls = await this.getMediaInfo(redditUrl);
-            const result: DownloaderResult = {urls};
+            const jsonUrl = this.convertToJsonUrl(url);
+            const response = await this.HTTP_CLIENT.get<any[]>(jsonUrl);
+            const postData = this.extractPostData(response.data);
 
-            if (options.includeMetadata) {
-                const metadata = await this.getMetadata(redditUrl);
-                result.metadata = metadata;
+            const mediaInfo: MediaInfo = {
+                urls: [],
+                metadata: {
+                    title: postData.title,
+                    author: postData.author,
+                    platform: 'Reddit',
+                    views: postData.view_count || undefined,
+                    likes: postData.score || undefined,
+                },
+            };
+
+            // Process media URLs
+            const mediaUrls = this.processRedditPost(postData);
+            if (!mediaUrls.length) {
+                throw new MediaNotFoundError('No media found in the Reddit post.');
             }
 
-            return result;
-        } catch (error) {
-            if (error instanceof Error) {
-                throw new Error(`Failed to process URL: ${error.message}`);
-            } else {
-                throw new Error('An unknown error occurred');
+            // Populate media URLs with additional info
+            for (const mediaUrl of mediaUrls) {
+                mediaInfo.urls.push({
+                    url: mediaUrl,
+                    quality: 'unknown',
+                    format: this.getFormatFromUrl(mediaUrl),
+                    size: 0, // Size can be fetched if necessary
+                });
             }
+
+            // Download media if required
+            if (options.downloadMedia) {
+                // Implement the download logic using your existing utilities
+                // E.g., mediaInfo.localPath = await downloadFile(...);
+            }
+
+            return mediaInfo;
+        } catch (error: any) {
+            logger(`Error fetching media info from Reddit: ${error.message}`);
+            if (error instanceof MediaNotFoundError) {
+                throw error;
+            }
+            throw new Error(`Failed to fetch media info from Reddit: ${error.message}`);
         }
     }
 
-    async getMetadata(redditUrl: string): Promise<Record<string, unknown>> {
-        const url = redditUrl.endsWith('.json') ? redditUrl : `${redditUrl}.json`;
-
-        try {
-            const response: AxiosResponse<RedditApiResponse[]> = await axios.get(url);
-            if (response.data?.[0]?.data?.children?.[0]?.data) {
-                const postData = response.data[0].data.children[0].data;
-                return this.extractMetadata(postData);
-            } else {
-                throw new Error('Unexpected response structure');
-            }
-        } catch (error) {
-            if (error instanceof Error) {
-                throw new Error(`Error fetching Reddit metadata: ${error.message}`);
-            } else {
-                throw new Error(
-                    'An unknown error occurred while fetching Reddit metadata'
-                );
-            }
+    /**
+     * Converts a Reddit post URL to its corresponding JSON URL.
+     * @param url The Reddit post URL.
+     * @returns The JSON URL.
+     */
+    private convertToJsonUrl(url: string): string {
+        let jsonUrl = url;
+        if (!jsonUrl.endsWith('.json')) {
+            jsonUrl = jsonUrl.replace(/\/$/, '') + '.json';
         }
+        return jsonUrl;
     }
 
-    private async getMediaInfo(redditUrl: string): Promise<string[]> {
-        const url = redditUrl.endsWith('.json') ? redditUrl : `${redditUrl}.json`;
-
-        try {
-            const response: AxiosResponse<RedditApiResponse[]> = await axios.get(url);
-            if (response.data?.[0]?.data?.children) {
-                const posts = response.data[0].data.children;
-                const mediaUrls: string[] = [];
-
-                for (const post of posts) {
-                    const urls = this.processRedditPost(post.data);
-                    mediaUrls.push(...urls);
-                }
-
-                return mediaUrls;
-            } else {
-                throw new Error('Unexpected response structure');
-            }
-        } catch (error) {
-            if (error instanceof Error) {
-                throw new Error(`Error fetching Reddit data: ${error.message}`);
-            } else {
-                throw new Error('An unknown error occurred while fetching Reddit data');
-            }
+    /**
+     * Extracts the post data from the Reddit API response.
+     * @param apiResponse The Reddit API response data.
+     * @returns The Reddit post data.
+     */
+    private extractPostData(apiResponse: any[]): any {
+        if (apiResponse?.[0]?.data?.children?.[0]?.data) {
+            return apiResponse[0].data.children[0].data;
         }
+        throw new Error('Unexpected response structure from Reddit API.');
     }
 
-    private processRedditPost(postData: RedditPost['data']): string[] {
+    /**
+     * Processes the Reddit post data to extract media URLs.
+     * @param postData The Reddit post data.
+     * @returns Array of media URLs.
+     */
+    private processRedditPost(postData: any): string[] {
         const mediaUrls: string[] = [];
 
         if (postData.is_gallery && postData.gallery_data?.items) {
-            mediaUrls.push(
-                ...postData.gallery_data.items.map(
-                    item => `https://i.redd.it/${item.media_id}.jpg`
-                )
-            );
+            // Handle Reddit galleries
+            const galleryUrls = postData.gallery_data.items.map((item: any) => {
+                const mediaId = item.media_id;
+                const mimeType = postData.media_metadata[mediaId]?.m || 'image/jpeg';
+                const extension = this.getExtensionFromMimeType(mimeType);
+                return `https://i.redd.it/${mediaId}.${extension}`;
+            });
+            mediaUrls.push(...galleryUrls);
         } else if (postData.is_video && postData.media?.reddit_video?.fallback_url) {
+            // Handle Reddit native videos
             mediaUrls.push(postData.media.reddit_video.fallback_url);
-        } else if (postData.secure_media?.oembed?.thumbnail_url) {
-            mediaUrls.push(postData.secure_media.oembed.thumbnail_url);
-        } else if (postData.url) {
+        } else if (postData.url && this.isDirectMediaUrl(postData.url)) {
+            // Handle direct media URLs
             mediaUrls.push(postData.url);
+        } else if (
+            postData.url_overridden_by_dest &&
+            this.isDirectMediaUrl(postData.url_overridden_by_dest)
+        ) {
+            // Handle overridden media URLs
+            mediaUrls.push(postData.url_overridden_by_dest);
+        } else if (postData.preview?.images?.[0]?.source?.url) {
+            // Handle preview images
+            const imageUrl = postData.preview.images[0].source.url.replace(/&amp;/g, '&');
+            mediaUrls.push(imageUrl);
         }
 
         return mediaUrls;
     }
 
-    private extractMetadata(postData: RedditPost['data']): Record<string, string> {
-        const titleParts: string[] = [postData.title ?? ''];
+    /**
+     * Determines if a URL is a direct link to a media file.
+     * @param url The URL to check.
+     * @returns Boolean indicating if the URL is a direct media link.
+     */
+    private isDirectMediaUrl(url: string): boolean {
+        return /\.(jpg|jpeg|png|gif|mp4|mkv|webm)$/i.test(url);
+    }
 
-        if (postData.subreddit) {
-            titleParts.push(`r/${postData.subreddit}`);
-        }
+    /**
+     * Extracts the file format from a URL.
+     * @param url The media URL.
+     * @returns The file format as a string.
+     */
+    private getFormatFromUrl(url: string): string {
+        const extensionMatch = url.match(/\.(\w+)(?:\?|$)/);
+        return extensionMatch ? extensionMatch[1] : 'unknown';
+    }
 
-        if (postData.author) {
-            titleParts.push(`u/${postData.author}`);
-        }
-
-        if (postData.score !== undefined) {
-            titleParts.push(`Votos: ${postData.score}`);
-        }
-
-        const formattedTitle = titleParts.join(' | ');
-
-        return {
-            title: formattedTitle,
-            url: postData.url ?? '',
+    /**
+     * Gets the file extension based on MIME type.
+     * @param mimeType The MIME type.
+     * @returns The file extension.
+     */
+    private getExtensionFromMimeType(mimeType: string): string {
+        const mimeToExt: {[key: string]: string} = {
+            'image/jpeg': 'jpg',
+            'image/png': 'png',
+            'image/gif': 'gif',
+            'video/mp4': 'mp4',
         };
+        return mimeToExt[mimeType] || 'jpg';
     }
 }
-
-export default RedditDownloader;

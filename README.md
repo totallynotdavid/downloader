@@ -19,9 +19,9 @@ yarn add @totallynodavid/downloader
 Then, use it in your project:
 
 ```typescript
-import {MediaDownloader, DownloadOptions} from '@totallynodavid/downloader';
+import {Downloader, DownloadOptions} from '@totallynodavid/downloader';
 
-const downloader = new MediaDownloader({
+const downloader = new Downloader({
     downloadDir: './media',
     proxy: 'http://your-proxy-url:port',
 });

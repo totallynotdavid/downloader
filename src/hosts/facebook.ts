@@ -1,98 +1,164 @@
-import https from 'node:https';
-import axios, {AxiosInstance} from 'axios';
-import * as querystring from 'querystring';
-import {Downloader, DownloaderOptions, DownloaderResult} from '@/types';
-import {MediaInfo, ApiResponse} from '@/types/facebook';
-import {mapQualityToSite, QualityType} from '@/utils/mapQualityToSite';
+import {PlatformHandler, DownloadOptions, DownloaderConfig, MediaInfo} from '@/types';
+import {HttpClient} from '@/utils/http-client';
+import {MediaNotFoundError, DownloadError} from '@/types/errors';
+import logger from '@/utils/logger';
+import {downloadFile} from '@/utils/file-downloader';
 
-/**
- * Extracts direct download URLs for Facebook videos using the internal x2download API.
- * Supports both standard video URLs and short share links.
- * Provides options for HD and SD quality downloads.
- *
- * @testCases
- * https://www.facebook.com/1551UNMSM/videos/2126724314377208 (standard video URL)
- * https://www.facebook.com/share/v/Hr3BZV9JjaKPy28P/ (short share link for the same video)
- */
-class FacebookDownloader implements Downloader {
-    private readonly BASE_URL: string;
-    private readonly axiosInstance: AxiosInstance;
+class FacebookHandler implements PlatformHandler {
+    private static validUrlPattern = /^(https?:\/\/)?(www\.)?(facebook|fb).com\/.+/i;
+
+    private readonly apiUrl: string;
 
     constructor() {
-        // Base URL for the x2download API
-        // Note: Using direct IP address to avoid ENOTFOUND errors
-        // TODO: Implement DNS lookup to get the current IP for x2download.app
-        this.BASE_URL = 'https://172.67.222.44/api/ajaxSearch/facebook';
-
-        this.axiosInstance = axios.create({
-            httpsAgent: new https.Agent({keepAlive: true}),
-            timeout: 10000,
-            headers: {
-                Host: 'x2download.app',
-                'User-Agent':
-                    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36 Edg/129.0.0.0',
-                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-            },
-        });
+        this.apiUrl = 'https://172.67.222.44/api/ajaxSearch/facebook';
     }
 
-    async getDirectUrls(
+    /**
+     * Validates if the given URL is a Facebook video URL.
+     * @param url The media URL.
+     * @returns True if the URL is a valid Facebook video URL.
+     */
+    public isValidUrl(url: string): boolean {
+        return FacebookHandler.validUrlPattern.test(url);
+    }
+
+    /**
+     * Fetches media information for a Facebook video.
+     * @param url The Facebook video URL.
+     * @param options Download options.
+     * @param config Downloader configuration.
+     * @returns MediaInfo object containing URLs and metadata.
+     */
+    public async getMediaInfo(
         url: string,
-        options: DownloaderOptions = {}
-    ): Promise<DownloaderResult> {
-        const mediaInfo = await this.getMediaInfo(url);
-        const quality = mapQualityToSite(
-            (options.quality as QualityType) || 'highest',
-            'facebook'
-        );
-        const selectedUrls = mediaInfo.links[quality.toLowerCase() as 'hd' | 'sd'] || [];
+        options: Required<DownloadOptions>,
+        config: DownloaderConfig
+    ): Promise<MediaInfo> {
+        try {
+            const httpClient = new HttpClient(config);
 
-        const result: DownloaderResult = {
-            urls: Array.isArray(selectedUrls) ? selectedUrls : [selectedUrls],
-        };
+            const postData = `q=${encodeURIComponent(url)}`;
 
-        if (options.includeMetadata) {
-            result.metadata = await this.getMetadata(url);
+            const response = await httpClient.post(this.apiUrl, postData, {
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                    'User-Agent':
+                        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 ' +
+                        '(KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36',
+                },
+            });
+
+            const data = response.data;
+
+            if (!data || data.status !== 'ok') {
+                throw new MediaNotFoundError(
+                    'Media not found or platform not supported.'
+                );
+            }
+
+            // Extract media URLs based on desired quality
+            const urls = this.extractMediaUrls(data, options.quality);
+
+            if (urls.length === 0) {
+                throw new MediaNotFoundError('No downloadable video found.');
+            }
+
+            // Prepare MediaInfo object
+            const mediaInfo: MediaInfo = {
+                urls: urls,
+                metadata: {
+                    title: data.title || 'Facebook Video',
+                    author: data.author || 'Unknown',
+                    platform: 'Facebook',
+                },
+            };
+
+            if (options.downloadMedia) {
+                // Download the first available media URL
+                const mediaUrl = mediaInfo.urls[0].url;
+                const fileExtension = mediaInfo.urls[0].format;
+                const sanitizedTitle = mediaInfo.metadata.title
+                    .replace(/[^\w\s-]/g, '')
+                    .replace(/\s+/g, '_');
+                const fileName = `${sanitizedTitle}-${Date.now()}.${fileExtension}`;
+
+                const localPath = await downloadFile(
+                    mediaUrl,
+                    config.downloadDir || './downloads',
+                    fileName,
+                    config
+                );
+                mediaInfo.localPath = localPath;
+            }
+
+            return mediaInfo;
+        } catch (error: any) {
+            // Handle known errors
+            if (error instanceof MediaNotFoundError) {
+                throw error;
+            } else {
+                logger(`An error occurred while fetching media info: ${error.message}`);
+                throw new DownloadError('Failed to download media.');
+            }
         }
-
-        return result;
     }
 
-    async getMetadata(url: string): Promise<Record<string, string>> {
-        const mediaInfo = await this.getMediaInfo(url);
-        return {
-            url,
-            title: mediaInfo.title,
-            duration: mediaInfo.duration,
-            thumbnail: mediaInfo.thumbnail,
-        };
-    }
+    /**
+     * Extracts media URLs from the API response based on the desired quality.
+     * @param data API response data.
+     * @param quality Desired quality string.
+     * @returns An array of media URLs with their quality and format.
+     */
+    private extractMediaUrls(data: any, quality: string): Array<MediaInfo['urls'][0]> {
+        const urls = [];
 
-    private async getMediaInfo(url: string): Promise<MediaInfo> {
-        const encodedUrl = querystring.escape(url);
-        const response = await this.axiosInstance.post(this.BASE_URL, `q=${encodedUrl}`);
-        return this.parseResponse(response.data);
-    }
+        const desiredQuality = quality.toLowerCase();
 
-    private parseResponse(data: ApiResponse): MediaInfo {
-        if (!data) {
-            throw new Error('No data received from server');
+        // Mapping desired quality to available qualities
+        if (['highest', 'hd', 'high', '720p', '1080p'].includes(desiredQuality)) {
+            if (data.links?.hd) {
+                urls.push({
+                    url: data.links.hd,
+                    quality: 'HD',
+                    format: 'mp4',
+                    size: 0,
+                });
+            }
         }
 
-        if (data.status !== 'ok' || (!data?.links?.hd && !data?.links?.sd)) {
-            throw new Error('Invalid response from server');
+        if (['lowest', 'sd', 'low', '480p', '360p'].includes(desiredQuality)) {
+            if (data.links?.sd) {
+                urls.push({
+                    url: data.links.sd,
+                    quality: 'SD',
+                    format: 'mp4',
+                    size: 0,
+                });
+            }
         }
 
-        return {
-            status: data.status,
-            p: data.p,
-            urlHD: data.urlHD,
-            links: data.links,
-            duration: data.duration,
-            title: data.title,
-            thumbnail: data.thumbnail,
-        };
+        // If no specific quality is found, include all available qualities
+        if (urls.length === 0) {
+            if (data.links?.hd) {
+                urls.push({
+                    url: data.links.hd,
+                    quality: 'HD',
+                    format: 'mp4',
+                    size: 0,
+                });
+            }
+            if (data.links?.sd) {
+                urls.push({
+                    url: data.links.sd,
+                    quality: 'SD',
+                    format: 'mp4',
+                    size: 0,
+                });
+            }
+        }
+
+        return urls;
     }
 }
 
-export default FacebookDownloader;
+export default FacebookHandler;

@@ -1,22 +1,24 @@
+import {DownloaderConfig, DownloadOptions, MediaInfo, PlatformHandler} from '@/types';
+import {
+    PlatformNotSupportedError,
+    MediaNotFoundError,
+    DownloadError,
+    RateLimitError,
+} from '@/types/errors';
+import {HttpClient} from '@/utils/http-client';
+import {downloadFile} from '@/utils/file-downloader';
+import logger from '@/utils/logger';
 import axios, {AxiosResponse} from 'axios';
 import qs from 'qs';
-import vm from 'node:vm';
+import vm from 'vm';
 import * as cheerio from 'cheerio';
-import {DownloaderOptions, DownloaderResult} from '@/types';
-import {Headers, MediaInfo, ApiResponse} from '@/types/instagram';
 
 /**
- * Extracts direct media URLs for Instagram media using
- * the internal savevid.net API.
- *
- * @testCases
- * image (return 1 img): https://www.instagram.com/p/C-KmYkCsSr5/
- * gallery (return 10 imgs): https://www.instagram.com/p/C-4D2GJo9Cd/
- * reel (return 1 mp4): https://www.instagram.com/p/C-4BsEyOPQY/
+ * InstagramHandler extracts direct media URLs from Instagram posts using a third-party API.
  */
-class InstagramDownloader {
+class InstagramHandler implements PlatformHandler {
     private readonly BASE_URL: string;
-    private readonly headers: Headers;
+    private readonly headers: Record<string, string>;
 
     constructor() {
         this.BASE_URL = 'https://v3.savevid.net/api/ajaxSearch';
@@ -28,120 +30,88 @@ class InstagramDownloader {
         };
     }
 
-    /**
-     * Executes obfuscated JavaScript code in a sandboxed environment to extract injected HTML.
-     * This function is primarily used for processing single image data from savevid.net.
-     */
-    private executeJavaScript(code: string): string {
-        const sandbox = {
-            result: '',
-            document: {
-                write: (html: string) => {
-                    sandbox.result += html;
-                },
-                // Simulate document.getElementById() to capture injected content
-                getElementById: (id: string) => ({
-                    set innerHTML(content: string) {
-                        if (id === 'download-result') {
-                            sandbox.result = content;
-                        }
-                    },
-                }),
-            },
-            window: {
-                // Simulate the expected execution domain
-                location: {
-                    hostname: 'savevid.net',
-                },
-            },
-            console: {
-                log: (message: string) => {
-                    console.log('Sandbox log:', message);
-                },
-                error: (message: string) => {
-                    console.error('Sandbox error:', message);
-                },
-            },
-        };
+    public isValidUrl(url: string): boolean {
+        const instagramRegex = /^(https?:\/\/)?(www\.)?(instagram\.com|instagr\.am)\/.+$/;
+        return instagramRegex.test(url);
+    }
 
+    public async getMediaInfo(
+        url: string,
+        options: Required<DownloadOptions>,
+        config: DownloaderConfig
+    ): Promise<MediaInfo> {
         try {
-            const script = new vm.Script(code);
-            const context = vm.createContext(sandbox);
-            script.runInContext(context);
-        } catch (error) {
-            console.error('Error executing script:', error);
-            console.error('Problematic code:', code);
-        }
-        return sandbox.result;
-    }
+            const httpClient = new HttpClient(config);
 
-    private parseHtml(html: string, options: DownloaderOptions = {}): MediaInfo {
-        const $ = cheerio.load(html);
-        const result: string[] = [];
+            const htmlContent = await this.fetchMediaPage(url, httpClient);
+            const mediaUrls = this.extractMediaUrls(htmlContent, options);
 
-        $('.download-items').each((_, element) => {
-            const videoDownloadLink = $(element)
-                .find('.download-items__btn:not(.dl-thumb) > a')
-                .attr('href');
+            if (mediaUrls.length === 0) {
+                throw new MediaNotFoundError(
+                    'No media found at the provided Instagram URL.'
+                );
+            }
 
-            if (videoDownloadLink) {
-                result.push(videoDownloadLink);
-            } else {
-                let qualityOptions = $(element)
-                    .find('.photo-option select option')
-                    .map((_, option) => ({
-                        url: $(option).attr('value'),
-                        dimensions: $(option).text().trim(),
-                    }))
-                    .get();
+            const metadata = await this.extractMetadata(url, httpClient);
 
-                // We sort them from highest to lowest resolution
-                qualityOptions.sort((a, b) => {
-                    const [aWidth, aHeight] = a.dimensions.split('x').map(Number);
-                    const [bWidth, bHeight] = b.dimensions.split('x').map(Number);
-                    return bWidth * bHeight - aWidth * aHeight;
-                });
+            // Build the MediaInfo object
+            const mediaInfo: MediaInfo = {
+                urls: mediaUrls.map(mediaUrl => ({
+                    url: mediaUrl.url,
+                    quality: mediaUrl.quality || 'unknown',
+                    format: mediaUrl.format || 'unknown',
+                    size: mediaUrl.size || 0, // Size in MB, set to 0 if unknown
+                })),
+                metadata: {
+                    title: metadata.title || '',
+                    author: metadata.author || '',
+                    platform: 'Instagram',
+                    views: metadata.views,
+                    likes: metadata.likes,
+                },
+            };
 
-                const qualityLabels = ['1080p', '720p', '480p', '360p', '240p'];
-                qualityOptions = qualityOptions.map((option, index) => ({
-                    ...option,
-                    quality: qualityLabels[index] || `${index + 1}p`,
-                }));
+            // Handle media download if requested
+            if (options.downloadMedia) {
+                const downloadDir = config.downloadDir;
+                const localPaths = [];
 
-                let selectedOption;
-                if (options.quality && options.quality !== 'highest') {
-                    selectedOption = qualityOptions.find(
-                        option => option.quality === options.quality
+                for (const mediaItem of mediaInfo.urls) {
+                    const fileName = this.getFileNameFromUrl(mediaItem.url);
+                    const localPath = await downloadFile(
+                        mediaItem.url,
+                        downloadDir || './downloads',
+                        fileName,
+                        config
                     );
+                    localPaths.push(localPath);
                 }
 
-                if (!selectedOption) {
-                    selectedOption = qualityOptions[0];
-                }
-
-                if (selectedOption) {
-                    result.push(selectedOption.url);
-                } else {
-                    console.warn('No suitable quality option found');
-                }
+                mediaInfo.localPath = localPaths.join(', '); // Concatenate local paths if multiple
             }
-        });
 
-        // If no items found, check for a single share link (fallback for single image/video)
-        if (result.length === 0) {
-            const shareLink = $('a[onclick="showShare()"]').attr('href');
-            if (shareLink) {
-                result.push(shareLink);
+            return mediaInfo;
+        } catch (error) {
+            logger(`Error fetching Instagram media info: ${error}`);
+            if (
+                error instanceof PlatformNotSupportedError ||
+                error instanceof MediaNotFoundError
+            ) {
+                throw error;
+            } else {
+                throw new DownloadError(
+                    `Failed to get media info: ${(error as Error).message}`
+                );
             }
         }
-
-        return {
-            results_number: result.length,
-            url_list: result.filter(url => url !== undefined),
-        };
     }
 
-    private async getMediaInfo(url: string): Promise<string> {
+    /**
+     * Fetches the media page HTML content.
+     * @param url The Instagram URL.
+     * @param httpClient The HttpClient instance.
+     */
+    private async fetchMediaPage(url: string, httpClient: HttpClient): Promise<string> {
         try {
             const params = {
                 q: url,
@@ -150,69 +120,212 @@ class InstagramDownloader {
                 v: 'v2',
             };
 
-            const response: AxiosResponse<ApiResponse> = await axios.post(
+            const response: AxiosResponse<any> = await httpClient.post(
                 this.BASE_URL,
                 qs.stringify(params),
                 {
                     headers: this.headers,
+                    responseType: 'json',
                 }
             );
+
             const responseData: string = response.data.data;
 
             if (!responseData) {
-                throw new Error('Empty response data');
+                throw new MediaNotFoundError('Empty response data.');
             }
 
             if (responseData.trim().startsWith('var')) {
                 return this.executeJavaScript(responseData);
             } else if (responseData.trim().startsWith('<ul class="download-box">')) {
+                // Directly return HTML content
                 return responseData;
             } else {
-                throw new Error('Unexpected response format');
+                throw new MediaNotFoundError('Unexpected response format.');
             }
         } catch (error) {
-            console.error('Error fetching Instagram data:', error);
-            throw error;
+            logger(`Error fetching media page: ${error}`);
+            if (axios.isAxiosError(error) && error.response?.status === 429) {
+                throw new RateLimitError('Rate limit exceeded. Consider using a proxy.');
+            }
+            throw new DownloadError(
+                `Failed to fetch media page: ${(error as Error).message}`
+            );
         }
     }
 
-    async getDirectUrls(
-        url: string,
-        options: DownloaderOptions = {}
-    ): Promise<DownloaderResult> {
-        try {
-            const htmlContent = await this.getMediaInfo(url);
-            const parsedResult = this.parseHtml(htmlContent, options);
-            const urls = parsedResult.url_list;
+    /**
+     * Executes obfuscated JavaScript code to extract HTML content.
+     * @param code The JavaScript code to execute.
+     */
+    private executeJavaScript(code: string): string {
+        const sandbox = {
+            result: '',
+            document: {
+                write: (html: string) => {
+                    sandbox.result += html;
+                },
+            },
+            window: {
+                location: {
+                    hostname: 'savevid.net',
+                },
+            },
+            console: {
+                log: () => {},
+                error: () => {},
+            },
+        };
 
-            if (options.includeMetadata) {
-                const metadata = await this.getMetadata(url);
+        try {
+            const script = new vm.Script(code);
+            const context = vm.createContext(sandbox);
+            script.runInContext(context);
+        } catch (error) {
+            logger(`Error executing JavaScript: ${error}`);
+            throw new DownloadError('Error executing response script.');
+        }
+        return sandbox.result;
+    }
+
+    /**
+     * Extracts media URLs from the HTML content.
+     * @param html The HTML content.
+     * @param options Download options.
+     */
+    private extractMediaUrls(
+        html: string,
+        options: Required<DownloadOptions>
+    ): Array<{url: string; quality?: string; format?: string; size?: number}> {
+        const $ = cheerio.load(html);
+        const mediaUrls: Array<{
+            url: string;
+            quality?: string;
+            format?: string;
+            size?: number;
+        }> = [];
+
+        $('.download-items').each((_, element) => {
+            const videoDownloadLink = $(element)
+                .find('.download-items__btn:not(.dl-thumb) > a')
+                .attr('href');
+
+            if (videoDownloadLink) {
+                // It's a video
+                const quality = $(element).find('.download-items__title').text().trim();
+                mediaUrls.push({
+                    url: videoDownloadLink,
+                    quality: quality || 'unknown',
+                    format: 'mp4',
+                });
+            } else {
+                // Handle images with multiple quality options
+                let qualityOptions = $(element)
+                    .find('.photo-option select option')
+                    .map((_, option) => ({
+                        url: $(option).attr('value'),
+                        dimensions: $(option).text().trim(),
+                    }))
+                    .get();
+
+                // Sort from highest to lowest resolution
+                qualityOptions.sort((a, b) => {
+                    const [aWidth, aHeight] = a.dimensions.split('x').map(Number);
+                    const [bWidth, bHeight] = b.dimensions.split('x').map(Number);
+                    return bWidth * bHeight - aWidth * aHeight;
+                });
+
+                let selectedOption;
+                if (options.quality && options.quality !== 'highest') {
+                    selectedOption = qualityOptions.find(
+                        option => option.dimensions === options.quality
+                    );
+                }
+
+                if (!selectedOption) {
+                    selectedOption = qualityOptions[0];
+                }
+
+                if (selectedOption) {
+                    mediaUrls.push({
+                        url: selectedOption.url,
+                        quality: selectedOption.dimensions,
+                        format: 'jpg', // Assuming it's an image
+                    });
+                } else {
+                    logger('No suitable quality option found');
+                }
+            }
+        });
+
+        // Fallback for single image/video
+        if (mediaUrls.length === 0) {
+            const shareLink = $('a[onclick="showShare()"]').attr('href');
+            if (shareLink) {
+                mediaUrls.push({
+                    url: shareLink,
+                    format: 'unknown',
+                });
+            }
+        }
+
+        return mediaUrls;
+    }
+
+    /**
+     * Extracts metadata from the Instagram media page.
+     * @param url The Instagram URL.
+     * @param httpClient The HttpClient instance.
+     */
+    private async extractMetadata(
+        url: string,
+        httpClient: HttpClient
+    ): Promise<{title?: string; author?: string; views?: number; likes?: number}> {
+        try {
+            const response = await httpClient.get<string>(url, {
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (compatible; AcmeInc/1.0)',
+                },
+            });
+
+            const html = response.data;
+            const $ = cheerio.load(html);
+
+            // Extract metadata
+            const rawData = $('script[type="application/ld+json"]').first().html();
+            if (rawData) {
+                const jsonData = JSON.parse(rawData);
+                const title = jsonData.caption || '';
+                const author = jsonData.author?.alternateName || '';
+
                 return {
-                    urls,
-                    metadata,
+                    title,
+                    author,
+                    views: undefined, // Not available in this context
+                    likes: undefined,
                 };
             } else {
-                return {
-                    urls,
-                };
+                return {};
             }
         } catch (error) {
-            console.error(`Failed to process Instagram URL: ${(error as Error).message}`);
-            return {urls: []};
+            logger(`Error extracting metadata: ${error}`);
+            // Return partial metadata
+            return {};
         }
     }
 
-    async getMetadata(url: string): Promise<Record<string, string>> {
+    /**
+     * Generates a file name from a URL.
+     * @param url The URL to extract the file name from.
+     */
+    private getFileNameFromUrl(url: string): string {
         try {
-            // TODO: add metadata
-            return {url, title: ''};
-        } catch (error) {
-            console.error(
-                `Failed to fetch Instagram metadata: ${(error as Error).message}`
-            );
-            return {};
+            const urlObj = new URL(url);
+            return urlObj.pathname.split('/').pop() || `downloaded_file_${Date.now()}`;
+        } catch {
+            return `downloaded_file_${Date.now()}`;
         }
     }
 }
 
-export default InstagramDownloader;
+export default InstagramHandler;
