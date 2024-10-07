@@ -1,5 +1,5 @@
 export interface DownloaderConfig {
-    downloadDir?: string;
+    downloadDir: string;
     proxy?: string;
 }
 

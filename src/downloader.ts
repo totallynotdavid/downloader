@@ -10,17 +10,15 @@ import RedditHandler from './hosts/reddit';
 import TikTokHandler from './hosts/tiktok';
 import TwitterHandler from './hosts/twitter';
 import YouTubeHandler from './hosts/youtube';
+import {defaultConfig} from './config';
 
 export class Downloader {
-    private config: Required<DownloaderConfig>;
+    private config: DownloaderConfig;
     private handlers: PlatformHandler[];
+    private limit = pLimit(5);
 
-    constructor(config: DownloaderConfig = {}) {
-        this.config = {
-            downloadDir: './downloads',
-            proxy: '',
-            ...config,
-        };
+    constructor(configOverrides: Partial<DownloaderConfig> = {}) {
+        this.config = {...defaultConfig, ...configOverrides};
 
         this.handlers = [
             new YouTubeHandler(),
@@ -82,10 +80,8 @@ export class Downloader {
             ...options,
         };
 
-        const limit = pLimit(5);
-
         const tasks = urls.map(url =>
-            limit(async () => {
+            this.limit(async () => {
                 try {
                     const mediaInfo = await this.getMediaInfo(url, mergedOptions);
                     return mediaInfo;

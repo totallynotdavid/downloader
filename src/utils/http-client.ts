@@ -1,4 +1,5 @@
 import axios, {AxiosInstance, AxiosRequestConfig, AxiosResponse} from 'axios';
+import {defaultConfig} from '@/config';
 import {DownloaderConfig} from '@/types';
 import logger from '@/utils/logger';
 
@@ -13,9 +14,11 @@ export class HttpClient {
 
     /**
      * Constructs a new HttpClient instance with the provided downloader configuration.
-     * @param config Downloader configuration which may include proxy settings.
+     * @param configOverrides Partial downloader configuration which may include proxy settings.
      */
-    constructor(config: DownloaderConfig) {
+    constructor(configOverrides: Partial<DownloaderConfig> = {}) {
+        const config: DownloaderConfig = {...defaultConfig, ...configOverrides};
+
         const axiosConfig: AxiosRequestConfig = {
             timeout: 10000, // 10 seconds timeout
             headers: {

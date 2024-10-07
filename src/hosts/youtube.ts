@@ -82,7 +82,7 @@ class YouTubeHandler implements PlatformHandler {
             try {
                 localPath = await downloadFile(
                     selectedMedia.url,
-                    config.downloadDir || './downloads',
+                    config.downloadDir,
                     fileName,
                     config
                 );
