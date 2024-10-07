@@ -1,23 +1,15 @@
-import { PlatformHandler, DownloadOptions, MediaInfo, DownloaderConfig } from '@/types';
-import { HttpClient } from '@/utils/http-client';
-import { downloadFile } from '@/utils/file-downloader';
+import {PlatformHandler, DownloadOptions, MediaInfo, DownloaderConfig} from '@/types';
+import {HttpClient} from '@/utils/http-client';
+import {downloadFile} from '@/utils/file-downloader';
 import logger from '@/utils/logger';
-import { MediaNotFoundError } from '@/types/errors';
-import https from 'https';
+import {MediaNotFoundError} from '@/types/errors';
 
 class YouTubeHandler implements PlatformHandler {
     private readonly API_BASE_URL = 'https://www.y2mate.com/mates';
     private readonly VIDEO_URL_BASE = 'https://www.youtube.com/watch?v=';
-    private readonly DEFAULT_TIMEOUT = 10000; // 10 seconds
 
-    // Cache for cookies to avoid unnecessary HTTP requests
-    private cachedCookies: string[] | null = null;
-    private cookieFetchedAt: number = 0;
-    private readonly COOKIE_EXPIRY = 60 * 60 * 1000; // 1 hour
-
-    // Quality mapping for comparison
     private readonly qualityMap: Record<string, number> = {
-        'auto': 0,
+        auto: 0,
         '144p': 1,
         '240p': 2,
         '360p': 3,
@@ -44,19 +36,16 @@ class YouTubeHandler implements PlatformHandler {
         const videoId = this.extractVideoId(url);
         logger.info(`Extracted video ID: ${videoId}`);
 
-        let cookies: string[];
-        try {
-            cookies = await this.fetchCookies();
-            logger.info(`Fetched cookies: ${JSON.stringify(cookies)}`);
-        } catch (error) {
-            logger.error(`Error fetching cookies: ${error}`);
-            throw new MediaNotFoundError('Failed to fetch necessary cookies');
-        }
+        const cookies = [
+            '_gid=GA1.2.2055666962.1683248123',
+            '_ga=GA1.1.1570308475.1683248122',
+            '_ga_K8CD7CY0TZ=GS1.1.1683248122.1.1.1683248164.0.0.0',
+            'prefetchAd_3381349=true',
+        ];
 
         let analysisData: any;
         try {
             analysisData = await this.analyzeVideo(httpClient, videoId, cookies);
-            logger.info(`Analysis data received: ${JSON.stringify(analysisData)}`);
         } catch (error) {
             logger.error(`Error analyzing video: ${error}`);
             throw new MediaNotFoundError('Failed to analyze video information');
@@ -67,7 +56,6 @@ class YouTubeHandler implements PlatformHandler {
             throw new MediaNotFoundError('Failed to retrieve video information');
         }
 
-        logger.info('Calling getMediaUrls with analysis data...');
         let mediaUrls: any[];
         try {
             mediaUrls = await this.getMediaUrls(
@@ -77,7 +65,6 @@ class YouTubeHandler implements PlatformHandler {
                 options,
                 cookies
             );
-            logger.info(`Media URLs retrieved: ${JSON.stringify(mediaUrls)}`);
         } catch (error) {
             logger.error(`Error getting media URLs: ${error}`);
             throw new MediaNotFoundError('Failed to retrieve media URLs');
@@ -85,12 +72,12 @@ class YouTubeHandler implements PlatformHandler {
 
         let localPath: string | undefined;
         if (options.downloadMedia && mediaUrls.length > 0) {
-            const selectedMedia = mediaUrls.find(urlInfo => urlInfo.format === 'mp4') || mediaUrls[0];
+            const selectedMedia =
+                mediaUrls.find(urlInfo => urlInfo.format === 'mp4') || mediaUrls[0];
             const fileName = this.generateFileName(
                 analysisData.title,
                 selectedMedia.format
             );
-            logger.info(`Generated file name: ${fileName}`);
 
             try {
                 localPath = await downloadFile(
@@ -102,7 +89,6 @@ class YouTubeHandler implements PlatformHandler {
                 logger.info(`File downloaded to: ${localPath}`);
             } catch (error) {
                 logger.error(`Error downloading file: ${error}`);
-                // Optionally, you can throw an error here if download is critical
             }
         } else {
             logger.info(
@@ -124,53 +110,7 @@ class YouTubeHandler implements PlatformHandler {
             },
         };
 
-        logger.info(`Returning MediaInfo: ${JSON.stringify(mediaInfo)}`);
         return mediaInfo;
-    }
-
-    private async fetchCookies(): Promise<string[]> {
-        const currentTime = Date.now();
-        if (this.cachedCookies && (currentTime - this.cookieFetchedAt) < this.COOKIE_EXPIRY) {
-            return this.cachedCookies;
-        }
-
-        logger.info('Fetching cookies from https://www.y2mate.com/en872');
-
-        return new Promise((resolve, reject) => {
-            const req = https.get('https://www.y2mate.com/en872', res => {
-                const cookiesArray = res.headers['set-cookie'];
-                logger.info('Response headers: ' + JSON.stringify(res.headers));
-                if (cookiesArray && cookiesArray.length > 0) {
-                    logger.info(`Cookies fetched: ${JSON.stringify(cookiesArray)}`);
-                    this.cachedCookies = cookiesArray;
-                    this.cookieFetchedAt = Date.now();
-                    resolve(cookiesArray);
-                } else {
-                    logger.warn(
-                        'No cookies found in response headers. Using default cookies.'
-                    );
-                    this.cachedCookies = [
-                        '_gid=GA1.2.2055666962.1683248123',
-                        '_ga=GA1.1.1570308475.1683248122',
-                        '_ga_K8CD7CY0TZ=GS1.1.1683248122.1.1.1683248164.0.0.0',
-                        'prefetchAd_3381349=true',
-                    ];
-                    this.cookieFetchedAt = Date.now();
-                    resolve(this.cachedCookies);
-                }
-            });
-
-            req.on('error', e => {
-                logger.error(`HTTP request error while fetching cookies: ${e.message}`);
-                reject(new Error(`Failed to fetch cookies: ${e.message}`));
-            });
-
-            req.setTimeout(this.DEFAULT_TIMEOUT, () => {
-                req.destroy();
-                logger.error('Request to fetch cookies timed out.');
-                reject(new Error('Request to fetch cookies timed out'));
-            });
-        });
     }
 
     private async analyzeVideo(
@@ -178,8 +118,6 @@ class YouTubeHandler implements PlatformHandler {
         videoId: string,
         cookies: string[]
     ) {
-        logger.info(`Analyzing video with ID: ${videoId}`);
-
         const postData = new URLSearchParams({
             vid: videoId,
             k_query: `${this.VIDEO_URL_BASE}${videoId}`,
@@ -188,24 +126,34 @@ class YouTubeHandler implements PlatformHandler {
             q_auto: '0',
         }).toString();
 
-        logger.info(`Post data for analysis: ${postData}`);
+        try {
+            const response = await httpClient.post(
+                `${this.API_BASE_URL}/analyzeV2/ajax`,
+                postData,
+                {
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        Cookie: cookies.join('; '),
+                        'User-Agent':
+                            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 ' +
+                            '(KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36',
+                    },
+                }
+            );
 
-        const response = await httpClient.post(
-            `${this.API_BASE_URL}/analyzeV2/ajax`,
-            postData,
-            {
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    Cookie: cookies.join('; '),
-                    'User-Agent':
-                        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 ' +
-                        '(KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36',
-                },
+            return response.data;
+        } catch (error: any) {
+            if (error.response) {
+                logger.error(
+                    `POST request failed for ${error.config.url}: Request failed with status code ${error.response.status}`
+                );
+            } else {
+                logger.error(
+                    `POST request failed for ${this.API_BASE_URL}/analyzeV2/ajax: ${error.message}`
+                );
             }
-        );
-
-        logger.info(`Analysis response data: ${JSON.stringify(response.data)}`);
-        return response.data;
+            throw error;
+        }
     }
 
     private async getMediaUrls(
@@ -215,48 +163,51 @@ class YouTubeHandler implements PlatformHandler {
         options: Required<DownloadOptions>,
         cookies: string[]
     ) {
-        logger.info('Entering getMediaUrls method.');
         const mediaUrls: any[] = [];
         const formats = options.preferAudio ? ['mp3'] : ['mp4', 'mp3'];
-        logger.info(`Formats to process: ${formats.join(', ')}`);
 
         for (const format of formats) {
-            logger.info(`Processing format: ${format}`);
             if (analysisData.links[format]) {
-                logger.info(`Found links for format: ${format}`);
-                const bestItem = this.getBestQualityItem(analysisData.links[format], options.quality);
+                const bestItem = this.getBestQualityItem(
+                    analysisData.links[format],
+                    options.quality
+                );
                 if (bestItem) {
-                    logger.info(`Selected item: ${JSON.stringify(bestItem)}`);
                     try {
-                        logger.info(`Attempting to convert media with key: ${bestItem.k}`);
                         const convertResponse = await this.convertMedia(
                             httpClient,
                             videoId,
                             bestItem.k,
                             cookies
                         );
-                        logger.info(`Convert response: ${JSON.stringify(convertResponse)}`);
 
                         if (convertResponse.dlink) {
+                            let sizeMB = 0;
+                            if (convertResponse.size) {
+                                const sizeMatch =
+                                    convertResponse.size.match(/([\d.]+)\s*MB/i);
+                                if (sizeMatch) {
+                                    sizeMB = parseFloat(sizeMatch[1]);
+                                }
+                            }
+
                             mediaUrls.push({
                                 url: convertResponse.dlink,
                                 quality: bestItem.q,
                                 format: format,
-                                size: parseFloat(convertResponse.size) || 0, // Handle missing or zero size
+                                size: sizeMB,
                             });
-                            logger.info(`Added media URL: ${convertResponse.dlink}`);
 
                             if (options.preferAudio) {
-                                logger.info(
-                                    'Prefer audio option is set. Returning early with available media URL.'
-                                );
                                 return mediaUrls;
                             }
                         } else {
                             logger.warn('No download link found in convert response.');
                         }
                     } catch (error) {
-                        logger.error(`Failed to convert media with key ${bestItem.k}: ${error}`);
+                        logger.error(
+                            `Failed to convert media with key ${bestItem.k}: ${error}`
+                        );
                     }
                 } else {
                     logger.warn(`No suitable item found for format: ${format}`);
@@ -266,9 +217,6 @@ class YouTubeHandler implements PlatformHandler {
             }
         }
 
-        logger.info(
-            `Finished processing formats. Total media URLs found: ${mediaUrls.length}`
-        );
         return mediaUrls;
     }
 
@@ -278,41 +226,52 @@ class YouTubeHandler implements PlatformHandler {
         key: string,
         cookies: string[]
     ) {
-        logger.info(`Converting media for video ID: ${videoId} with key: ${key}`);
-
         const postData = new URLSearchParams({
             vid: videoId,
             k: key,
         }).toString();
 
-        logger.info(`Post data for conversion: ${postData}`);
+        try {
+            const response = await httpClient.post(
+                `${this.API_BASE_URL}/convertV2/index`,
+                postData,
+                {
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        Cookie: cookies.join('; '),
+                        'User-Agent':
+                            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 ' +
+                            '(KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36',
+                    },
+                }
+            );
 
-        const response = await httpClient.post(
-            `${this.API_BASE_URL}/convertV2/index`,
-            postData,
-            {
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    Cookie: cookies.join('; '),
-                    'User-Agent':
-                        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 ' +
-                        '(KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36',
-                },
+            return response.data;
+        } catch (error: any) {
+            if (error.response) {
+                logger.error(
+                    `POST request failed for ${error.config.url}: Request failed with status code ${error.response.status}`
+                );
+            } else {
+                logger.error(
+                    `POST request failed for ${this.API_BASE_URL}/convertV2/index: ${error.message}`
+                );
             }
-        );
-
-        logger.info(`ConvertMedia response data: ${JSON.stringify(response.data)}`);
-        return response.data;
+            throw error;
+        }
     }
 
-    private getBestQualityItem(links: Record<string, any>, requestedQuality: string): any | null {
+    private getBestQualityItem(
+        links: Record<string, any>,
+        requestedQuality: string
+    ): any | null {
         let bestItem: any = null;
         let highestQualityValue = -1;
 
         for (const key in links) {
             const item = links[key];
             const itemQuality = item.q;
-            const itemQualityValue = this.qualityMap[itemQuality] || -1;
+            const itemQualityValue = this.qualityMap[itemQuality] || 0;
 
             if (this.isQualityAcceptable(itemQuality, requestedQuality)) {
                 if (itemQualityValue > highestQualityValue) {
@@ -326,60 +285,40 @@ class YouTubeHandler implements PlatformHandler {
     }
 
     private isQualityAcceptable(itemQuality: string, requestedQuality: string): boolean {
-        logger.info(
-            `Checking if item quality "${itemQuality}" meets requested quality "${requestedQuality}"`
-        );
-
         if (requestedQuality === 'highest') {
-            logger.info(`Requested quality is "highest". Any quality is acceptable.`);
             return true;
         }
 
         const itemQualityValue = this.qualityMap[itemQuality] || 0;
         const requestedQualityValue = this.qualityMap[requestedQuality] || Infinity;
 
-        const isAcceptable = itemQualityValue <= requestedQualityValue;
-        logger.info(
-            `Item quality value: ${itemQualityValue}, Requested quality value: ${requestedQualityValue}. Acceptable: ${isAcceptable}`
-        );
-
-        return isAcceptable;
+        return itemQualityValue <= requestedQualityValue;
     }
 
     public isValidUrl(url: string): boolean {
-        const isValid = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+$/.test(url);
-        logger.info(`URL validation for "${url}": ${isValid}`);
-        return isValid;
+        return /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+$/.test(url);
     }
 
     private extractVideoId(url: string): string {
-        logger.info(`Extracting video ID from URL: ${url}`);
-        let videoId = '';
         try {
             const urlObj = new URL(url);
             if (urlObj.hostname === 'youtu.be') {
-                videoId = urlObj.pathname.slice(1);
+                return urlObj.pathname.slice(1);
             } else {
-                videoId = urlObj.searchParams.get('v') || '';
+                return urlObj.searchParams.get('v') || '';
             }
-            logger.info(`Extracted video ID: ${videoId}`);
         } catch (error) {
             logger.error(`Error extracting video ID from URL "${url}": ${error}`);
+            return '';
         }
-        return videoId;
     }
 
     private generateFileName(title: string, format: string): string {
-        logger.info(
-            `Generating file name from title: "${title}" and format: "${format}"`
-        );
         const sanitizedTitle = title
             .replace(/[^\w\s-]/g, '')
             .trim()
             .replace(/\s+/g, '-');
-        const fileName = `${sanitizedTitle}.${format}`;
-        logger.info(`Generated file name: ${fileName}`);
-        return fileName;
+        return `${sanitizedTitle}.${format}`;
     }
 }
 
