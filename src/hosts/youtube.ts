@@ -1,8 +1,8 @@
-import {PlatformHandler, DownloadOptions, MediaInfo, DownloaderConfig} from '@/types';
-import {HttpClient} from '@/utils/http-client';
-import {downloadFile} from '@/utils/file-downloader';
+import { PlatformHandler, DownloadOptions, MediaInfo, DownloaderConfig } from '@/types';
+import { HttpClient } from '@/utils/http-client';
+import { downloadFile } from '@/utils/file-downloader';
 import logger from '@/utils/logger';
-import {MediaNotFoundError} from '@/types/errors';
+import { MediaNotFoundError } from '@/types/errors';
 import https from 'https';
 
 class YouTubeHandler implements PlatformHandler {
@@ -10,13 +10,24 @@ class YouTubeHandler implements PlatformHandler {
     private readonly VIDEO_URL_BASE = 'https://www.youtube.com/watch?v=';
     private readonly DEFAULT_TIMEOUT = 10000; // 10 seconds
 
-    /**
-     * Retrieves media information for a given YouTube URL.
-     * @param url - The YouTube video URL.
-     * @param options - Download options.
-     * @param config - Downloader configuration.
-     * @returns A promise that resolves to MediaInfo.
-     */
+    // Cache for cookies to avoid unnecessary HTTP requests
+    private cachedCookies: string[] | null = null;
+    private cookieFetchedAt: number = 0;
+    private readonly COOKIE_EXPIRY = 60 * 60 * 1000; // 1 hour
+
+    // Quality mapping for comparison
+    private readonly qualityMap: Record<string, number> = {
+        'auto': 0,
+        '144p': 1,
+        '240p': 2,
+        '360p': 3,
+        '480p': 4,
+        '720p': 5,
+        '1080p': 6,
+        '1440p': 7,
+        '2160p': 8,
+    };
+
     async getMediaInfo(
         url: string,
         options: Required<DownloadOptions>,
@@ -74,15 +85,16 @@ class YouTubeHandler implements PlatformHandler {
 
         let localPath: string | undefined;
         if (options.downloadMedia && mediaUrls.length > 0) {
+            const selectedMedia = mediaUrls.find(urlInfo => urlInfo.format === 'mp4') || mediaUrls[0];
             const fileName = this.generateFileName(
                 analysisData.title,
-                mediaUrls[0].format
+                selectedMedia.format
             );
             logger.info(`Generated file name: ${fileName}`);
 
             try {
                 localPath = await downloadFile(
-                    mediaUrls[0].url,
+                    selectedMedia.url,
                     config.downloadDir || './downloads',
                     fileName,
                     config
@@ -90,7 +102,7 @@ class YouTubeHandler implements PlatformHandler {
                 logger.info(`File downloaded to: ${localPath}`);
             } catch (error) {
                 logger.error(`Error downloading file: ${error}`);
-                // Depending on requirements, you might want to throw an error here
+                // Optionally, you can throw an error here if download is critical
             }
         } else {
             logger.info(
@@ -105,7 +117,7 @@ class YouTubeHandler implements PlatformHandler {
             localPath,
             metadata: {
                 title: analysisData.title,
-                author: analysisData.author || 'Unknown',
+                author: analysisData.author,
                 platform: 'YouTube',
                 views: analysisData.views,
                 likes: analysisData.likes,
@@ -116,29 +128,35 @@ class YouTubeHandler implements PlatformHandler {
         return mediaInfo;
     }
 
-    /**
-     * Fetches cookies from y2mate.com
-     * @returns A promise that resolves to an array of cookie strings.
-     */
     private async fetchCookies(): Promise<string[]> {
+        const currentTime = Date.now();
+        if (this.cachedCookies && (currentTime - this.cookieFetchedAt) < this.COOKIE_EXPIRY) {
+            return this.cachedCookies;
+        }
+
         logger.info('Fetching cookies from https://www.y2mate.com/en872');
 
         return new Promise((resolve, reject) => {
             const req = https.get('https://www.y2mate.com/en872', res => {
                 const cookiesArray = res.headers['set-cookie'];
-                if (cookiesArray) {
+                logger.info('Response headers: ' + JSON.stringify(res.headers));
+                if (cookiesArray && cookiesArray.length > 0) {
                     logger.info(`Cookies fetched: ${JSON.stringify(cookiesArray)}`);
+                    this.cachedCookies = cookiesArray;
+                    this.cookieFetchedAt = Date.now();
                     resolve(cookiesArray);
                 } else {
                     logger.warn(
                         'No cookies found in response headers. Using default cookies.'
                     );
-                    resolve([
+                    this.cachedCookies = [
                         '_gid=GA1.2.2055666962.1683248123',
                         '_ga=GA1.1.1570308475.1683248122',
                         '_ga_K8CD7CY0TZ=GS1.1.1683248122.1.1.1683248164.0.0.0',
                         'prefetchAd_3381349=true',
-                    ]);
+                    ];
+                    this.cookieFetchedAt = Date.now();
+                    resolve(this.cachedCookies);
                 }
             });
 
@@ -155,13 +173,6 @@ class YouTubeHandler implements PlatformHandler {
         });
     }
 
-    /**
-     * Analyzes the video using y2mate's analyze endpoint.
-     * @param httpClient - The HTTP client instance.
-     * @param videoId - The YouTube video ID.
-     * @param cookies - Array of cookies to include in the request.
-     * @returns A promise that resolves to the analysis data.
-     */
     private async analyzeVideo(
         httpClient: HttpClient,
         videoId: string,
@@ -197,15 +208,6 @@ class YouTubeHandler implements PlatformHandler {
         return response.data;
     }
 
-    /**
-     * Retrieves media URLs based on analysis data.
-     * @param httpClient - The HTTP client instance.
-     * @param videoId - The YouTube video ID.
-     * @param analysisData - Data obtained from analyzing the video.
-     * @param options - Download options.
-     * @param cookies - Array of cookies to include in the requests.
-     * @returns A promise that resolves to an array of media URLs.
-     */
     private async getMediaUrls(
         httpClient: HttpClient,
         videoId: string,
@@ -222,58 +224,42 @@ class YouTubeHandler implements PlatformHandler {
             logger.info(`Processing format: ${format}`);
             if (analysisData.links[format]) {
                 logger.info(`Found links for format: ${format}`);
-                for (const key in analysisData.links[format]) {
-                    const item = analysisData.links[format][key];
-                    logger.info(`Processing item: ${JSON.stringify(item)}`);
-
-                    if (this.isQualityAcceptable(item.q, options.quality)) {
-                        logger.info(
-                            `Item quality "${item.q}" is acceptable for requested quality "${options.quality}".`
+                const bestItem = this.getBestQualityItem(analysisData.links[format], options.quality);
+                if (bestItem) {
+                    logger.info(`Selected item: ${JSON.stringify(bestItem)}`);
+                    try {
+                        logger.info(`Attempting to convert media with key: ${bestItem.k}`);
+                        const convertResponse = await this.convertMedia(
+                            httpClient,
+                            videoId,
+                            bestItem.k,
+                            cookies
                         );
-                        try {
-                            logger.info(
-                                `Attempting to convert media with key: ${item.k}`
-                            );
-                            const convertResponse = await this.convertMedia(
-                                httpClient,
-                                videoId,
-                                item.k,
-                                cookies
-                            );
-                            logger.info(
-                                `Convert response: ${JSON.stringify(convertResponse)}`
-                            );
+                        logger.info(`Convert response: ${JSON.stringify(convertResponse)}`);
 
-                            if (convertResponse.dlink) {
-                                mediaUrls.push({
-                                    url: convertResponse.dlink,
-                                    quality: item.q,
-                                    format: format,
-                                    size: parseFloat(convertResponse.size) || 0,
-                                });
-                                logger.info(`Added media URL: ${convertResponse.dlink}`);
+                        if (convertResponse.dlink) {
+                            mediaUrls.push({
+                                url: convertResponse.dlink,
+                                quality: bestItem.q,
+                                format: format,
+                                size: parseFloat(convertResponse.size) || 0, // Handle missing or zero size
+                            });
+                            logger.info(`Added media URL: ${convertResponse.dlink}`);
 
-                                if (options.preferAudio) {
-                                    logger.info(
-                                        'Prefer audio option is set. Returning early with available media URL.'
-                                    );
-                                    return mediaUrls;
-                                }
-                            } else {
-                                logger.warn(
-                                    'No download link found in convert response.'
+                            if (options.preferAudio) {
+                                logger.info(
+                                    'Prefer audio option is set. Returning early with available media URL.'
                                 );
+                                return mediaUrls;
                             }
-                        } catch (error) {
-                            logger.error(
-                                `Failed to convert media with key ${item.k}: ${error}`
-                            );
+                        } else {
+                            logger.warn('No download link found in convert response.');
                         }
-                    } else {
-                        logger.warn(
-                            `Item quality "${item.q}" is not acceptable for requested quality "${options.quality}".`
-                        );
+                    } catch (error) {
+                        logger.error(`Failed to convert media with key ${bestItem.k}: ${error}`);
                     }
+                } else {
+                    logger.warn(`No suitable item found for format: ${format}`);
                 }
             } else {
                 logger.warn(`No links found for format: ${format}`);
@@ -286,14 +272,6 @@ class YouTubeHandler implements PlatformHandler {
         return mediaUrls;
     }
 
-    /**
-     * Converts media using y2mate's convert endpoint.
-     * @param httpClient - The HTTP client instance.
-     * @param videoId - The YouTube video ID.
-     * @param key - The key for conversion.
-     * @param cookies - Array of cookies to include in the request.
-     * @returns A promise that resolves to the conversion response data.
-     */
     private async convertMedia(
         httpClient: HttpClient,
         videoId: string,
@@ -310,7 +288,7 @@ class YouTubeHandler implements PlatformHandler {
         logger.info(`Post data for conversion: ${postData}`);
 
         const response = await httpClient.post(
-            `${this.API_BASE_URL}/en948/convertV2/index`,
+            `${this.API_BASE_URL}/convertV2/index`,
             postData,
             {
                 headers: {
@@ -327,12 +305,26 @@ class YouTubeHandler implements PlatformHandler {
         return response.data;
     }
 
-    /**
-     * Checks if the item's quality meets the requested quality.
-     * @param itemQuality - The quality of the media item.
-     * @param requestedQuality - The quality preference set by the user.
-     * @returns True if acceptable, else false.
-     */
+    private getBestQualityItem(links: Record<string, any>, requestedQuality: string): any | null {
+        let bestItem: any = null;
+        let highestQualityValue = -1;
+
+        for (const key in links) {
+            const item = links[key];
+            const itemQuality = item.q;
+            const itemQualityValue = this.qualityMap[itemQuality] || -1;
+
+            if (this.isQualityAcceptable(itemQuality, requestedQuality)) {
+                if (itemQualityValue > highestQualityValue) {
+                    highestQualityValue = itemQualityValue;
+                    bestItem = item;
+                }
+            }
+        }
+
+        return bestItem;
+    }
+
     private isQualityAcceptable(itemQuality: string, requestedQuality: string): boolean {
         logger.info(
             `Checking if item quality "${itemQuality}" meets requested quality "${requestedQuality}"`
@@ -343,19 +335,8 @@ class YouTubeHandler implements PlatformHandler {
             return true;
         }
 
-        const qualityMap: Record<string, number> = {
-            '144p': 1,
-            '240p': 2,
-            '360p': 3,
-            '480p': 4,
-            '720p': 5,
-            '1080p': 6,
-            '1440p': 7,
-            '2160p': 8,
-        };
-
-        const itemQualityValue = qualityMap[itemQuality] || 0;
-        const requestedQualityValue = qualityMap[requestedQuality] || Infinity;
+        const itemQualityValue = this.qualityMap[itemQuality] || 0;
+        const requestedQualityValue = this.qualityMap[requestedQuality] || Infinity;
 
         const isAcceptable = itemQualityValue <= requestedQualityValue;
         logger.info(
@@ -365,22 +346,12 @@ class YouTubeHandler implements PlatformHandler {
         return isAcceptable;
     }
 
-    /**
-     * Validates if the provided URL is a valid YouTube URL.
-     * @param url - The URL to validate.
-     * @returns True if valid, else false.
-     */
     public isValidUrl(url: string): boolean {
         const isValid = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+$/.test(url);
         logger.info(`URL validation for "${url}": ${isValid}`);
         return isValid;
     }
 
-    /**
-     * Extracts the video ID from a YouTube URL.
-     * @param url - The YouTube video URL.
-     * @returns The extracted video ID.
-     */
     private extractVideoId(url: string): string {
         logger.info(`Extracting video ID from URL: ${url}`);
         let videoId = '';
@@ -398,12 +369,6 @@ class YouTubeHandler implements PlatformHandler {
         return videoId;
     }
 
-    /**
-     * Generates a sanitized file name based on the video title and format.
-     * @param title - The title of the video.
-     * @param format - The format of the media (e.g., mp3, mp4).
-     * @returns A sanitized file name string.
-     */
     private generateFileName(title: string, format: string): string {
         logger.info(
             `Generating file name from title: "${title}" and format: "${format}"`

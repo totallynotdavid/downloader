@@ -105,8 +105,7 @@ interface MediaInfo {
     localPath?: string; // Only if downloadMedia is true
     metadata: {
         title: string;
-        duration: number; // in seconds
-        thumbnail: string;
+        author: string;
         platform: string;
         views?: number;
         likes?: number;
