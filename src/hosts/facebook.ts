@@ -93,7 +93,6 @@ class FacebookHandler implements PlatformHandler {
 
             return mediaInfo;
         } catch (error: any) {
-            // Handle known errors
             if (error instanceof MediaNotFoundError) {
                 throw error;
             } else {

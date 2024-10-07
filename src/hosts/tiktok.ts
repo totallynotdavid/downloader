@@ -130,8 +130,8 @@ export default class TikTokHandler implements PlatformHandler {
             });
 
             return {cookie, requestData: data};
-        } catch (error: any) {
-            throw new Error(`Failed to prepare request data: ${error.message}`);
+        } catch (error) {
+            throw new Error(`Failed to prepare request data: ${error}`);
         }
     }
 
@@ -269,9 +269,8 @@ export default class TikTokHandler implements PlatformHandler {
                 views,
                 likes,
             };
-        } catch (error: any) {
-            // If metadata can't be fetched, return default values
-            logger.error(`Unable to fetch metadata: ${error.message}`);
+        } catch (error) {
+            logger.error(`Unable to fetch metadata: ${error}`);
             return {
                 title: 'TikTok Video',
                 author: '',

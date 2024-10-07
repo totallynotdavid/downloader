@@ -136,8 +136,8 @@ export default class ImgurHandler implements PlatformHandler {
                 return response.data.data;
             }
             return null;
-        } catch (error: any) {
-            logger.error(`Error fetching media info from Imgur: ${error.message}`);
+        } catch (error) {
+            logger.error(`Error fetching media info from Imgur: ${error}`);
             throw new MediaNotFoundError('Failed to fetch media info from Imgur.');
         }
     }

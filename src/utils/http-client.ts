@@ -42,7 +42,7 @@ export class HttpClient {
                     : undefined,
             };
         } catch (error) {
-            logger.error(`Invalid proxy URL: ${proxy}`);
+            logger.error(`Invalid proxy URL: ${proxy}`, error);
             throw new Error('Invalid proxy URL.');
         }
     }
@@ -58,8 +58,8 @@ export class HttpClient {
                 this.mergeOptions(options)
             );
             return response;
-        } catch (error: any) {
-            logger.error(`GET request failed for ${url}: ${error.message}`);
+        } catch (error) {
+            logger.error(`GET request failed for ${url}: ${error}`);
             throw error;
         }
     }
@@ -77,8 +77,8 @@ export class HttpClient {
                 this.mergeOptions(options)
             );
             return response;
-        } catch (error: any) {
-            logger.error(`POST request failed for ${url}: ${error.message}`);
+        } catch (error) {
+            logger.error(`POST request failed for ${url}: ${error}`);
             throw error;
         }
     }
@@ -97,8 +97,8 @@ export class HttpClient {
                 })
             );
             return response;
-        } catch (error: any) {
-            logger.error(`STREAM request failed for ${url}: ${error.message}`);
+        } catch (error) {
+            logger.error(`STREAM request failed for ${url}: ${error}`);
             throw error;
         }
     }
