@@ -92,7 +92,7 @@ class InstagramHandler implements PlatformHandler {
 
             return mediaInfo;
         } catch (error) {
-            logger(`Error fetching Instagram media info: ${error}`);
+            logger.error(`Error fetching Instagram media info: ${error}`);
             if (
                 error instanceof PlatformNotSupportedError ||
                 error instanceof MediaNotFoundError
@@ -144,7 +144,7 @@ class InstagramHandler implements PlatformHandler {
                 throw new MediaNotFoundError('Unexpected response format.');
             }
         } catch (error) {
-            logger(`Error fetching media page: ${error}`);
+            logger.error(`Error fetching media page: ${error}`);
             if (axios.isAxiosError(error) && error.response?.status === 429) {
                 throw new RateLimitError('Rate limit exceeded. Consider using a proxy.');
             }
@@ -182,7 +182,7 @@ class InstagramHandler implements PlatformHandler {
             const context = vm.createContext(sandbox);
             script.runInContext(context);
         } catch (error) {
-            logger(`Error executing JavaScript: ${error}`);
+            logger.error(`Error executing JavaScript: ${error}`);
             throw new DownloadError('Error executing response script.');
         }
         return sandbox.result;
@@ -253,7 +253,7 @@ class InstagramHandler implements PlatformHandler {
                         format: 'jpg', // Assuming it's an image
                     });
                 } else {
-                    logger('No suitable quality option found');
+                    logger.error('No suitable quality option found');
                 }
             }
         });
@@ -308,7 +308,7 @@ class InstagramHandler implements PlatformHandler {
                 return {};
             }
         } catch (error) {
-            logger(`Error extracting metadata: ${error}`);
+            logger.error(`Error extracting metadata: ${error}`);
             // Return partial metadata
             return {};
         }

@@ -37,7 +37,7 @@ export default class TikTokHandler implements PlatformHandler {
         options: Required<DownloadOptions>,
         config: DownloaderConfig
     ): Promise<MediaInfo> {
-        logger(`TikTokHandler: Fetching media info for URL: ${url}`);
+        logger.info(`TikTokHandler: Fetching media info for URL: ${url}`);
 
         try {
             const httpClient = new HttpClient(config);
@@ -79,7 +79,7 @@ export default class TikTokHandler implements PlatformHandler {
 
             return mediaInfo;
         } catch (error: any) {
-            logger(`TikTokHandler: Error fetching media info: ${error.message}`);
+            logger.error(`TikTokHandler: Error fetching media info: ${error.message}`);
 
             if (error instanceof MediaNotFoundError || error instanceof RateLimitError) {
                 throw error;
@@ -271,7 +271,7 @@ export default class TikTokHandler implements PlatformHandler {
             };
         } catch (error: any) {
             // If metadata can't be fetched, return default values
-            logger(`Unable to fetch metadata: ${error.message}`);
+            logger.error(`Unable to fetch metadata: ${error.message}`);
             return {
                 title: 'TikTok Video',
                 author: '',

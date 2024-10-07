@@ -26,7 +26,7 @@ export class HttpClient {
         if (config.proxy) {
             const proxyConfig = this.parseProxy(config.proxy);
             axiosConfig.proxy = proxyConfig;
-            logger(`Using proxy: ${config.proxy}`);
+            logger.info(`Using proxy: ${config.proxy}`);
         }
 
         this.axiosInstance = axios.create(axiosConfig);
@@ -52,7 +52,7 @@ export class HttpClient {
                     : undefined,
             };
         } catch (error) {
-            logger(`Invalid proxy URL: ${proxy}`);
+            logger.error(`Invalid proxy URL: ${proxy}`);
             throw new Error('Invalid proxy URL.');
         }
     }
@@ -67,7 +67,7 @@ export class HttpClient {
         url: string,
         options?: AxiosRequestConfig
     ): Promise<AxiosResponse<T>> {
-        logger(`HTTP GET: ${url}`);
+        logger.info(`HTTP GET: ${url}`);
         try {
             const response = await this.axiosInstance.get<T>(
                 url,
@@ -75,7 +75,7 @@ export class HttpClient {
             );
             return response;
         } catch (error: any) {
-            logger(`GET request failed for ${url}: ${error.message}`);
+            logger.info(`GET request failed for ${url}: ${error.message}`);
             throw error;
         }
     }
@@ -92,7 +92,7 @@ export class HttpClient {
         data?: any,
         options?: AxiosRequestConfig
     ): Promise<AxiosResponse<T>> {
-        logger(`HTTP POST: ${url}`);
+        logger.info(`HTTP POST: ${url}`);
         try {
             const response = await this.axiosInstance.post<T>(
                 url,
@@ -101,7 +101,7 @@ export class HttpClient {
             );
             return response;
         } catch (error: any) {
-            logger(`POST request failed for ${url}: ${error.message}`);
+            logger.error(`POST request failed for ${url}: ${error.message}`);
             throw error;
         }
     }
@@ -117,7 +117,7 @@ export class HttpClient {
         url: string,
         options?: AxiosRequestConfig
     ): Promise<AxiosResponse<any>> {
-        logger(`HTTP STREAM: ${url}`);
+        logger.info(`HTTP STREAM: ${url}`);
         try {
             const response = await this.axiosInstance.get(
                 url,
@@ -128,7 +128,7 @@ export class HttpClient {
             );
             return response;
         } catch (error: any) {
-            logger(`STREAM request failed for ${url}: ${error.message}`);
+            logger.error(`STREAM request failed for ${url}: ${error.message}`);
             throw error;
         }
     }

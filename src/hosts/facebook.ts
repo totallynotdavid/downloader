@@ -97,7 +97,9 @@ class FacebookHandler implements PlatformHandler {
             if (error instanceof MediaNotFoundError) {
                 throw error;
             } else {
-                logger(`An error occurred while fetching media info: ${error.message}`);
+                logger.error(
+                    `An error occurred while fetching media info: ${error.message}`
+                );
                 throw new DownloadError('Failed to download media.');
             }
         }

@@ -32,16 +32,16 @@ export async function downloadFile(
 
         return new Promise<string>((resolve, reject) => {
             writer.on('finish', () => {
-                logger(`Download completed: ${fullPath}`);
+                logger.info(`Download completed: ${fullPath}`);
                 resolve(fullPath);
             });
             writer.on('error', err => {
-                logger(`Download failed: ${fullPath}`);
+                logger.error(`Download failed: ${fullPath}`);
                 reject(new Error(`Failed to download file: ${err.message}`));
             });
         });
     } catch (error) {
-        logger(`Error downloading file from ${url}: ${error}`);
+        logger.error(`Error downloading file from ${url}: ${error}`);
         throw error;
     }
 }

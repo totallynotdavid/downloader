@@ -33,7 +33,7 @@ export class Downloader {
             new ImgurHandler(),
         ];
 
-        logger('Downloader initialized with config:', this.config);
+        logger.info('Downloader initialized with config:', this.config);
     }
 
     /**
@@ -58,7 +58,7 @@ export class Downloader {
             throw new PlatformNotSupportedError('The provided URL is not supported.');
         }
 
-        logger(`Fetching media info for URL: ${url} with options:`, mergedOptions);
+        logger.info(`Fetching media info for URL: ${url} with options:`, mergedOptions);
 
         const mediaInfo = await handler.getMediaInfo(url, mergedOptions, this.config);
 
@@ -90,7 +90,7 @@ export class Downloader {
                     const mediaInfo = await this.getMediaInfo(url, mergedOptions);
                     return mediaInfo;
                 } catch (error) {
-                    logger(`Error processing URL ${url}: ${error}`);
+                    logger.error(`Error processing URL ${url}: ${error}`);
                     throw error;
                 }
             })
@@ -103,7 +103,7 @@ export class Downloader {
                 const mediaInfo = await task;
                 results.push(mediaInfo);
             } catch (error) {
-                logger(`Failed to process a URL: ${error}`);
+                logger.error(`Failed to process a URL: ${error}`);
             }
         }
 

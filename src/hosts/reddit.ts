@@ -71,7 +71,7 @@ export default class RedditHandler implements PlatformHandler {
 
             return mediaInfo;
         } catch (error: any) {
-            logger(`Error fetching media info from Reddit: ${error.message}`);
+            logger.error(`Error fetching media info from Reddit: ${error.message}`);
             if (error instanceof MediaNotFoundError) {
                 throw error;
             }

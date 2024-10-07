@@ -114,7 +114,7 @@ export default class ImgurHandler implements PlatformHandler {
             id = pathParts[0] ?? '';
         }
 
-        logger(`Classified Imgur link: type=${type}, id=${id}`);
+        logger.info(`Classified Imgur link: type=${type}, id=${id}`);
         return {type, id};
     }
 
@@ -137,7 +137,7 @@ export default class ImgurHandler implements PlatformHandler {
             }
             return null;
         } catch (error: any) {
-            logger(`Error fetching media info from Imgur: ${error.message}`);
+            logger.error(`Error fetching media info from Imgur: ${error.message}`);
             throw new MediaNotFoundError('Failed to fetch media info from Imgur.');
         }
     }

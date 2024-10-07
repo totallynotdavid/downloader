@@ -98,7 +98,7 @@ export default class PinterestHandler implements PlatformHandler {
 
             return result;
         } catch (error: any) {
-            logger(`Error fetching media info from Pinterest: ${error.message}`);
+            logger.error(`Error fetching media info from Pinterest: ${error.message}`);
             if (error.response && error.response.status === 429) {
                 throw new RateLimitError('Rate limit exceeded.');
             } else if (error instanceof MediaNotFoundError) {
@@ -151,7 +151,7 @@ export default class PinterestHandler implements PlatformHandler {
 
             return response.data;
         } catch (error: any) {
-            logger(`Error fetching media info: ${error.message}`);
+            logger.error(`Error fetching media info: ${error.message}`);
             if (error.code === 'ECONNABORTED') {
                 throw new DownloadError('Request timed out. Please try again later.');
             }
@@ -173,7 +173,7 @@ export default class PinterestHandler implements PlatformHandler {
             }
             return setCookie;
         } catch (error) {
-            logger(`Error getting cookies: ${error}`);
+            logger.error(`Error getting cookies: ${error}`);
             throw new DownloadError('Failed to retrieve necessary cookies.');
         }
     }

@@ -75,7 +75,7 @@ export default class TwitterHandler implements PlatformHandler {
 
             return result;
         } catch (error) {
-            logger(`Error in TwitterHandler getMediaInfo: ${error}`);
+            logger.error(`Error in TwitterHandler getMediaInfo: ${error}`);
             if (error instanceof MediaNotFoundError) {
                 throw error;
             } else {
@@ -108,7 +108,7 @@ export default class TwitterHandler implements PlatformHandler {
 
             return data;
         } catch (error) {
-            logger(`Error fetching Twitter data: ${error}`);
+            logger.error(`Error fetching Twitter data: ${error}`);
             if (error instanceof MediaNotFoundError) {
                 throw error;
             } else {
