@@ -6,16 +6,6 @@ import path from 'node:path';
 import logger from '@/utils/logger';
 import {ImgurApiData, ImgurApiResponse} from '@/types/imgur';
 
-/**
- * ImgurHandler is responsible for handling media retrieval from Imgur links.
- * It supports single images, albums, and gallery links.
- *
- * @testCases
- * - Single image: https://i.imgur.com/7q4TxW7.png
- * - Single image as a gallery: https://imgur.com/gallery/ouMQkN1
- * - Album with multiple images: https://imgur.com/gallery/art-gallery-ready-to-heist-free-dnd-ttrpg-maps-dTFUK1E
- * - Video album: https://imgur.com/gallery/mouth-movements-hxXHU13
- */
 export default class ImgurHandler implements PlatformHandler {
     private readonly clientId: string;
 
@@ -26,23 +16,11 @@ export default class ImgurHandler implements PlatformHandler {
         this.clientId = '546c25a59c58ad7';
     }
 
-    /**
-     * Determines if the given URL is a valid Imgur URL.
-     * @param url The URL to validate.
-     * @returns True if valid, false otherwise.
-     */
     public isValidUrl(url: string): boolean {
         const imgurRegex = /^https?:\/\/(www\.)?(i\.)?imgur\.com\/.+$/;
         return imgurRegex.test(url);
     }
 
-    /**
-     * Retrieves media information from an Imgur URL.
-     * @param url The Imgur URL.
-     * @param options Download options.
-     * @param config Downloader configuration.
-     * @returns MediaInfo object containing media details.
-     */
     public async getMediaInfo(
         url: string,
         options: Required<DownloadOptions>,
@@ -81,13 +59,6 @@ export default class ImgurHandler implements PlatformHandler {
         };
     }
 
-    /**
-     * Downloads media files and updates the URLs with local paths.
-     * @param urls Array of URL objects to download.
-     * @param downloadDir Directory to save downloaded files.
-     * @param title Base title for the files.
-     * @returns Updated array of URL objects with local paths.
-     */
     private async downloadMedia(
         urls: MediaInfo['urls'],
         downloadDir: string,
@@ -115,11 +86,6 @@ export default class ImgurHandler implements PlatformHandler {
         );
     }
 
-    /**
-     * Classifies the Imgur link to determine its type and extract the media ID.
-     * @param url The Imgur URL.
-     * @returns An object containing the type and ID of the media.
-     */
     private classifyImgurLink(url: string): {type: string; id: string} {
         const urlObj = new URL(url);
         const pathParts = urlObj.pathname.split('/').filter(Boolean);
@@ -145,12 +111,6 @@ export default class ImgurHandler implements PlatformHandler {
         return {type, id};
     }
 
-    /**
-     * Fetches media information from the Imgur API.
-     * @param type The type of media ('image' or 'album').
-     * @param id The media ID.
-     * @returns The Imgur API response data.
-     */
     private async fetchMediaInfo(type: string, id: string): Promise<ImgurApiData | null> {
         const endpoint = `https://api.imgur.com/3/${type}/${id}`;
 
@@ -169,11 +129,6 @@ export default class ImgurHandler implements PlatformHandler {
         }
     }
 
-    /**
-     * Extracts media URLs from the Imgur API data.
-     * @param data The Imgur API data.
-     * @returns An array of media URLs.
-     */
     private extractUrls(data: ImgurApiData): string[] {
         if (data.is_album && data.images) {
             return data.images.map(img => img.link);
@@ -183,11 +138,6 @@ export default class ImgurHandler implements PlatformHandler {
         return [];
     }
 
-    /**
-     * Extracts metadata from the Imgur API data.
-     * @param data The Imgur API data.
-     * @returns An object containing metadata.
-     */
     private extractMetadata(data: ImgurApiData): {title: string} {
         let title = data.title || 'Untitled';
 
@@ -204,11 +154,6 @@ export default class ImgurHandler implements PlatformHandler {
         };
     }
 
-    /**
-     * Utility method to extract file extension from a URL.
-     * @param url The URL string.
-     * @returns The file extension.
-     */
     private getFileExtension(url: string): string {
         const parsed = path.parse(new URL(url).pathname);
         return parsed.ext.replace('.', '') || 'unknown';
