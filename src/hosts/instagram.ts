@@ -32,7 +32,8 @@ class InstagramHandler implements PlatformHandler {
     }
 
     public isValidUrl(url: string): boolean {
-        const instagramRegex = /^(https?:\/\/)?(www\.)?(instagram\.com|instagr\.am)\/.+$/;
+        const instagramRegex =
+            /^(https?:\/\/)?(www\.)?(instagram\.com|instagr\.am)\/p\/[^\/\s]+\/?$/;
         return instagramRegex.test(url);
     }
 
@@ -43,8 +44,15 @@ class InstagramHandler implements PlatformHandler {
     ): Promise<MediaInfo> {
         const mergedOptions = mergeOptions(options);
         try {
+            const postId = this.extractPostId(url);
+            if (!postId) {
+                throw new PlatformNotSupportedError(
+                    'Unable to extract post ID from URL.'
+                );
+            }
+
             const htmlContent = await this.fetchMediaPage(url);
-            let mediaUrls = this.extractMediaUrls(htmlContent, mergedOptions);
+            let mediaUrls = this.extractMediaUrls(htmlContent, mergedOptions, postId);
 
             if (mediaUrls.length === 0) {
                 throw new MediaNotFoundError(
@@ -55,7 +63,11 @@ class InstagramHandler implements PlatformHandler {
             const metadata = await this.extractMetadata(url);
 
             if (mergedOptions.downloadMedia) {
-                mediaUrls = await this.downloadMedia(mediaUrls, config.downloadDir);
+                mediaUrls = await this.downloadMedia(
+                    mediaUrls,
+                    config.downloadDir,
+                    postId
+                );
             }
 
             const mediaInfo: MediaInfo = {
@@ -83,6 +95,12 @@ class InstagramHandler implements PlatformHandler {
                 );
             }
         }
+    }
+
+    private extractPostId(url: string): string | null {
+        const regex = /instagram\.com\/p\/([^\/\s]+)/;
+        const match = url.match(regex);
+        return match ? match[1] : null;
     }
 
     private async fetchMediaPage(url: string): Promise<string> {
@@ -167,55 +185,65 @@ class InstagramHandler implements PlatformHandler {
 
     private extractMediaUrls(
         html: string,
-        options: Required<DownloadOptions>
+        options: Required<DownloadOptions>,
+        postId: string
     ): MediaInfo['urls'] {
         const $ = cheerio.load(html);
         const mediaUrls: MediaInfo['urls'] = [];
 
         $('.download-items').each((_, element) => {
-            const videoDownloadLink = $(element)
-                .find('.download-items__btn:not(.dl-thumb) > a')
-                .attr('href');
+            const $element = $(element);
 
-            if (videoDownloadLink) {
-                const quality = $(element).find('.download-items__title').text().trim();
-                mediaUrls.push({
-                    url: videoDownloadLink,
-                    quality: quality || 'unknown',
-                    format: 'mp4',
-                    size: 0,
-                });
-            } else {
-                let qualityOptions = $(element)
-                    .find('.photo-option select option')
-                    .map((_, option) => ({
-                        url: $(option).attr('value'),
-                        dimensions: $(option).text().trim(),
-                    }))
-                    .get();
+            // Find all download buttons excluding the thumbnail download (dl-thumb)
+            const downloadButtons = $element.find(
+                '.download-items__btn:not(.dl-thumb) > a'
+            );
 
-                qualityOptions.sort((a, b) => {
-                    const [aWidth, aHeight] = a.dimensions.split('x').map(Number);
-                    const [bWidth, bHeight] = b.dimensions.split('x').map(Number);
-                    return bWidth * bHeight - aWidth * aHeight;
-                });
+            downloadButtons.each((_, button) => {
+                const $button = $(button);
+                const href = $button.attr('href');
+                const buttonText = $button.find('span').last().text().trim();
 
-                let selectedOption =
-                    qualityOptions.find(
-                        option => option.dimensions === options.quality
-                    ) || qualityOptions[0];
+                if (!href) return;
 
-                if (selectedOption) {
+                if (buttonText === 'Download Video') {
+                    const format = 'mp4';
+                    const quality = 'unknown';
                     mediaUrls.push({
-                        url: selectedOption.url,
-                        quality: selectedOption.dimensions,
-                        format: 'jpg',
+                        url: href,
+                        quality: quality,
+                        format: format,
                         size: 0,
                     });
-                } else {
-                    logger.error('No suitable quality option found');
+                } else if (buttonText === 'Download Image') {
+                    const qualityOptions = $element
+                        .find('.photo-option select option')
+                        .map((_, option) => ({
+                            url: $(option).attr('value'),
+                            quality: $(option).text().trim(),
+                        }))
+                        .get();
+
+                    if (qualityOptions.length > 0) {
+                        qualityOptions.forEach(option => {
+                            mediaUrls.push({
+                                url: option.url || '',
+                                quality: option.quality || 'unknown',
+                                format: 'jpeg',
+                                size: 0,
+                            });
+                        });
+                    } else {
+                        // If no quality options, use the href from the button
+                        mediaUrls.push({
+                            url: href,
+                            quality: 'unknown',
+                            format: 'jpeg',
+                            size: 0,
+                        });
+                    }
                 }
-            }
+            });
         });
 
         if (mediaUrls.length === 0) {
@@ -251,8 +279,8 @@ class InstagramHandler implements PlatformHandler {
                 return {
                     title: jsonData.caption || '',
                     author: jsonData.author?.alternateName || '',
-                    views: undefined,
-                    likes: undefined,
+                    views: jsonData.interactionStatistic?.userInteractionCount,
+                    likes: jsonData.interactionStatistic?.userInteractionCount,
                 };
             }
             return {};
@@ -264,12 +292,17 @@ class InstagramHandler implements PlatformHandler {
 
     private async downloadMedia(
         mediaUrls: MediaInfo['urls'],
-        downloadDir: string
+        downloadDir: string,
+        postId: string
     ): Promise<MediaInfo['urls']> {
         return Promise.all(
-            mediaUrls.map(async mediaItem => {
-                const fileName = this.getFileNameFromUrl(mediaItem.url);
+            mediaUrls.map(async (mediaItem, index) => {
                 try {
+                    const fileName = this.getFileNameFromUrl(
+                        postId,
+                        index + 1,
+                        mediaItem.format
+                    );
                     const localPath = await this.fileDownloader.downloadFile(
                         mediaItem.url,
                         downloadDir,
@@ -284,13 +317,9 @@ class InstagramHandler implements PlatformHandler {
         );
     }
 
-    private getFileNameFromUrl(url: string): string {
-        try {
-            const urlObj = new URL(url);
-            return urlObj.pathname.split('/').pop() || `instagram_media_${Date.now()}`;
-        } catch {
-            return `instagram_media_${Date.now()}`;
-        }
+    private getFileNameFromUrl(postId: string, index: number, format: string): string {
+        const extension = format === 'unknown' ? '' : `.${format}`;
+        return `instagram-${postId}-${index}${extension}`;
     }
 }
 

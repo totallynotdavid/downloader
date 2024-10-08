@@ -11,6 +11,6 @@ const options: DownloadOptions = {
 };
 
 downloader
-    .getMediaInfo('https://www.instagram.com/p/C-KmYkCsSr5/', options)
+    .getMediaInfo('https://www.instagram.com/p/C-4D2GJo9Cd/', options)
     .then(result => console.log(result))
     .catch(error => console.error(error));
