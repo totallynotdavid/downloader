@@ -44,6 +44,7 @@ class InstagramHandler implements PlatformHandler {
         const mergedOptions = mergeOptions(options);
         try {
             const htmlContent = await this.fetchMediaPage(url);
+
             let mediaUrls = this.extractMediaUrls(htmlContent, mergedOptions);
 
             if (mediaUrls.length === 0) {
@@ -272,7 +273,7 @@ class InstagramHandler implements PlatformHandler {
                 try {
                     const localPath = await this.fileDownloader.downloadFile(
                         mediaItem.url,
-                        downloadDir || './downloads',
+                        downloadDir,
                         fileName
                     );
                     return {...mediaItem, localPath};
