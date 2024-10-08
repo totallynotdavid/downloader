@@ -15,21 +15,19 @@ import vm from 'node:vm';
 import * as cheerio from 'cheerio';
 
 class InstagramHandler implements PlatformHandler {
-    private readonly BASE_URL: string;
-    private readonly headers: Record<string, string>;
+    private readonly BASE_URL: string = 'https://v3.savevid.net/api/ajaxSearch';
+    private readonly headers: Record<string, string> = {
+        accept: '*/*',
+        'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
+        Referer: 'https://savevid.net/',
+        'Referrer-Policy': 'strict-origin-when-cross-origin',
+    };
+    private cache: Map<string, MediaInfo> = new Map();
 
     constructor(
         private httpClient: HttpClient,
         private fileDownloader: FileDownloader
-    ) {
-        this.BASE_URL = 'https://v3.savevid.net/api/ajaxSearch';
-        this.headers = {
-            accept: '*/*',
-            'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
-            Referer: 'https://savevid.net/',
-            'Referrer-Policy': 'strict-origin-when-cross-origin',
-        };
-    }
+    ) {}
 
     public isValidUrl(url: string): boolean {
         const instagramRegex =
@@ -43,6 +41,12 @@ class InstagramHandler implements PlatformHandler {
         config: DownloaderConfig
     ): Promise<MediaInfo> {
         const mergedOptions = mergeOptions(options);
+        const cacheKey = `${url}_${JSON.stringify(mergedOptions)}`;
+
+        if (this.cache.has(cacheKey)) {
+            return this.cache.get(cacheKey)!;
+        }
+
         try {
             const postId = this.extractPostId(url);
             if (!postId) {
@@ -51,16 +55,22 @@ class InstagramHandler implements PlatformHandler {
                 );
             }
 
-            const htmlContent = await this.fetchMediaPage(url);
-            let mediaUrls = this.extractMediaUrls(htmlContent, mergedOptions, postId);
+            const [htmlContent, metadata] = await Promise.all([
+                this.fetchMediaPage(url),
+                this.extractMetadata(url),
+            ]);
+
+            let mediaUrls = await this.extractMediaUrls(
+                htmlContent,
+                mergedOptions,
+                postId
+            );
 
             if (mediaUrls.length === 0) {
                 throw new MediaNotFoundError(
                     'No media found at the provided Instagram URL.'
                 );
             }
-
-            const metadata = await this.extractMetadata(url);
 
             if (mergedOptions.downloadMedia) {
                 mediaUrls = await this.downloadMedia(
@@ -81,6 +91,7 @@ class InstagramHandler implements PlatformHandler {
                 },
             };
 
+            this.cache.set(cacheKey, mediaInfo);
             return mediaInfo;
         } catch (error) {
             logger.error(`Error fetching Instagram media info: ${error}`);
@@ -98,8 +109,7 @@ class InstagramHandler implements PlatformHandler {
     }
 
     private extractPostId(url: string): string | null {
-        const regex = /instagram\.com\/p\/([^\/\s]+)/;
-        const match = url.match(regex);
+        const match = url.match(/instagram\.com\/p\/([^\/\s]+)/);
         return match ? match[1] : null;
     }
 
@@ -135,7 +145,6 @@ class InstagramHandler implements PlatformHandler {
                 throw new MediaNotFoundError('Unexpected response format.');
             }
         } catch (error) {
-            logger.error(`Error fetching media page: ${error}`);
             if (axios.isAxiosError(error) && error.response?.status === 429) {
                 throw new RateLimitError('Rate limit exceeded. Consider using a proxy.');
             }
@@ -152,7 +161,6 @@ class InstagramHandler implements PlatformHandler {
                 write: (html: string) => {
                     sandbox.result += html;
                 },
-                // Simulate document.getElementById() to capture injected content
                 getElementById: (id: string) => ({
                     set innerHTML(content: string) {
                         if (id === 'download-result') {
@@ -176,25 +184,23 @@ class InstagramHandler implements PlatformHandler {
             const script = new vm.Script(code);
             const context = vm.createContext(sandbox);
             script.runInContext(context);
+            return sandbox.result;
         } catch (error) {
             logger.error(`Error executing JavaScript: ${error}`);
             throw new DownloadError('Error executing response script.');
         }
-        return sandbox.result;
     }
 
-    private extractMediaUrls(
+    private async extractMediaUrls(
         html: string,
         options: Required<DownloadOptions>,
         postId: string
-    ): MediaInfo['urls'] {
+    ): Promise<MediaInfo['urls']> {
         const $ = cheerio.load(html);
         const mediaUrls: MediaInfo['urls'] = [];
 
         $('.download-items').each((_, element) => {
             const $element = $(element);
-
-            // Find all download buttons excluding the thumbnail download (dl-thumb)
             const downloadButtons = $element.find(
                 '.download-items__btn:not(.dl-thumb) > a'
             );
@@ -207,34 +213,32 @@ class InstagramHandler implements PlatformHandler {
                 if (!href) return;
 
                 if (buttonText === 'Download Video') {
-                    const format = 'mp4';
-                    const quality = 'unknown';
                     mediaUrls.push({
                         url: href,
-                        quality: quality,
-                        format: format,
+                        quality: 'unknown',
+                        format: 'mp4',
                         size: 0,
                     });
                 } else if (buttonText === 'Download Image') {
                     const qualityOptions = $element
                         .find('.photo-option select option')
                         .map((_, option) => ({
-                            url: $(option).attr('value'),
+                            url: $(option).attr('value') || '',
                             quality: $(option).text().trim(),
+                            format: 'jpeg',
+                            size: 0,
                         }))
                         .get();
 
                     if (qualityOptions.length > 0) {
-                        qualityOptions.forEach(option => {
-                            mediaUrls.push({
-                                url: option.url || '',
-                                quality: option.quality || 'unknown',
-                                format: 'jpeg',
-                                size: 0,
-                            });
-                        });
+                        const selectedQuality = this.selectQuality(
+                            qualityOptions,
+                            options.quality
+                        );
+                        if (selectedQuality) {
+                            mediaUrls.push(selectedQuality);
+                        }
                     } else {
-                        // If no quality options, use the href from the button
                         mediaUrls.push({
                             url: href,
                             quality: 'unknown',
@@ -259,6 +263,37 @@ class InstagramHandler implements PlatformHandler {
         }
 
         return mediaUrls;
+    }
+
+    private selectQuality(
+        options: Array<{url: string; quality: string; format: string; size: number}>,
+        desiredQuality: string
+    ): {url: string; quality: string; format: string; size: number} | null {
+        if (desiredQuality === 'highest') {
+            return options[0];
+        }
+
+        const parseResolution = (quality: string): number => {
+            const match = quality.match(/(\d+)x(\d+)/);
+            return match ? Math.max(parseInt(match[1]), parseInt(match[2])) : 0;
+        };
+
+        const desiredHeight = parseInt(desiredQuality);
+        if (isNaN(desiredHeight)) {
+            logger.warn(
+                `Invalid quality specified: ${desiredQuality}. Defaulting to highest.`
+            );
+            return options[0];
+        }
+
+        return options.reduce((closest, current) => {
+            const currentResolution = parseResolution(current.quality);
+            const closestResolution = parseResolution(closest.quality);
+            return Math.abs(currentResolution - desiredHeight) <
+                Math.abs(closestResolution - desiredHeight)
+                ? current
+                : closest;
+        });
     }
 
     private async extractMetadata(
