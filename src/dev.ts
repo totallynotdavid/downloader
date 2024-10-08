@@ -11,9 +11,6 @@ const options: DownloadOptions = {
 };
 
 downloader
-    .getMediaInfo(
-        'https://imgur.com/gallery/mouth-movements-hxXHU13',
-        options
-    )
+    .getMediaInfo('https://www.instagram.com/p/C-KmYkCsSr5/', options)
     .then(result => console.log(result))
     .catch(error => console.error(error));

@@ -11,7 +11,7 @@ import logger from '@/utils/logger';
 import {mergeOptions} from '@/utils/options-merger';
 import axios from 'axios';
 import qs from 'qs';
-import vm from 'vm';
+import vm from 'node:vm';
 import * as cheerio from 'cheerio';
 
 class InstagramHandler implements PlatformHandler {
@@ -134,6 +134,14 @@ class InstagramHandler implements PlatformHandler {
                 write: (html: string) => {
                     sandbox.result += html;
                 },
+                // Simulate document.getElementById() to capture injected content
+                getElementById: (id: string) => ({
+                    set innerHTML(content: string) {
+                        if (id === 'download-result') {
+                            sandbox.result = content;
+                        }
+                    },
+                }),
             },
             window: {
                 location: {
