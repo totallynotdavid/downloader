@@ -44,7 +44,6 @@ class InstagramHandler implements PlatformHandler {
         const mergedOptions = mergeOptions(options);
         try {
             const htmlContent = await this.fetchMediaPage(url);
-
             let mediaUrls = this.extractMediaUrls(htmlContent, mergedOptions);
 
             if (mediaUrls.length === 0) {
