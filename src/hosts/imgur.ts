@@ -4,7 +4,7 @@ import {FileDownloader} from '@/utils/file-downloader';
 import {MediaNotFoundError} from '@/types/errors';
 import path from 'node:path';
 import logger from '@/utils/logger';
-import {ImgurApiData, ImgurApiResponse} from '@/types/imgur';
+import {ImgurApiData, ImgurApiResponse, ImgurPostV1Response} from '@/types/imgur';
 
 export default class ImgurHandler implements PlatformHandler {
     private readonly clientId: string;
@@ -40,7 +40,7 @@ export default class ImgurHandler implements PlatformHandler {
             url: mediaUrl,
             quality: 'original',
             format: this.getFileExtension(mediaUrl),
-            size: 0,
+            size: this.getSize(data, mediaUrl),
         }));
 
         if (options.downloadMedia) {
@@ -49,13 +49,7 @@ export default class ImgurHandler implements PlatformHandler {
 
         return {
             urls,
-            metadata: {
-                title: metadata.title,
-                author: data.account_url || 'Unknown',
-                platform: 'Imgur',
-                views: data.views,
-                likes: data.ups - data.downs,
-            },
+            metadata,
         };
     }
 
@@ -100,7 +94,9 @@ export default class ImgurHandler implements PlatformHandler {
         } else if (pathParts[0] === 'gallery' || pathParts[0] === 'a') {
             // Gallery or album
             type = 'album';
-            id = pathParts[1] ?? '';
+            const lastPart = pathParts[pathParts.length - 1] ?? '';
+            const parts = lastPart.split('-');
+            id = parts[parts.length - 1] ?? '';
         } else {
             // Single image page
             type = 'image';
@@ -111,51 +107,114 @@ export default class ImgurHandler implements PlatformHandler {
         return {type, id};
     }
 
-    private async fetchMediaInfo(type: string, id: string): Promise<ImgurApiData | null> {
-        const endpoint = `https://api.imgur.com/3/${type}/${id}`;
+    private async fetchMediaInfo(
+        type: string,
+        id: string
+    ): Promise<ImgurApiData | ImgurPostV1Response> {
+        let endpoint: string;
+        let responseType: 'ImgurApiResponse' | 'ImgurPostV1Response';
+
+        if (type === 'image') {
+            endpoint = `https://api.imgur.com/post/v1/media/${id}?client_id=${this.clientId}&include=media`;
+            responseType = 'ImgurPostV1Response';
+        } else {
+            endpoint = `https://api.imgur.com/3/${type}/${id}?client_id=${this.clientId}`;
+            responseType = 'ImgurApiResponse';
+        }
 
         try {
-            const response = await this.httpClient.get<ImgurApiResponse>(endpoint, {
-                headers: {Authorization: `Client-ID ${this.clientId}`},
-            });
+            const response = await this.httpClient.get(endpoint);
 
-            if (response.data.success && response.data.data) {
-                return response.data.data;
+            if (responseType === 'ImgurApiResponse') {
+                const imgurApiResponse = response.data as ImgurApiResponse;
+                if (imgurApiResponse.success && imgurApiResponse.data) {
+                    return imgurApiResponse.data;
+                }
+            } else {
+                return response.data as ImgurPostV1Response;
             }
-            return null;
+
+            throw new MediaNotFoundError('Media not found on Imgur.');
         } catch (error) {
             logger.error(`Error fetching media info from Imgur: ${error}`);
             throw new MediaNotFoundError('Failed to fetch media info from Imgur.');
         }
     }
 
-    private extractUrls(data: ImgurApiData): string[] {
-        if (data.is_album && data.images) {
+    private extractUrls(data: ImgurApiData | ImgurPostV1Response): string[] {
+        if ('is_album' in data && data.is_album && 'images' in data && data.images) {
             return data.images.map(img => img.link);
-        } else if (data.link) {
+        } else if ('media' in data && data.media) {
+            return data.media.map(media => media.url);
+        } else if ('link' in data && data.link) {
             return [data.link];
         }
         return [];
     }
 
-    private extractMetadata(data: ImgurApiData): {title: string} {
-        let title = data.title || 'Untitled';
+    private extractMetadata(
+        data: ImgurApiData | ImgurPostV1Response
+    ): MediaInfo['metadata'] {
+        let title = 'Untitled';
+        let views = 0;
+        let author = 'Unknown';
+        let likes = 0;
 
-        if (data.description) {
+        if ('title' in data) {
+            title = data.title || 'Untitled';
+        }
+
+        if ('description' in data && data.description) {
             title += ` - ${data.description}`;
         }
 
-        if (data.is_album) {
+        if ('is_album' in data && data.is_album) {
             title += ` (Album)`;
+        }
+
+        if ('view_count' in data) {
+            views = data.view_count;
+        } else if ('views' in data) {
+            views = data.views || 0;
+        }
+
+        if ('account_url' in data) {
+            author = data.account_url || 'Unknown';
+        }
+
+        if ('upvote_count' in data && 'downvote_count' in data) {
+            likes = data.upvote_count - data.downvote_count;
+        } else if ('ups' in data && 'downs' in data) {
+            likes = (data.ups || 0) - (data.downs || 0);
         }
 
         return {
             title: title.trim(),
+            author,
+            platform: 'Imgur',
+            views,
+            likes,
         };
     }
 
     private getFileExtension(url: string): string {
         const parsed = path.parse(new URL(url).pathname);
         return parsed.ext.replace('.', '') || 'unknown';
+    }
+
+    private getSize(data: ImgurApiData | ImgurPostV1Response, url: string): number {
+        let sizeInBytes = 0;
+
+        if ('media' in data) {
+            const media = data.media.find(m => m.url === url);
+            sizeInBytes = media ? media.size : 0;
+        } else if ('images' in data && data.images) {
+            const image = data.images.find(img => img.link === url);
+            sizeInBytes = image ? image.size : 0;
+        } else if ('size' in data) {
+            sizeInBytes = data.size;
+        }
+
+        return Number((sizeInBytes / (1024 * 1024)).toFixed(2));
     }
 }

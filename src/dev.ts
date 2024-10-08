@@ -11,6 +11,9 @@ const options: DownloadOptions = {
 };
 
 downloader
-    .getMediaInfo('https://www.facebook.com/1551UNMSM/videos/2126724314377208', options)
+    .getMediaInfo(
+        'https://imgur.com/gallery/mouth-movements-hxXHU13',
+        options
+    )
     .then(result => console.log(result))
     .catch(error => console.error(error));

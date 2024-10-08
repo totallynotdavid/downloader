@@ -4,6 +4,45 @@ export interface ImgurApiResponse {
     status: number;
 }
 
+export interface ImgurPostV1Response {
+    id: string;
+    account_id: number;
+    title: string;
+    description: string;
+    view_count: number;
+    upvote_count: number;
+    downvote_count: number;
+    point_count: number;
+    is_album: boolean;
+    created_at: string;
+    updated_at: string | null;
+    url: string;
+    privacy: string;
+    media: Array<{
+        id: string;
+        account_id: number;
+        mime_type: string;
+        type: string;
+        name: string;
+        basename: string;
+        url: string;
+        ext: string;
+        width: number;
+        height: number;
+        size: number;
+        metadata: {
+            title: string;
+            description: string;
+            is_animated: boolean;
+            is_looping: boolean;
+            duration: number;
+            has_sound: boolean;
+        };
+        created_at: string;
+        updated_at: string | null;
+    }>;
+}
+
 export interface ImgurApiData {
     id: string;
     title: string;
