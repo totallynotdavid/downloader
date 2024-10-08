@@ -31,7 +31,7 @@ class InstagramHandler implements PlatformHandler {
 
     public isValidUrl(url: string): boolean {
         const instagramRegex =
-            /^(https?:\/\/)?(www\.)?(instagram\.com|instagr\.am)\/p\/[^\/\s]+\/?$/;
+            /^(https?:\/\/)?(www\.)?(instagram\.com|instagr\.am)\/(p|reel|reels)\/[^\/\s]+\/?$/;
         return instagramRegex.test(url);
     }
 
@@ -109,7 +109,7 @@ class InstagramHandler implements PlatformHandler {
     }
 
     private extractPostId(url: string): string | null {
-        const match = url.match(/instagram\.com\/p\/([^\/\s]+)/);
+        const match = url.match(/instagram\.com\/(?:p|reel|reels)\/([^\/\s]+)/);
         return match ? match[1] : null;
     }
 
