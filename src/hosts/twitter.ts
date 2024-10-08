@@ -26,10 +26,14 @@ export default class TwitterHandler implements PlatformHandler {
         try {
             const mediaInfo = await this.getMediaInfoFromApi(url);
 
-            const mediaUrls = this.processMediaItems(mediaInfo.media_extended);
+            let urls = this.processMediaItems(mediaInfo.media_extended);
 
-            const result: MediaInfo = {
-                urls: mediaUrls,
+            if (options.downloadMedia) {
+                urls = await this.downloadMediaFiles(urls, config.downloadDir);
+            }
+
+            return {
+                urls,
                 metadata: {
                     title: mediaInfo.text,
                     author: mediaInfo.user.username,
@@ -38,15 +42,6 @@ export default class TwitterHandler implements PlatformHandler {
                     likes: mediaInfo.likes,
                 },
             };
-
-            if (options.downloadMedia) {
-                result.localPath = await this.downloadMediaFiles(
-                    mediaUrls,
-                    config.downloadDir
-                );
-            }
-
-            return result;
         } catch (error) {
             logger.error(`Error in TwitterHandler getMediaInfo: ${error}`);
             if (error instanceof MediaNotFoundError) {
@@ -96,18 +91,23 @@ export default class TwitterHandler implements PlatformHandler {
     }
 
     private async downloadMediaFiles(
-        mediaUrls: MediaInfo['urls'],
+        urls: MediaInfo['urls'],
         downloadDir: string
-    ): Promise<string> {
-        const downloads = mediaUrls.map((media, index) =>
-            this.fileDownloader.downloadFile(
-                media.url,
-                downloadDir,
-                `twitter_media_${Date.now()}_${index + 1}.${media.format}`
-            )
+    ): Promise<MediaInfo['urls']> {
+        return Promise.all(
+            urls.map(async (urlInfo, index) => {
+                try {
+                    const localPath = await this.fileDownloader.downloadFile(
+                        urlInfo.url,
+                        downloadDir,
+                        `twitter_media_${Date.now()}_${index + 1}.${urlInfo.format}`
+                    );
+                    return {...urlInfo, localPath};
+                } catch (error) {
+                    logger.error(`Failed to download file: ${error}`);
+                    return urlInfo;
+                }
+            })
         );
-
-        const localPaths = await Promise.all(downloads);
-        return localPaths.join(', ');
     }
 }

@@ -44,10 +44,14 @@ class FacebookHandler implements PlatformHandler {
                 );
             }
 
-            const urls = this.extractMediaUrls(data, options.quality);
+            let urls = this.extractMediaUrls(data, options.quality);
 
             if (urls.length === 0) {
                 throw new MediaNotFoundError('No downloadable video found.');
+            }
+
+            if (options.downloadMedia) {
+                urls = await this.downloadMedia(urls, config.downloadDir, data.title);
             }
 
             const mediaInfo: MediaInfo = {
@@ -58,22 +62,6 @@ class FacebookHandler implements PlatformHandler {
                     platform: 'Facebook',
                 },
             };
-
-            if (options.downloadMedia) {
-                const mediaUrl = mediaInfo.urls[0].url;
-                const fileExtension = mediaInfo.urls[0].format;
-                const sanitizedTitle = mediaInfo.metadata.title
-                    .replace(/[^\w\s-]/g, '')
-                    .replace(/\s+/g, '_');
-                const fileName = `${sanitizedTitle}-${Date.now()}.${fileExtension}`;
-
-                const localPath = await this.fileDownloader.downloadFile(
-                    mediaUrl,
-                    config.downloadDir || './downloads',
-                    fileName
-                );
-                mediaInfo.localPath = localPath;
-            }
 
             return mediaInfo;
         } catch (error: any) {
@@ -88,8 +76,8 @@ class FacebookHandler implements PlatformHandler {
         }
     }
 
-    private extractMediaUrls(data: any, quality: string): Array<MediaInfo['urls'][0]> {
-        const urls = [];
+    private extractMediaUrls(data: any, quality: string): MediaInfo['urls'] {
+        const urls: MediaInfo['urls'] = [];
         const desiredQuality = quality.toLowerCase();
 
         if (['highest', 'hd', 'high', '720p', '1080p'].includes(desiredQuality)) {
@@ -134,6 +122,33 @@ class FacebookHandler implements PlatformHandler {
         }
 
         return urls;
+    }
+
+    private async downloadMedia(
+        urls: MediaInfo['urls'],
+        downloadDir: string,
+        title: string
+    ): Promise<MediaInfo['urls']> {
+        return Promise.all(
+            urls.map(async urlInfo => {
+                const sanitizedTitle = title
+                    .replace(/[^\w\s-]/g, '')
+                    .replace(/\s+/g, '_');
+                const fileName = `${sanitizedTitle}-${Date.now()}-${urlInfo.quality}.${urlInfo.format}`;
+
+                try {
+                    const localPath = await this.fileDownloader.downloadFile(
+                        urlInfo.url,
+                        downloadDir || './downloads',
+                        fileName
+                    );
+                    return {...urlInfo, localPath};
+                } catch (error) {
+                    logger.error(`Failed to download file: ${error}`);
+                    return urlInfo;
+                }
+            })
+        );
     }
 }
 

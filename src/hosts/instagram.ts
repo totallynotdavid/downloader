@@ -44,7 +44,7 @@ class InstagramHandler implements PlatformHandler {
         const mergedOptions = mergeOptions(options);
         try {
             const htmlContent = await this.fetchMediaPage(url);
-            const mediaUrls = this.extractMediaUrls(htmlContent, mergedOptions);
+            let mediaUrls = this.extractMediaUrls(htmlContent, mergedOptions);
 
             if (mediaUrls.length === 0) {
                 throw new MediaNotFoundError(
@@ -54,13 +54,12 @@ class InstagramHandler implements PlatformHandler {
 
             const metadata = await this.extractMetadata(url);
 
+            if (mergedOptions.downloadMedia) {
+                mediaUrls = await this.downloadMedia(mediaUrls, config.downloadDir);
+            }
+
             const mediaInfo: MediaInfo = {
-                urls: mediaUrls.map(mediaUrl => ({
-                    url: mediaUrl.url,
-                    quality: mediaUrl.quality || 'unknown',
-                    format: mediaUrl.format || 'unknown',
-                    size: mediaUrl.size || 0,
-                })),
+                urls: mediaUrls,
                 metadata: {
                     title: metadata.title || '',
                     author: metadata.author || '',
@@ -69,14 +68,6 @@ class InstagramHandler implements PlatformHandler {
                     likes: metadata.likes,
                 },
             };
-
-            if (mergedOptions.downloadMedia) {
-                const localPaths = await this.downloadMedia(
-                    mediaInfo.urls,
-                    config.downloadDir
-                );
-                mediaInfo.localPath = localPaths.join(', ');
-            }
 
             return mediaInfo;
         } catch (error) {
@@ -169,14 +160,9 @@ class InstagramHandler implements PlatformHandler {
     private extractMediaUrls(
         html: string,
         options: Required<DownloadOptions>
-    ): Array<{url: string; quality?: string; format?: string; size?: number}> {
+    ): MediaInfo['urls'] {
         const $ = cheerio.load(html);
-        const mediaUrls: Array<{
-            url: string;
-            quality?: string;
-            format?: string;
-            size?: number;
-        }> = [];
+        const mediaUrls: MediaInfo['urls'] = [];
 
         $('.download-items').each((_, element) => {
             const videoDownloadLink = $(element)
@@ -189,6 +175,7 @@ class InstagramHandler implements PlatformHandler {
                     url: videoDownloadLink,
                     quality: quality || 'unknown',
                     format: 'mp4',
+                    size: 0,
                 });
             } else {
                 let qualityOptions = $(element)
@@ -215,6 +202,7 @@ class InstagramHandler implements PlatformHandler {
                         url: selectedOption.url,
                         quality: selectedOption.dimensions,
                         format: 'jpg',
+                        size: 0,
                     });
                 } else {
                     logger.error('No suitable quality option found');
@@ -227,7 +215,9 @@ class InstagramHandler implements PlatformHandler {
             if (shareLink) {
                 mediaUrls.push({
                     url: shareLink,
+                    quality: 'unknown',
                     format: 'unknown',
+                    size: 0,
                 });
             }
         }
@@ -265,28 +255,33 @@ class InstagramHandler implements PlatformHandler {
     }
 
     private async downloadMedia(
-        mediaUrls: Array<{url: string; quality?: string; format?: string; size?: number}>,
+        mediaUrls: MediaInfo['urls'],
         downloadDir: string
-    ): Promise<string[]> {
-        const localPaths: string[] = [];
-        for (const mediaItem of mediaUrls) {
-            const fileName = this.getFileNameFromUrl(mediaItem.url);
-            const localPath = await this.fileDownloader.downloadFile(
-                mediaItem.url,
-                downloadDir || './downloads',
-                fileName
-            );
-            localPaths.push(localPath);
-        }
-        return localPaths;
+    ): Promise<MediaInfo['urls']> {
+        return Promise.all(
+            mediaUrls.map(async mediaItem => {
+                const fileName = this.getFileNameFromUrl(mediaItem.url);
+                try {
+                    const localPath = await this.fileDownloader.downloadFile(
+                        mediaItem.url,
+                        downloadDir || './downloads',
+                        fileName
+                    );
+                    return {...mediaItem, localPath};
+                } catch (error) {
+                    logger.error(`Failed to download file: ${error}`);
+                    return mediaItem;
+                }
+            })
+        );
     }
 
     private getFileNameFromUrl(url: string): string {
         try {
             const urlObj = new URL(url);
-            return urlObj.pathname.split('/').pop() || `downloaded_file_${Date.now()}`;
+            return urlObj.pathname.split('/').pop() || `instagram_media_${Date.now()}`;
         } catch {
-            return `downloaded_file_${Date.now()}`;
+            return `instagram_media_${Date.now()}`;
         }
     }
 }

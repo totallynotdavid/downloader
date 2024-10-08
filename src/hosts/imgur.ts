@@ -58,26 +58,19 @@ export default class ImgurHandler implements PlatformHandler {
         const mediaUrls = this.extractUrls(data);
         const metadata = this.extractMetadata(data);
 
-        const urls = mediaUrls.map(mediaUrl => ({
+        let urls: MediaInfo['urls'] = mediaUrls.map(mediaUrl => ({
             url: mediaUrl,
-            quality: 'original', // Imgur doesn't provide quality variants
+            quality: 'original',
             format: this.getFileExtension(mediaUrl),
-            size: 0, // Size is unknown at this point; can fetch headers if needed
+            size: 0,
         }));
 
-        let localPath: string | undefined;
         if (options.downloadMedia) {
-            const fileName = `${metadata.title || 'imgur_media'}.${urls[0].format}`;
-            localPath = await this.fileDownloader.downloadFile(
-                urls[0].url,
-                config.downloadDir,
-                fileName
-            );
+            urls = await this.downloadMedia(urls, config.downloadDir, metadata.title);
         }
 
         return {
             urls,
-            localPath,
             metadata: {
                 title: metadata.title,
                 author: data.account_url || 'Unknown',
@@ -86,6 +79,40 @@ export default class ImgurHandler implements PlatformHandler {
                 likes: data.ups - data.downs,
             },
         };
+    }
+
+    /**
+     * Downloads media files and updates the URLs with local paths.
+     * @param urls Array of URL objects to download.
+     * @param downloadDir Directory to save downloaded files.
+     * @param title Base title for the files.
+     * @returns Updated array of URL objects with local paths.
+     */
+    private async downloadMedia(
+        urls: MediaInfo['urls'],
+        downloadDir: string,
+        title: string
+    ): Promise<MediaInfo['urls']> {
+        return Promise.all(
+            urls.map(async (urlInfo, index) => {
+                const sanitizedTitle = title
+                    .replace(/[^\w\s-]/g, '')
+                    .replace(/\s+/g, '_');
+                const fileName = `${sanitizedTitle}_${index + 1}.${urlInfo.format}`;
+
+                try {
+                    const localPath = await this.fileDownloader.downloadFile(
+                        urlInfo.url,
+                        downloadDir,
+                        fileName
+                    );
+                    return {...urlInfo, localPath};
+                } catch (error) {
+                    logger.error(`Failed to download file: ${error}`);
+                    return urlInfo;
+                }
+            })
+        );
     }
 
     /**

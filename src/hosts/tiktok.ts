@@ -5,12 +5,6 @@ import {FileDownloader} from '@/utils/file-downloader';
 import logger from '@/utils/logger';
 import * as cheerio from 'cheerio';
 
-/**
- * TikTokHandler is responsible for extracting media information
- * and optionally downloading media from TikTok URLs.
- *
- * It uses the musicaldown.com service to fetch direct media URLs.
- */
 export default class TikTokHandler implements PlatformHandler {
     private readonly BASE_URL = 'https://musicaldown.com';
     private readonly API_URL = `${this.BASE_URL}/download`;
@@ -20,23 +14,11 @@ export default class TikTokHandler implements PlatformHandler {
         private fileDownloader: FileDownloader
     ) {}
 
-    /**
-     * Checks if the provided URL is a valid TikTok URL.
-     * @param url The URL to check.
-     * @returns True if the URL is a TikTok URL, false otherwise.
-     */
     public isValidUrl(url: string): boolean {
         const regex = /^(https?:\/\/)?(www\.)?(m\.)?(tiktok\.com)\/.+$/;
         return regex.test(url);
     }
 
-    /**
-     * Fetches media information from a TikTok URL.
-     * @param url The TikTok video URL.
-     * @param options The download options.
-     * @param config The downloader configuration.
-     * @returns A promise that resolves to a MediaInfo object.
-     */
     public async getMediaInfo(
         url: string,
         options: Required<DownloadOptions>,
@@ -45,17 +27,19 @@ export default class TikTokHandler implements PlatformHandler {
         logger.info(`TikTokHandler: Fetching media info for URL: ${url}`);
 
         try {
-            // Prepare request data by fetching initial form and cookie
             const {cookie, requestData} = await this.getRequestData(url);
-
-            // Fetch media URLs from musicaldown.com
-            const mediaUrls = await this.getMediaUrls(requestData, cookie);
-
-            // Fetch metadata from the TikTok page
+            let mediaUrls = await this.getMediaUrls(requestData, cookie);
             const metadata = await this.getMetadata(url);
 
-            // Build the MediaInfo object
-            const mediaInfo: MediaInfo = {
+            if (options.downloadMedia) {
+                mediaUrls = await this.downloadMedia(
+                    mediaUrls,
+                    config.downloadDir,
+                    metadata.title
+                );
+            }
+
+            return {
                 urls: mediaUrls,
                 metadata: {
                     title: metadata.title,
@@ -65,21 +49,6 @@ export default class TikTokHandler implements PlatformHandler {
                     likes: metadata.likes,
                 },
             };
-
-            // If downloadMedia option is true, download the first media file
-            if (options.downloadMedia && mediaInfo.urls.length > 0) {
-                const media = mediaInfo.urls[0];
-                const fileExtension = media.format || 'mp4';
-                const fileName = `${metadata.title || 'tiktok_media'}.${fileExtension}`;
-                const localPath = await this.fileDownloader.downloadFile(
-                    media.url,
-                    config.downloadDir || './downloads',
-                    fileName
-                );
-                mediaInfo.localPath = localPath;
-            }
-
-            return mediaInfo;
         } catch (error: any) {
             logger.error(`TikTokHandler: Error fetching media info: ${error.message}`);
 
@@ -91,11 +60,6 @@ export default class TikTokHandler implements PlatformHandler {
         }
     }
 
-    /**
-     * Prepares the request data required by musicaldown.com to process the TikTok URL.
-     * @param url The TikTok video URL.
-     * @returns An object containing the request data and cookie.
-     */
     private async getRequestData(
         url: string
     ): Promise<{cookie: string; requestData: any}> {
@@ -135,23 +99,10 @@ export default class TikTokHandler implements PlatformHandler {
         }
     }
 
-    /**
-     * Fetches media URLs by submitting the request data to musicaldown.com.
-     * @param requestData The request data to submit.
-     * @param cookie The session cookie.
-     * @returns An array of media URL objects.
-     */
     private async getMediaUrls(
         requestData: any,
         cookie: string
-    ): Promise<
-        Array<{
-            url: string;
-            quality: string;
-            format: string;
-            size: number;
-        }>
-    > {
+    ): Promise<MediaInfo['urls']> {
         try {
             const response = await this.httpClient.post(
                 this.API_URL,
@@ -171,7 +122,6 @@ export default class TikTokHandler implements PlatformHandler {
 
             const $ = cheerio.load(response.data);
 
-            // Check for rate limit error
             if (
                 response.data.includes('sending too many requests') ||
                 response.status === 429
@@ -179,13 +129,7 @@ export default class TikTokHandler implements PlatformHandler {
                 throw new RateLimitError('Rate limited by musicaldown.com');
             }
 
-            // Extract video URLs
-            const mediaUrls: Array<{
-                url: string;
-                quality: string;
-                format: string;
-                size: number;
-            }> = [];
+            const mediaUrls: MediaInfo['urls'] = [];
 
             // For videos
             $('a.button.is-info').each((_, element) => {
@@ -196,7 +140,7 @@ export default class TikTokHandler implements PlatformHandler {
                         url: link,
                         quality: 'Unknown',
                         format: 'mp4',
-                        size: 0, // Size can be determined later if needed
+                        size: 0,
                     });
                 }
             });
@@ -229,11 +173,6 @@ export default class TikTokHandler implements PlatformHandler {
         }
     }
 
-    /**
-     * Fetches metadata from the TikTok page.
-     * @param url The TikTok video URL.
-     * @returns An object containing metadata like title and author.
-     */
     private async getMetadata(
         url: string
     ): Promise<{title: string; author: string; views?: number; likes?: number}> {
@@ -249,7 +188,6 @@ export default class TikTokHandler implements PlatformHandler {
 
             const title = $('title').text().trim();
             const author = $('meta[name="author"]').attr('content') || '';
-            // Optionally, extract views and likes if available
             const viewsText = $('strong[data-e2e="video-views"]')
                 .text()
                 .replace(/[^\d]/g, '');
@@ -272,5 +210,32 @@ export default class TikTokHandler implements PlatformHandler {
                 author: '',
             };
         }
+    }
+
+    private async downloadMedia(
+        urls: MediaInfo['urls'],
+        downloadDir: string,
+        title: string
+    ): Promise<MediaInfo['urls']> {
+        return Promise.all(
+            urls.map(async (urlInfo, index) => {
+                const sanitizedTitle = title
+                    .replace(/[^\w\s-]/g, '')
+                    .replace(/\s+/g, '_');
+                const fileName = `${sanitizedTitle}_${index + 1}.${urlInfo.format}`;
+
+                try {
+                    const localPath = await this.fileDownloader.downloadFile(
+                        urlInfo.url,
+                        downloadDir,
+                        fileName
+                    );
+                    return {...urlInfo, localPath};
+                } catch (error) {
+                    logger.error(`Failed to download file: ${error}`);
+                    return urlInfo;
+                }
+            })
+        );
     }
 }

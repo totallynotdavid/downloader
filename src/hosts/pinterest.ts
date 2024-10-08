@@ -45,7 +45,7 @@ export default class PinterestHandler implements PlatformHandler {
                 );
             }
 
-            const urls = [];
+            let urls: MediaInfo['urls'] = [];
 
             if (videoMedia) {
                 urls.push({
@@ -54,7 +54,8 @@ export default class PinterestHandler implements PlatformHandler {
                     format: 'mp4',
                     size: 0,
                 });
-            } else if (imageMedia) {
+            }
+            if (imageMedia) {
                 urls.push({
                     url: imageMedia.url,
                     quality: 'unknown',
@@ -63,7 +64,14 @@ export default class PinterestHandler implements PlatformHandler {
                 });
             }
 
-            const result: MediaInfo = {
+            if (options.downloadMedia) {
+                urls = await this.downloadMedia(
+                    urls,
+                    config.downloadDir || './downloads'
+                );
+            }
+
+            return {
                 urls,
                 metadata: {
                     title: mediaInfo.title || '',
@@ -73,20 +81,6 @@ export default class PinterestHandler implements PlatformHandler {
                     likes: undefined,
                 },
             };
-
-            if (options.downloadMedia) {
-                const downloadUrl = urls[0].url;
-                const extension = videoMedia ? 'mp4' : 'jpg';
-                const fileName = `pinterest_${crypto.randomBytes(8).toString('hex')}.${extension}`;
-                const localPath = await this.fileDownloader.downloadFile(
-                    downloadUrl,
-                    config.downloadDir || './downloads',
-                    fileName
-                );
-                result.localPath = localPath;
-            }
-
-            return result;
         } catch (error: any) {
             logger.error(`Error fetching media info from Pinterest: ${error.message}`);
             if (error.response && error.response.status === 429) {
@@ -97,6 +91,28 @@ export default class PinterestHandler implements PlatformHandler {
                 throw new DownloadError(`Failed to fetch media info: ${error.message}`);
             }
         }
+    }
+
+    private async downloadMedia(
+        urls: MediaInfo['urls'],
+        downloadDir: string
+    ): Promise<MediaInfo['urls']> {
+        return Promise.all(
+            urls.map(async (urlInfo, index) => {
+                const fileName = `pinterest_${crypto.randomBytes(8).toString('hex')}_${index + 1}.${urlInfo.format}`;
+                try {
+                    const localPath = await this.fileDownloader.downloadFile(
+                        urlInfo.url,
+                        downloadDir,
+                        fileName
+                    );
+                    return {...urlInfo, localPath};
+                } catch (error) {
+                    logger.error(`Failed to download file: ${error}`);
+                    return urlInfo;
+                }
+            })
+        );
     }
 
     private async fetchMediaInfo(url: string): Promise<PinterestMediaInfo> {

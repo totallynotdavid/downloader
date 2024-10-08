@@ -49,12 +49,11 @@ class YouTubeHandler implements PlatformHandler {
             cookies
         );
 
-        let localPath: string | undefined;
         if (options.downloadMedia && mediaUrls.length > 0) {
-            localPath = await this.downloadMedia(mediaUrls, analysisData.title, config);
+            await this.downloadMediaFiles(mediaUrls, analysisData.title, config);
         }
 
-        return this.createMediaInfo(mediaUrls, localPath, analysisData);
+        return this.createMediaInfo(mediaUrls, analysisData);
     }
 
     private getCookies(): string[] {
@@ -207,23 +206,24 @@ class YouTubeHandler implements PlatformHandler {
         };
     }
 
-    private async downloadMedia(
+    private async downloadMediaFiles(
         mediaUrls: any[],
         title: string,
         config: DownloaderConfig
-    ): Promise<string | undefined> {
-        const selectedMedia =
-            mediaUrls.find(urlInfo => urlInfo.format === 'mp4') || mediaUrls[0];
-        const fileName = this.generateFileName(title, selectedMedia.format);
-        try {
-            return await this.fileDownloader.downloadFile(
-                selectedMedia.url,
-                config.downloadDir,
-                fileName
-            );
-        } catch (error) {
-            logger.error(`Error downloading file: ${error}`);
-            return undefined;
+    ): Promise<void> {
+        for (const media of mediaUrls) {
+            const fileName = this.generateFileName(title, media.format);
+            try {
+                const localPath = await this.fileDownloader.downloadFile(
+                    media.url,
+                    config.downloadDir,
+                    fileName
+                );
+                media.localPath = localPath;
+            } catch (error) {
+                logger.error(`Error downloading file: ${error}`);
+                media.localPath = undefined;
+            }
         }
     }
 
@@ -239,17 +239,12 @@ class YouTubeHandler implements PlatformHandler {
                 }
             }
         }
-        return {url, quality: item.q, format, size: sizeMB};
+        return {url, quality: item.q, format, size: sizeMB, localPath: undefined};
     }
 
-    private createMediaInfo(
-        mediaUrls: any[],
-        localPath: string | undefined,
-        analysisData: any
-    ): MediaInfo {
+    private createMediaInfo(mediaUrls: any[], analysisData: any): MediaInfo {
         return {
             urls: mediaUrls,
-            localPath,
             metadata: {
                 title: analysisData.title,
                 author: analysisData.author,
