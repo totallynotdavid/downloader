@@ -29,6 +29,7 @@ class FacebookHandler implements PlatformHandler {
 
             const response = await this.httpClient.post(this.apiUrl, postData, {
                 headers: {
+                    Host: 'x2download.app',
                     'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
                     'User-Agent':
                         'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 ' +
@@ -139,7 +140,7 @@ class FacebookHandler implements PlatformHandler {
                 try {
                     const localPath = await this.fileDownloader.downloadFile(
                         urlInfo.url,
-                        downloadDir || './downloads',
+                        downloadDir,
                         fileName
                     );
                     return {...urlInfo, localPath};
