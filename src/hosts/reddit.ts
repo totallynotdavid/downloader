@@ -29,12 +29,12 @@ export default class RedditHandler implements PlatformHandler {
                 metadata: this.extractMetadata(postData),
             };
 
-            const mediaUrls = this.processRedditPost(postData);
-            if (!mediaUrls.length) {
+            const mediaItems = this.processRedditPost(postData);
+            if (!mediaItems.length) {
                 throw new MediaNotFoundError('No media found in the Reddit post.');
             }
 
-            mediaInfo.urls = await this.populateMediaUrls(mediaUrls, options, config);
+            mediaInfo.urls = await this.populateMediaUrls(mediaItems, options, config);
 
             return mediaInfo;
         } catch (error: any) {
@@ -69,39 +69,56 @@ export default class RedditHandler implements PlatformHandler {
         };
     }
 
-    private processRedditPost(postData: any): string[] {
-        const mediaUrls: string[] = [];
+    private processRedditPost(postData: any): Array<{url: string; mediaId: string}> {
+        const mediaItems: Array<{url: string; mediaId: string}> = [];
 
         if (postData.is_gallery && postData.gallery_data?.items) {
-            mediaUrls.push(...this.processGallery(postData));
+            mediaItems.push(...this.processGallery(postData));
         } else if (postData.is_video && postData.media?.reddit_video?.fallback_url) {
-            mediaUrls.push(postData.media.reddit_video.fallback_url);
+            const mediaUrl = postData.media.reddit_video.fallback_url;
+            const mediaId = postData.id;
+
+            mediaItems.push({url: mediaUrl, mediaId});
         } else if (postData.url && this.isDirectMediaUrl(postData.url)) {
-            mediaUrls.push(postData.url);
+            const mediaUrl = postData.url;
+            const mediaId = this.extractMediaIdFromUrl(mediaUrl) || postData.id;
+
+            mediaItems.push({url: mediaUrl, mediaId});
         } else if (
             postData.url_overridden_by_dest &&
             this.isDirectMediaUrl(postData.url_overridden_by_dest)
         ) {
-            mediaUrls.push(postData.url_overridden_by_dest);
+            const mediaUrl = postData.url_overridden_by_dest;
+            const mediaId = this.extractMediaIdFromUrl(mediaUrl) || postData.id;
+
+            mediaItems.push({url: mediaUrl, mediaId});
         } else if (postData.preview?.images?.[0]?.source?.url) {
             const imageUrl = postData.preview.images[0].source.url.replace(/&amp;/g, '&');
-            mediaUrls.push(imageUrl);
+            const mediaId = postData.id;
+
+            mediaItems.push({url: imageUrl, mediaId});
         }
 
-        return mediaUrls;
+        return mediaItems;
     }
 
-    private processGallery(postData: any): string[] {
+    private processGallery(postData: any): Array<{url: string; mediaId: string}> {
         return postData.gallery_data.items.map((item: any) => {
             const mediaId = item.media_id;
             const mimeType = postData.media_metadata[mediaId]?.m || 'image/jpeg';
             const extension = this.getExtensionFromMimeType(mimeType);
-            return `https://i.redd.it/${mediaId}.${extension}`;
+            const url = `https://i.redd.it/${mediaId}.${extension}`;
+            return {url, mediaId};
         });
     }
 
     private isDirectMediaUrl(url: string): boolean {
         return /\.(jpg|jpeg|png|gif|mp4|mkv|webm)$/i.test(url);
+    }
+
+    private extractMediaIdFromUrl(url: string): string | null {
+        const match = url.match(/\/([a-zA-Z0-9]+)\.(jpg|jpeg|png|gif|mp4|mkv|webm)/i);
+        return match ? match[1] : null;
     }
 
     private getFormatFromUrl(url: string): string {
@@ -121,13 +138,14 @@ export default class RedditHandler implements PlatformHandler {
     }
 
     private async populateMediaUrls(
-        mediaUrls: string[],
+        mediaItems: Array<{url: string; mediaId: string}>,
         options: Required<DownloadOptions>,
         config: DownloaderConfig
     ): Promise<MediaInfo['urls']> {
         const populatedUrls: MediaInfo['urls'] = [];
 
-        for (const mediaUrl of mediaUrls) {
+        for (const item of mediaItems) {
+            const {url: mediaUrl, mediaId} = item;
             const format = this.getFormatFromUrl(mediaUrl);
             const quality = format.startsWith('video')
                 ? this.getVideoQuality(mediaUrl)
@@ -141,7 +159,7 @@ export default class RedditHandler implements PlatformHandler {
             };
 
             if (options.downloadMedia) {
-                const fileName = `reddit_${Date.now()}.${format}`;
+                const fileName = `reddit_${mediaId}.${format}`;
                 const localPath = await this.fileDownloader.downloadFile(
                     mediaUrl,
                     config.downloadDir,
