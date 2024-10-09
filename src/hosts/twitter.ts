@@ -1,139 +1,139 @@
-import axios, {AxiosResponse} from 'axios';
+import {
+    DownloaderConfig,
+    DownloadOptions,
+    MediaInfo,
+    PlatformHandler,
+    TwitterApiResponse,
+    TwitterMediaItem,
+} from '@/types';
+import {HttpClient} from '@/utils/http-client';
+import {FileDownloader} from '@/utils/file-downloader';
+import {MediaNotFoundError, DownloadError} from '@/types/errors';
+import logger from '@/utils/logger';
+import path from 'node:path';
 
-interface MediaItem {
-    url: string;
-    type: string;
-}
+export default class TwitterHandler implements PlatformHandler {
+    private static readonly BASE_URL: string = 'https://api.vxtwitter.com';
 
-interface MediaInfo {
-    text: string;
-    media: MediaItem[];
-}
+    constructor(
+        private readonly httpClient: HttpClient,
+        private readonly fileDownloader: FileDownloader
+    ) {}
 
-interface GetDirectUrlsAndCountOptions {
-    buffer?: boolean;
-    text?: boolean;
-}
-
-interface GetDirectUrlsAndCountResult {
-    urls: string[];
-    count: number;
-    buffers?: (Buffer | null)[];
-    text?: string;
-}
-
-interface VxTwitterApiResponse {
-    text: string;
-    media_extended: {
-        url: string;
-        type: string;
-    }[];
-}
-
-/**
- * Downloads and extracts media from Twitter posts using the internal vxtwitter.com API.
- * Supports downloading images, videos, and associated text content.
- * Handles both twitter.com and x.com URLs.
- *
- * @testCases
- * single image: https://twitter.com/martinmbauer/status/1827230665932157320
- * gallery (2 imgs): https://twitter.com/violet_zct/status/1826243212530610389
- * video: https://twitter.com/ridd_design/status/1827005484156538976
- *
- */
-class TwitterDownloader {
-    private readonly BASE_URL: string;
-
-    constructor() {
-        this.BASE_URL = 'https://api.vxtwitter.com';
+    public isValidUrl(url: string): boolean {
+        const pattern = /(?:https?:\/\/)?(?:www\.)?(?:twitter\.com|x\.com)/i;
+        return pattern.test(url);
     }
 
-    public async getDirectUrlsAndCount(
+    public async getMediaInfo(
         url: string,
-        options: GetDirectUrlsAndCountOptions = {}
-    ): Promise<GetDirectUrlsAndCountResult> {
+        options: Required<DownloadOptions>,
+        config: DownloaderConfig
+    ): Promise<MediaInfo> {
         try {
-            const mediaInfo = await this.getMediaInfo(url);
-            const media = mediaInfo.media;
+            const mediaInfo = await this.fetchMediaInfo(url);
+            const tweetID = mediaInfo.tweetID;
+            let mediaUrls = this.extractMediaUrls(mediaInfo.media_extended);
 
-            const urlArray = media.map(item => item.url);
-
-            const result: GetDirectUrlsAndCountResult = {
-                urls: urlArray,
-                count: urlArray.length,
-            };
-
-            if (options.buffer) {
-                result.buffers = await Promise.all(
-                    media.map(async item => {
-                        try {
-                            const response: AxiosResponse<ArrayBuffer> = await axios.get(
-                                item.url,
-                                {
-                                    responseType: 'arraybuffer',
-                                    timeout: 10000, // 10 seconds timeout
-                                }
-                            );
-                            return Buffer.from(response.data);
-                        } catch (error) {
-                            console.warn('Error getting buffer:', error);
-                            return null;
-                        }
-                    })
+            if (options.downloadMedia) {
+                mediaUrls = await this.downloadMedia(
+                    mediaUrls,
+                    config.downloadDir,
+                    tweetID
                 );
             }
 
-            if (options.text) {
-                result.text = mediaInfo.text;
-            }
-
-            return result;
-        } catch (error) {
-            console.error('Error in getDirectUrlsAndCount:', error);
-            throw new Error(
-                `Failed to process Twitter URL: ${error instanceof Error ? error.message : String(error)}`
-            );
-        }
-    }
-
-    private async getMediaInfo(url: string): Promise<MediaInfo> {
-        try {
-            if (!/twitter\.com|x\.com/.test(url)) {
-                throw new Error('Invalid Twitter URL');
-            }
-
-            const apiURL = `${this.BASE_URL}${new URL(url).pathname}`;
-            const response: AxiosResponse<VxTwitterApiResponse> = await axios.get(
-                apiURL,
-                {
-                    timeout: 10000, // 10 seconds timeout
-                }
-            );
-
-            const data = response.data;
-
-            if (!data || !data.media_extended) {
-                throw new Error('No media found');
-            }
+            const metadata = this.buildMetadata(mediaInfo);
 
             return {
-                text: data.text,
-                media: data.media_extended.map(mediaItem => ({
-                    url: mediaItem.url,
-                    type: mediaItem.type,
-                })),
+                urls: mediaUrls,
+                metadata,
             };
         } catch (error) {
-            console.error('Error in getMediaInfo:', error);
-            if (axios.isAxiosError(error) && error.response) {
-                console.error('Response status:', error.response.status);
-                console.error('Response data:', error.response.data);
+            logger.error(`Error in TwitterHandler getMediaInfo: ${error}`);
+            if (error instanceof MediaNotFoundError) {
+                throw error;
             }
-            throw new Error(
-                `Error fetching Twitter data: ${error instanceof Error ? error.message : String(error)}`
-            );
+            throw new DownloadError('Failed to retrieve media information from Twitter.');
         }
     }
-}
 
-export default TwitterDownloader;
+    private async fetchMediaInfo(url: string): Promise<TwitterApiResponse> {
+        try {
+            const apiURL = `${TwitterHandler.BASE_URL}${new URL(url).pathname}`;
+            const response = await this.httpClient.get<TwitterApiResponse>(apiURL);
+            const data = response.data;
+
+            if (!data || !data.media_extended || data.media_extended.length === 0) {
+                throw new MediaNotFoundError('No media found in the Twitter post.');
+            }
+
+            return data;
+        } catch (error) {
+            logger.error(`Error fetching Twitter data: ${error}`);
+            if (error instanceof MediaNotFoundError) {
+                throw error;
+            }
+            throw new DownloadError('Error fetching data from Twitter API.');
+        }
+    }
+
+    private extractMediaUrls(mediaItems: TwitterMediaItem[]): MediaInfo['urls'] {
+        return mediaItems.map(mediaItem => ({
+            url: mediaItem.url,
+            quality: 'original',
+            format: this.getFileExtension(mediaItem.url),
+            size: 0,
+        }));
+    }
+
+    private getFileExtension(url: string): string {
+        const extension = path.extname(new URL(url).pathname).toLowerCase().slice(1);
+        return extension || 'unknown';
+    }
+
+    private async downloadMedia(
+        mediaUrls: MediaInfo['urls'],
+        downloadDir: string,
+        tweetID: string
+    ): Promise<MediaInfo['urls']> {
+        const downloadPromises = mediaUrls.map(async (urlInfo, index) => {
+            try {
+                const filename = `twitter_${tweetID}_${index + 1}.${urlInfo.format}`;
+                const localPath = await this.fileDownloader.downloadFile(
+                    urlInfo.url,
+                    downloadDir,
+                    filename
+                );
+                return {...urlInfo, localPath};
+            } catch (error) {
+                logger.error(`Failed to download file: ${error}`);
+                return urlInfo;
+            }
+        });
+        return Promise.all(downloadPromises);
+    }
+
+    private buildMetadata(mediaInfo: TwitterApiResponse): MediaInfo['metadata'] {
+        return {
+            title: mediaInfo.text || '',
+            author: this.formatAuthorName(mediaInfo),
+            platform: 'Twitter',
+            views: mediaInfo.views || 0,
+            likes: mediaInfo.likes || 0,
+        };
+    }
+
+    private formatAuthorName(mediaInfo: TwitterApiResponse): string {
+        const name = mediaInfo.user_name || '';
+        const username = mediaInfo.user_screen_name || '';
+        if (name && username) {
+            return `${name} (@${username})`;
+        } else if (name) {
+            return name;
+        } else if (username) {
+            return `@${username}`;
+        }
+        return '';
+    }
+}

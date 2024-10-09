@@ -1,280 +1,189 @@
-import axios, {AxiosResponse, AxiosRequestConfig} from 'axios';
-import cheerio from 'cheerio';
+import {DownloaderConfig, DownloadOptions, MediaInfo, PlatformHandler} from '@/types';
+import {DownloadError, MediaNotFoundError} from '@/types/errors';
+import {HttpClient} from '@/utils/http-client';
+import {FileDownloader} from '@/utils/file-downloader';
+import logger from '@/utils/logger';
 
-interface MediaItem {
-    url: string;
-    type: 'image' | 'video';
-}
+export default class TikTokHandler implements PlatformHandler {
+    private readonly BASE_URL = 'https://www.tiktok.com';
 
-interface Author {
-    avatar: string | undefined;
-    nickname: string;
-}
+    constructor(
+        private httpClient: HttpClient,
+        private fileDownloader: FileDownloader
+    ) {}
 
-interface MediaInfo {
-    text: string;
-    media: MediaItem[];
-    author: Author;
-    music: string | undefined;
-}
-
-interface GetDirectUrlsAndCountOptions {
-    buffer?: boolean;
-    text?: boolean;
-}
-
-interface GetDirectUrlsAndCountResult {
-    urls: string[];
-    count: number;
-    buffers?: (Buffer | undefined)[];
-    text?: string;
-}
-
-interface RequestResult {
-    status: 'success' | 'error';
-    request?: Record<string, string>;
-    cookie?: string;
-    message?: string;
-}
-
-interface MusicResult {
-    status: 'success' | 'error';
-    result?: string;
-}
-
-class TiktokDownloaderError extends Error {
-    constructor(message: string) {
-        super(message);
-        this.name = 'TiktokDownloaderError';
-    }
-}
-
-/**
- * Downloads and extracts media from TikTok videos using the internal API of musicaldown.
- * Supports downloading videos, images, and associated music.
- *
- * @testCases
- * video: https://www.tiktok.com/@stayc_official/video/7136124191849417985
- * gallery: [missing]
- */
-class TiktokDownloader {
-    private readonly BASE_URL: string;
-    private readonly API_URL: string;
-    private readonly MUSIC_API_URL: string;
-    private readonly AXIOS_TIMEOUT: number = 10000; // 10 seconds
-    private readonly MAX_RETRIES: number = 3;
-
-    constructor() {
-        this.BASE_URL = 'https://musicaldown.com';
-        this.API_URL = `${this.BASE_URL}/download`;
-        this.MUSIC_API_URL = `${this.BASE_URL}/mp3/download`;
+    public isValidUrl(url: string): boolean {
+        return /^https?:\/\/(?:www\.)?tiktok\.com\/(?:@[\w\.-]+\/video\/(\d+))/.test(url);
     }
 
-    private async axiosWithRetry(
-        config: AxiosRequestConfig,
-        retries: number = 0
-    ): Promise<AxiosResponse> {
-        try {
-            return await axios({...config, timeout: this.AXIOS_TIMEOUT});
-        } catch (error) {
-            if (retries < this.MAX_RETRIES) {
-                const delay = Math.pow(2, retries) * 1000; // Exponential backoff
-                await new Promise(resolve => setTimeout(resolve, delay));
-                return this.axiosWithRetry(config, retries + 1);
-            }
-            throw error;
-        }
-    }
-
-    async getDirectUrlsAndCount(
+    public async getMediaInfo(
         url: string,
-        options: GetDirectUrlsAndCountOptions = {}
-    ): Promise<GetDirectUrlsAndCountResult> {
+        options: Required<DownloadOptions>,
+        config: DownloaderConfig
+    ): Promise<MediaInfo> {
+        logger.info(`TikTokHandler: Fetching media info for URL: ${url}`);
+
         try {
-            const mediaInfo = await this.getMediaInfo(url);
-            const media = mediaInfo.media;
+            const pageContent = await this.fetchPageContent(url);
+            const jsonData = this.extractJsonData(pageContent);
+            const {metadata, mediaUrls} = this.extractInfo(jsonData);
 
-            const urlArray = media.map(item => item.url);
+            const selectedQuality = this.selectQuality(mediaUrls, options.quality);
 
-            const result: GetDirectUrlsAndCountResult = {
-                urls: urlArray,
-                count: urlArray.length,
-            };
-
-            if (options.buffer) {
-                result.buffers = await Promise.all(
-                    media.map(async item => {
-                        try {
-                            const response = await this.axiosWithRetry({
-                                method: 'get',
-                                url: item.url,
-                                responseType: 'arraybuffer',
-                            });
-                            return Buffer.from(response.data);
-                        } catch (error) {
-                            console.warn('Error getting buffer:', error);
-                            return undefined;
-                        }
-                    })
+            if (options.downloadMedia && selectedQuality) {
+                selectedQuality.localPath = await this.downloadMedia(
+                    selectedQuality,
+                    config.downloadDir,
+                    metadata.title
                 );
             }
-
-            if (options.text) {
-                result.text = mediaInfo.text;
-            }
-
-            return result;
-        } catch (error) {
-            throw new TiktokDownloaderError(
-                `Failed to process TikTok URL: ${(error as Error).message}`
-            );
-        }
-    }
-
-    async getMediaInfo(url: string): Promise<MediaInfo> {
-        try {
-            const request = await this.getRequest(url);
-            if (request.status !== 'success' || !request.request || !request.cookie) {
-                throw new TiktokDownloaderError(
-                    request.message || 'Failed to get request data'
-                );
-            }
-
-            const response = await this.axiosWithRetry({
-                method: 'post',
-                url: this.API_URL,
-                data: new URLSearchParams(Object.entries(request.request)),
-                headers: {
-                    cookie: request.cookie,
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    Origin: 'https://musicaldown.com',
-                    Referer: 'https://musicaldown.com/en',
-                    'Upgrade-Insecure-Requests': '1',
-                    'User-Agent':
-                        'Mozilla/5.0 (X11; Linux x86_64; rv:127.0) Gecko/20100101 Firefox/127.0',
-                },
-            });
-
-            const $ = cheerio.load(response.data);
-
-            const images: string[] = [];
-            $("div.row > div[class='col s12 m3']").each((_, el) => {
-                const src = $(el).find('img').attr('src');
-                if (src) images.push(src);
-            });
-
-            const videos: Record<string, string> = {};
-            $("div[class='col s12 l8'] > a").each((i, el) => {
-                const href = $(el).attr('href');
-                if (href && href !== '#modal2') {
-                    let text = $(el)
-                        .text()
-                        .trim()
-                        .replace(/\s/, ' ')
-                        .replace('arrow_downward', '')
-                        .toLowerCase();
-                    let key = text.includes('hd')
-                        ? 'videoHD'
-                        : text.includes('watermark')
-                          ? 'videoWatermark'
-                          : `video${i + 1}`;
-                    videos[key] = href;
-                }
-            });
-
-            const music = await this.getMusic(request.cookie);
 
             return {
-                text: this.sanitizeHtml($('div.row > div > div > h2').eq(1).text()),
-                media:
-                    images.length > 0
-                        ? images.map(url => ({url, type: 'image' as const}))
-                        : Object.values(videos).map(url => ({
-                              url,
-                              type: 'video' as const,
-                          })),
-                author: {
-                    avatar: $('div.img-area > img').attr('src'),
-                    nickname: this.sanitizeHtml(
-                        $('div.row > div > div > h2').eq(0).text()
-                    ),
+                urls: [selectedQuality],
+                metadata: {
+                    title: metadata.title,
+                    author: metadata.author,
+                    platform: 'TikTok',
+                    views: metadata.views,
+                    likes: metadata.likes,
                 },
-                music: music.result,
             };
-        } catch (error) {
-            throw new TiktokDownloaderError(
-                `Error fetching TikTok data: ${(error as Error).message}`
+        } catch (error: any) {
+            logger.error(`TikTokHandler: Error fetching media info: ${error.message}`);
+            throw new DownloadError(`Failed to fetch media info: ${error.message}`);
+        }
+    }
+
+    private async fetchPageContent(url: string): Promise<string> {
+        const response = await this.httpClient.get(url, {
+            headers: {
+                'User-Agent':
+                    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36',
+                Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+                'Accept-Language': 'en-US,en;q=0.9',
+            },
+        });
+
+        if (response.status !== 200) {
+            throw new Error(
+                `Failed to retrieve the TikTok page. Status code: ${response.status}`
             );
         }
+
+        return response.data;
     }
 
-    private sanitizeHtml(input: string): string {
-        return input.replace(
-            /[&<>"']/g,
-            char =>
-                ({
-                    '&': '&amp;',
-                    '<': '&lt;',
-                    '>': '&gt;',
-                    '"': '&quot;',
-                    "'": '&#39;',
-                })[char] || char
+    private extractJsonData(pageContent: string): any {
+        const jsonDataMatch = pageContent.match(
+            /<script id="__UNIVERSAL_DATA_FOR_REHYDRATION__" type="application\/json">([^<]+)<\/script>/
         );
-    }
+        if (!jsonDataMatch) {
+            throw new Error(
+                'Failed to locate the embedded JSON data in the TikTok page.'
+            );
+        }
 
-    async getRequest(url: string): Promise<RequestResult> {
         try {
-            const response = await this.axiosWithRetry({
-                method: 'get',
-                url: this.BASE_URL,
-                headers: {
-                    Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-                    'Update-Insecure-Requests': '1',
-                    'User-Agent':
-                        'Mozilla/5.0 (X11; Linux x86_64; rv:127.0) Gecko/20100101 Firefox/127.0',
-                },
-            });
-
-            const cookie = response.headers['set-cookie']?.[0]?.split(';')[0];
-            if (!cookie) {
-                throw new TiktokDownloaderError('Cookie not found in response headers');
-            }
-
-            const $ = cheerio.load(response.data);
-            const input = $('div > input');
-
-            const request: Record<string, string> = {
-                [input.eq(0).attr('name') || '']: url,
-                [input.eq(1).attr('name') || '']: input.eq(1).attr('value') || '',
-                [input.eq(2).attr('name') || '']: input.eq(2).attr('value') || '',
-            };
-
-            return {status: 'success', request, cookie};
+            return JSON.parse(jsonDataMatch[1]);
         } catch (error) {
-            return {status: 'error', message: 'Failed to get the request form!'};
+            throw new Error('Failed to parse JSON data from the TikTok page.');
         }
     }
 
-    async getMusic(cookie: string): Promise<MusicResult> {
-        try {
-            const response = await this.axiosWithRetry({
-                method: 'get',
-                url: this.MUSIC_API_URL,
-                headers: {
-                    cookie: cookie,
-                    'Upgrade-Insecure-Requests': '1',
-                    'User-Agent':
-                        'Mozilla/5.0 (X11; Linux x86_64; rv:127.0) Gecko/20100101 Firefox/127.0',
-                },
-            });
+    private extractInfo(jsonData: any): {
+        metadata: MediaInfo['metadata'];
+        mediaUrls: MediaInfo['urls'];
+    } {
+        const videoDetail = jsonData.__DEFAULT_SCOPE__['webapp.video-detail'];
+        const itemStruct = videoDetail.itemInfo.itemStruct;
 
-            const $ = cheerio.load(response.data);
-            const music = $('audio > source').attr('src');
-            return {status: 'success', result: music};
+        const metadata = {
+            title: videoDetail.shareMeta?.desc || 'TikTok Video',
+            author: `${itemStruct.author?.nickname || ''} (@${itemStruct.author?.uniqueId || ''})`,
+            platform: 'TikTok',
+            views: itemStruct.stats?.playCount,
+            likes: itemStruct.stats?.diggCount,
+        };
+
+        const bitrateInfo = itemStruct.video?.bitrateInfo || [];
+        if (bitrateInfo.length === 0) {
+            throw new MediaNotFoundError('No media found for the provided TikTok URL.');
+        }
+
+        const mediaUrls = bitrateInfo.map((br: any) => ({
+            url: br.PlayAddr?.UrlList[0] || '',
+            quality: `${br.PlayAddr?.Width}x${br.PlayAddr?.Height}`,
+            format: 'mp4',
+            size: 0,
+        }));
+
+        return {metadata, mediaUrls};
+    }
+
+    private selectQuality(
+        mediaUrls: MediaInfo['urls'],
+        requestedQuality: string
+    ): MediaInfo['urls'][0] {
+        if (requestedQuality === 'highest') {
+            return mediaUrls.reduce((prev, current) =>
+                this.getResolution(current.quality) > this.getResolution(prev.quality)
+                    ? current
+                    : prev
+            );
+        }
+
+        const requestedHeight = this.getRequestedHeight(requestedQuality);
+        if (requestedHeight) {
+            return mediaUrls.reduce((prev, current) =>
+                Math.abs(this.getResolution(current.quality) - requestedHeight) <
+                Math.abs(this.getResolution(prev.quality) - requestedHeight)
+                    ? current
+                    : prev
+            );
+        }
+
+        logger.warn(
+            `Requested quality "${requestedQuality}" not found. Defaulting to highest quality.`
+        );
+        return this.selectQuality(mediaUrls, 'highest');
+    }
+
+    private getResolution(quality: string): number {
+        const match = quality.match(/(\d+)x(\d+)/);
+        return match ? parseInt(match[2]) : 0;
+    }
+
+    private getRequestedHeight(quality: string): number | null {
+        const match = quality.match(/(\d+)p/);
+        return match ? parseInt(match[1]) : null;
+    }
+
+    private async downloadMedia(
+        selectedQuality: MediaInfo['urls'][0],
+        downloadDir: string,
+        title: string
+    ): Promise<string> {
+        const sanitizedTitle = title.replace(/[^\w\s-]/g, '').replace(/\s+/g, '_');
+        const fileName = `${sanitizedTitle}_${selectedQuality.quality}.${selectedQuality.format}`;
+
+        try {
+            return await this.fileDownloader.downloadFile(
+                selectedQuality.url,
+                downloadDir,
+                fileName,
+                {
+                    headers: {
+                        'User-Agent':
+                            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36',
+                        Referer: this.BASE_URL,
+                        Accept: 'video/mp4,application/octet-stream;q=0.9,*/*;q=0.8',
+                        'Accept-Language': 'en-US,en;q=0.9',
+                    },
+                }
+            );
         } catch (error) {
-            return {status: 'error'};
+            logger.error(`Failed to download file: ${error}`);
+            throw new DownloadError(`Failed to download file: ${error}`);
         }
     }
 }
-
-export default TiktokDownloader;

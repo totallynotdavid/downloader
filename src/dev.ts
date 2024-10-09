@@ -1,12 +1,19 @@
-import MediaDownloader from './index';
+import {Downloader, DownloadOptions} from '@/index';
 
-interface DownloaderResult {
-    urls: string[];
-    count: number;
-}
+const downloader = new Downloader({
+    downloadDir: './storage',
+});
 
-const url: string = 'https://www.facebook.com/share/v/Hr3BZV9JjaKPy28P/';
+const options: DownloadOptions = {
+    quality: '720p',
+    downloadMedia: true,
+    preferAudio: false,
+};
 
-MediaDownloader(url)
-    .then((result: DownloaderResult) => console.log(result))
-    .catch((error: Error) => console.error(error));
+downloader
+    .getMediaInfo(
+        'https://www.tiktok.com/@stayc_official/video/7136124191849417985',
+        options
+    )
+    .then(result => console.log(result))
+    .catch(error => console.error(error));

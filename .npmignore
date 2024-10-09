@@ -1,10 +1,22 @@
+// Folders
+.git
 .github
+.vscode
 .changeset
+logs
 node_modules
-dist
+storage
+src
 
+// Extensions
+*.ts
+*.json
+*.log
+
+// Files
 .gitignore
 .prettierignore
+.npmignore
 eslint.config.js
 prettier.config.js
 pnpm-lock.yaml

@@ -1,2 +1,12 @@
+# Node modules
 node_modules
-dist
+
+# Logs
+logs/
+*.log
+*.txt
+*.json
+
+# Build
+dist/
+storage/

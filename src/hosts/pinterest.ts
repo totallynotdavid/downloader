@@ -1,124 +1,133 @@
-import axios, {AxiosResponse} from 'axios';
+import {
+    DownloaderConfig,
+    DownloadOptions,
+    MediaInfo,
+    PlatformHandler,
+    PinterestMediaInfo,
+} from '@/types';
+import {MediaNotFoundError, DownloadError} from '@/types/errors';
+import {HttpClient} from '@/utils/http-client';
+import {FileDownloader} from '@/utils/file-downloader';
+import logger from '@/utils/logger';
 import crypto from 'node:crypto';
 
-interface MediaInfo {
-    medias: {
-        videoAvailable: boolean;
-        url: string;
-    }[];
-}
-
-interface DownloadResult {
-    urls: string[];
-    count: number;
-}
-
-/**
- * Extracts direct download URLs for Pinterest media using the internal getindevice.com API.
- * Supports both video and image content from Pinterest pins.
- * Implements cookie-based authentication and secure token generation.
- *
- * @testCases
- * https://es.pinterest.com/pin/805651820863629473/ - video
- * https://es.pinterest.com/pin/805651820858880488/ - image
- *
- */
-class PinterestDownloader {
+export default class PinterestHandler implements PlatformHandler {
     private readonly BASE_URL: string =
         'https://getindevice.com/wp-json/aio-dl/video-data/';
-    private readonly COOKIE_URL: string =
-        'https://getindevice.com/pinterest-video-downloader/';
 
-    public async getDirectUrlsAndCount(url: string): Promise<DownloadResult> {
+    constructor(
+        private httpClient: HttpClient,
+        private fileDownloader: FileDownloader
+    ) {}
+
+    public isValidUrl(url: string): boolean {
+        return /pinterest\.com\/pin\/\d+/i.test(url);
+    }
+
+    public async getMediaInfo(
+        url: string,
+        options: Required<DownloadOptions>,
+        config: DownloaderConfig
+    ): Promise<MediaInfo> {
         try {
-            const mediaInfo: MediaInfo = await this.getMediaInfo(url);
+            const mediaInfo = await this.fetchMediaInfo(url);
+            const mediaUrl = this.processMediaInfo(mediaInfo, options);
 
-            const videoMedia = mediaInfo.medias.find(media => media.videoAvailable);
-            const imageMedia = mediaInfo.medias.find(media => !media.videoAvailable);
+            if (!mediaUrl) {
+                throw new MediaNotFoundError(
+                    'No suitable media found at the provided Pinterest URL.'
+                );
+            }
 
-            const urlArray: string[] = [];
-            if (videoMedia) {
-                urlArray.push(videoMedia.url);
-            } else if (imageMedia) {
-                urlArray.push(imageMedia.url);
+            let localPath: string | undefined;
+            if (options.downloadMedia) {
+                localPath = await this.downloadMedia(mediaUrl, config.downloadDir);
+                mediaUrl.localPath = localPath;
             }
 
             return {
-                urls: urlArray,
-                count: urlArray.length,
+                urls: [mediaUrl],
+                metadata: {
+                    title: mediaInfo.title || '',
+                    author: '',
+                    platform: 'Pinterest',
+                    views: undefined,
+                    likes: undefined,
+                },
             };
-        } catch (error) {
-            console.error('Error in getDirectUrlsAndCount:', error);
-            throw new Error(
-                `Failed to process Pinterest URL: ${(error as Error).message}`
-            );
+        } catch (error: any) {
+            logger.error(`Error processing Pinterest URL: ${error.message}`);
+            throw error instanceof MediaNotFoundError || error instanceof DownloadError
+                ? error
+                : new DownloadError(`Failed to process Pinterest URL: ${error.message}`);
         }
     }
 
-    private async getMediaInfo(url: string): Promise<MediaInfo> {
+    private processMediaInfo(
+        mediaInfo: PinterestMediaInfo,
+        options: Required<DownloadOptions>
+    ): MediaInfo['urls'][0] | null {
+        const media =
+            mediaInfo.medias.find(media =>
+                options.preferAudio ? media.audioAvailable : media.videoAvailable
+            ) || mediaInfo.medias[0]; // Fallback to first media if no match
+
+        if (!media) return null;
+
+        return {
+            url: media.url,
+            quality: media.quality,
+            format: media.extension,
+            size: this.convertBytesToMB(media.size),
+        };
+    }
+
+    private convertBytesToMB(bytes: number): number {
+        return Number((bytes / (1024 * 1024)).toFixed(2));
+    }
+
+    private async downloadMedia(
+        urlInfo: MediaInfo['urls'][0],
+        downloadDir: string
+    ): Promise<string> {
+        const fileName = `pinterest_${crypto.randomBytes(8).toString('hex')}.${urlInfo.format}`;
         try {
-            if (!/pinterest\.com|pin\.it/i.test(url)) {
-                throw new Error('Invalid Pinterest URL');
-            }
-
-            const cookies = await this.getCookies();
-
-            const response: AxiosResponse = await axios.post(
-                this.BASE_URL,
-                new URLSearchParams({
-                    url: url,
-                    token: this.generateSecureToken(),
-                }),
-                {
-                    headers: {
-                        'sec-ch-ua': '"Not)A;Brand";v="24", "Chromium";v="116"',
-                        'sec-ch-ua-platform': '"Android"',
-                        Referer: 'https://getindevice.com/pinterest-video-downloader/',
-                        'sec-ch-ua-mobile': '?1',
-                        'User-Agent':
-                            'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Mobile Safari/537.36',
-                        Cookie: cookies.join('; '),
-                    },
-                    timeout: 10000,
-                    validateStatus: (status: number) => status >= 200 && status < 300,
-                }
+            return await this.fileDownloader.downloadFile(
+                urlInfo.url,
+                downloadDir,
+                fileName
             );
-
-            const data = response.data;
-
-            if (!data) {
-                throw new Error('Invalid response from server');
-            }
-
-            return data as MediaInfo;
         } catch (error) {
-            console.error('Error in getMediaInfo:', error);
-            if (axios.isAxiosError(error) && error.response) {
-                console.error('Response status:', error.response.status);
-                console.error('Response data:', error.response.data);
-            }
-            if (axios.isAxiosError(error) && error.code === 'ECONNABORTED') {
-                throw new Error('Request timed out. Please try again later.');
-            }
-            throw new Error(`Error fetching Pinterest data: ${(error as Error).message}`);
+            logger.error(`Failed to download file: ${error}`);
+            throw new DownloadError(`Failed to download file: ${error}`);
         }
     }
 
-    private async getCookies(): Promise<string[]> {
-        try {
-            const response: AxiosResponse = await axios.get(this.COOKIE_URL);
-            return response.headers['set-cookie'] || [];
-        } catch (error) {
-            console.error('Error getting cookies:', error);
-            throw new Error(
-                'Failed to retrieve necessary cookies. Please try again later.'
-            );
-        }
-    }
+    private async fetchMediaInfo(url: string): Promise<PinterestMediaInfo> {
+        const response = await this.httpClient.post<PinterestMediaInfo>(
+            this.BASE_URL,
+            new URLSearchParams({
+                url: url,
+                token: crypto.randomBytes(16).toString('base64'),
+            }).toString(),
+            {
+                headers: {
+                    'sec-ch-ua': '"Not)A;Brand";v="24", "Chromium";v="116"',
+                    'sec-ch-ua-platform': '"Android"',
+                    Referer: 'https://getindevice.com/pinterest-video-downloader/',
+                    'sec-ch-ua-mobile': '?1',
+                    'User-Agent':
+                        'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Mobile Safari/537.36',
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                timeout: 10000,
+            }
+        );
 
-    private generateSecureToken(): string {
-        return crypto.randomBytes(16).toString('base64');
+        if (!response.data || !response.data.medias) {
+            throw new DownloadError('Invalid response from the Pinterest API.');
+        }
+
+        return response.data;
     }
 }
-
-export default PinterestDownloader;

@@ -1,84 +1,128 @@
-import https from 'node:https';
-import querystring from 'querystring';
+import {PlatformHandler, DownloadOptions, MediaInfo, DownloaderConfig} from '@/types';
+import {HttpClient} from '@/utils/http-client';
+import {FileDownloader} from '@/utils/file-downloader';
+import logger from '@/utils/logger';
+import {MediaNotFoundError} from '@/types/errors';
 
-interface DownloaderResult {
-    urls: string[];
-    count: number;
-}
+class YouTubeHandler implements PlatformHandler {
+    private readonly API_BASE_URL = 'https://www.y2mate.com/mates';
+    private readonly VIDEO_URL_BASE = 'https://www.youtube.com/watch?v=';
+    private readonly qualityMap: Record<string, number> = {
+        auto: 0,
+        '144p': 1,
+        '240p': 2,
+        '360p': 3,
+        '480p': 4,
+        '720p': 5,
+        '1080p': 6,
+        '1440p': 7,
+        '2160p': 8,
+    };
 
-/**
- * A utility class for extracting direct download URLs from YouTube videos.
- * Utilizes the internal y2mate.com API to fetch and convert video links.
- * Supports both MP3 and MP4 formats.
- *
- * @testCases
- * https://www.youtube.com/watch?v=PEECtnSQ6CY (length = 47 min.)
- * https://www.youtube.com/watch?v=Yvts2CHLOlU (length = 9 min.)
- * https://www.youtube.com/watch?v=cvVtbenDZxA (length = 4 min.)
- */
-class YouTubeDownloader {
-    private readonly SUPPORTED_SERVERS = ['en', 'id', 'es'] as const;
-    private readonly DEFAULT_TIMEOUT = 10000; // 10 seconds
+    constructor(
+        private httpClient: HttpClient,
+        private fileDownloader: FileDownloader
+    ) {}
 
-    async getDirectUrlsAndCount(url: string): Promise<DownloaderResult> {
-        try {
-            if (!this.isValidYoutubeUrl(url)) {
-                throw new Error('Invalid YouTube URL');
-            }
+    async getMediaInfo(
+        url: string,
+        options: Required<DownloadOptions>,
+        config: DownloaderConfig
+    ): Promise<MediaInfo> {
+        logger.info('Starting getMediaInfo method.');
 
-            const cookies = await this.fetchCookies();
-            const videoId = this.extractVideoId(url);
-            const downloadUrls = await this.getDownloadUrls(videoId, cookies);
-
-            return {
-                urls: downloadUrls,
-                count: downloadUrls.length,
-            };
-        } catch (error) {
-            console.error(
-                'YouTube Downloader error:',
-                error instanceof Error ? error.message : 'Unknown error'
-            );
-            return {urls: [], count: 0};
+        if (!this.isValidUrl(url)) {
+            logger.error(`Invalid YouTube URL provided: ${url}`);
+            throw new MediaNotFoundError('Invalid YouTube URL');
         }
-    }
 
-    private async getDownloadUrls(videoId: string, cookies: string[]): Promise<string[]> {
-        const postData = querystring.stringify({
-            vid: videoId,
-            k_query: `https://www.youtube.com/watch?v=${videoId}`,
-            k_page: 'home',
-            hl: this.SUPPORTED_SERVERS[0],
-            q_auto: 0,
-        });
+        const videoId = this.extractVideoId(url);
+        logger.info(`Extracted video ID: ${videoId}`);
 
-        const response = await this.makeHttpRequest<any>(
-            'www.y2mate.com',
-            '/mates/analyzeV2/ajax',
-            'POST',
-            postData,
+        const cookies = this.getCookies();
+
+        const analysisData = await this.analyzeVideo(videoId, cookies);
+        const mediaUrls = await this.getMediaUrls(
+            videoId,
+            analysisData,
+            options,
             cookies
         );
 
-        const downloadUrls: string[] = [];
+        if (options.downloadMedia && mediaUrls.length > 0) {
+            await this.downloadMediaFiles(mediaUrls, analysisData.title, config);
+        }
 
-        for (const format of ['mp4', 'mp3']) {
-            for (const key in response.links[format]) {
-                const item = response.links[format][key];
-                if (item.f === format) {
+        return this.createMediaInfo(mediaUrls, analysisData);
+    }
+
+    private getCookies(): string[] {
+        return [
+            '_gid=GA1.2.2055666962.1683248123',
+            '_ga=GA1.1.1570308475.1683248122',
+            '_ga_K8CD7CY0TZ=GS1.1.1683248122.1.1.1683248164.0.0.0',
+            'prefetchAd_3381349=true',
+        ];
+    }
+
+    private async analyzeVideo(videoId: string, cookies: string[]): Promise<any> {
+        const postData = new URLSearchParams({
+            vid: videoId,
+            k_query: `${this.VIDEO_URL_BASE}${videoId}`,
+            k_page: 'home',
+            hl: 'en',
+            q_auto: '0',
+        }).toString();
+
+        try {
+            const response = await this.httpClient.post(
+                `${this.API_BASE_URL}/analyzeV2/ajax`,
+                postData,
+                {headers: this.getHeaders(cookies)}
+            );
+            return response.data;
+        } catch (error) {
+            logger.error(`Error analyzing video: ${error}`);
+            throw new MediaNotFoundError('Failed to analyze video information');
+        }
+    }
+
+    private async getMediaUrls(
+        videoId: string,
+        analysisData: any,
+        options: Required<DownloadOptions>,
+        cookies: string[]
+    ): Promise<any[]> {
+        const mediaUrls: any[] = [];
+        const formats = options.preferAudio ? ['mp3'] : ['mp4'];
+
+        for (const format of formats) {
+            if (analysisData.links[format]) {
+                const bestItem = this.getBestQualityItem(
+                    analysisData.links[format],
+                    options.quality
+                );
+                if (bestItem) {
                     const convertResponse = await this.convertMedia(
                         videoId,
-                        item.k,
+                        bestItem.k,
                         cookies
                     );
                     if (convertResponse.dlink) {
-                        downloadUrls.push(convertResponse.dlink);
+                        mediaUrls.push(
+                            this.createMediaUrlInfo(
+                                convertResponse.dlink,
+                                bestItem,
+                                format
+                            )
+                        );
+                        if (options.preferAudio) return mediaUrls;
                     }
                 }
             }
         }
 
-        return downloadUrls;
+        return mediaUrls;
     }
 
     private async convertMedia(
@@ -86,100 +130,130 @@ class YouTubeDownloader {
         key: string,
         cookies: string[]
     ): Promise<any> {
-        const postData = querystring.stringify({vid: videoId, k: key});
-        return this.makeHttpRequest(
-            'www.y2mate.com',
-            '/mates/convertV2/index',
-            'POST',
-            postData,
-            cookies
-        );
-    }
-
-    private async fetchCookies(): Promise<string[]> {
-        return new Promise((resolve, reject) => {
-            const req = https.get('https://www.y2mate.com/en872', res => {
-                const cookiesArray = res.headers['set-cookie'];
-                resolve(
-                    cookiesArray || [
-                        '_gid=GA1.2.2055666962.1683248123',
-                        '_ga=GA1.1.1570308475.1683248122',
-                        '_ga_K8CD7CY0TZ=GS1.1.1683248122.1.1.1683248164.0.0.0',
-                        'prefetchAd_3381349=true',
-                    ]
-                );
-            });
-
-            req.on('error', e =>
-                reject(new Error(`Failed to fetch cookies: ${e.message}`))
+        const postData = new URLSearchParams({vid: videoId, k: key}).toString();
+        try {
+            const response = await this.httpClient.post(
+                `${this.API_BASE_URL}/convertV2/index`,
+                postData,
+                {headers: this.getHeaders(cookies)}
             );
-            req.setTimeout(this.DEFAULT_TIMEOUT, () => {
-                req.destroy();
-                reject(new Error('Request to fetch cookies timed out'));
-            });
-        });
+            return response.data;
+        } catch (error) {
+            logger.error(`Failed to convert media with key ${key}: ${error}`);
+            throw error;
+        }
     }
 
-    private isValidYoutubeUrl(url: string): boolean {
-        const youtubeUrlRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+$/;
-        return youtubeUrlRegex.test(url);
+    private getBestQualityItem(
+        links: Record<string, any>,
+        requestedQuality: string
+    ): any | null {
+        let bestItem: any = null;
+        let highestQualityValue = -1;
+
+        for (const key in links) {
+            const item = links[key];
+            const itemQualityValue = this.qualityMap[item.q] || 0;
+
+            if (
+                this.isQualityAcceptable(item.q, requestedQuality) &&
+                itemQualityValue > highestQualityValue
+            ) {
+                highestQualityValue = itemQualityValue;
+                bestItem = item;
+            }
+        }
+
+        return bestItem;
+    }
+
+    private isQualityAcceptable(itemQuality: string, requestedQuality: string): boolean {
+        if (requestedQuality === 'highest') return true;
+        const itemQualityValue = this.qualityMap[itemQuality] || 0;
+        const requestedQualityValue = this.qualityMap[requestedQuality] || Infinity;
+        return itemQualityValue <= requestedQualityValue;
+    }
+
+    public isValidUrl(url: string): boolean {
+        return /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+$/.test(url);
     }
 
     private extractVideoId(url: string): string {
-        const urlObj = new URL(url);
-        if (urlObj.hostname === 'youtu.be') {
-            return urlObj.pathname.slice(1);
+        try {
+            const urlObj = new URL(url);
+            return urlObj.hostname === 'youtu.be'
+                ? urlObj.pathname.slice(1)
+                : urlObj.searchParams.get('v') || '';
+        } catch (error) {
+            logger.error(`Error extracting video ID from URL "${url}": ${error}`);
+            return '';
         }
-        return urlObj.searchParams.get('v') || '';
     }
 
-    private makeHttpRequest<T>(
-        hostname: string,
-        path: string,
-        method: string,
-        postData: string,
-        cookies: string[]
-    ): Promise<T> {
-        return new Promise((resolve, reject) => {
-            const options: https.RequestOptions = {
-                hostname: hostname,
-                path: path,
-                method: method,
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    Cookie: cookies.join('; '),
-                    'User-Agent':
-                        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36',
-                },
-                timeout: this.DEFAULT_TIMEOUT,
-            };
+    private generateFileName(title: string, format: string): string {
+        return `${title
+            .replace(/[^\w\s-]/g, '')
+            .trim()
+            .replace(/\s+/g, '-')}.${format}`;
+    }
 
-            const req = https.request(options, res => {
-                let data = '';
-                res.on('data', chunk => {
-                    data += chunk;
-                });
-                res.on('end', () => {
-                    try {
-                        resolve(JSON.parse(data));
-                    } catch (error) {
-                        reject(new Error('Failed to parse API response'));
-                    }
-                });
-            });
+    private getHeaders(cookies: string[]): Record<string, string> {
+        return {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            Cookie: cookies.join('; '),
+            'User-Agent':
+                'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36',
+        };
+    }
 
-            req.on('error', e => reject(new Error(`HTTP request failed: ${e.message}`)));
-            req.on('timeout', () => {
-                req.destroy();
-                reject(new Error('HTTP request timed out'));
-            });
-
-            if (postData) {
-                req.write(postData);
+    private async downloadMediaFiles(
+        mediaUrls: any[],
+        title: string,
+        config: DownloaderConfig
+    ): Promise<void> {
+        for (const media of mediaUrls) {
+            const fileName = this.generateFileName(title, media.format);
+            try {
+                const localPath = await this.fileDownloader.downloadFile(
+                    media.url,
+                    config.downloadDir,
+                    fileName
+                );
+                media.localPath = localPath;
+            } catch (error) {
+                logger.error(`Error downloading file: ${error}`);
+                media.localPath = undefined;
             }
-            req.end();
-        });
+        }
+    }
+
+    private createMediaUrlInfo(url: string, item: any, format: string): any {
+        let sizeMB = 0;
+        const sizeStr = item.size || '';
+        if (sizeStr) {
+            const sizeMatch = sizeStr.match(/([\d.]+)\s*(MB|KB)/i);
+            if (sizeMatch) {
+                sizeMB = parseFloat(sizeMatch[1]);
+                if (sizeMatch[2].toLowerCase() === 'kb') {
+                    sizeMB /= 1024;
+                }
+            }
+        }
+        return {url, quality: item.q, format, size: sizeMB, localPath: undefined};
+    }
+
+    private createMediaInfo(mediaUrls: any[], analysisData: any): MediaInfo {
+        return {
+            urls: mediaUrls,
+            metadata: {
+                title: analysisData.title,
+                author: analysisData.a,
+                platform: 'YouTube',
+                views: analysisData.views,
+                likes: analysisData.likes,
+            },
+        };
     }
 }
 
-export default YouTubeDownloader;
+export default YouTubeHandler;
