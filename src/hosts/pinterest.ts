@@ -36,6 +36,7 @@ export default class PinterestHandler implements PlatformHandler {
             let localPath: string | undefined;
             if (options.downloadMedia) {
                 localPath = await this.downloadMedia(mediaUrl, config.downloadDir);
+                mediaUrl.localPath = localPath;
             }
 
             return {
