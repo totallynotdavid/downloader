@@ -11,6 +11,6 @@ const options: DownloadOptions = {
 };
 
 downloader
-    .getMediaInfo('https://www.instagram.com/reels/DApZT9wpHeR/', options)
+    .getMediaInfo('https://es.pinterest.com/pin/805651820858880488/', options)
     .then(result => console.log(result))
     .catch(error => console.error(error));
