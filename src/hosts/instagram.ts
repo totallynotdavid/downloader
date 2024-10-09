@@ -8,7 +8,7 @@ import {
 import {HttpClient} from '@/utils/http-client';
 import {FileDownloader} from '@/utils/file-downloader';
 import logger from '@/utils/logger';
-import {mergeOptions} from '@/utils/options-merger';
+import {mergeOptions} from '@/core/options-merger';
 import axios from 'axios';
 import qs from 'qs';
 import vm from 'node:vm';

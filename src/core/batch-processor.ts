@@ -1,5 +1,5 @@
 import {DownloadOptions, MediaInfo, DownloaderConfig} from '@/types';
-import {MediaInfoFetcher} from '@/utils/media-info-fetcher';
+import {MediaInfoFetcher} from '@/core/media-info-fetcher';
 import logger from '@/utils/logger';
 import pLimit from 'p-limit';
 

@@ -1,8 +1,8 @@
 import {DownloaderConfig, DownloadOptions, MediaInfo} from '@/types';
 import {PlatformNotSupportedError} from '@/types/errors';
-import {HandlerFactory} from '@/utils/handler-factory';
+import {HandlerFactory} from '@/core/handler-factory';
+import {mergeOptions} from '@/core/options-merger';
 import logger from '@/utils/logger';
-import {mergeOptions} from '@/utils/options-merger';
 
 export class MediaInfoFetcher {
     constructor(

@@ -1,9 +1,9 @@
-import {DownloaderConfig, DownloadOptions, MediaInfo} from './types';
-import {defaultConfig} from './config';
-import {HandlerFactory} from '@/utils/handler-factory';
-import {MediaInfoFetcher} from '@/utils/media-info-fetcher';
-import {BatchProcessor} from '@/utils/batch-processor';
-import logger from './utils/logger';
+import {DownloaderConfig, DownloadOptions, MediaInfo} from '@/types';
+import {defaultConfig} from '@/config';
+import {HandlerFactory} from '@/core/handler-factory';
+import {MediaInfoFetcher} from '@/core/media-info-fetcher';
+import {BatchProcessor} from '@/core/batch-processor';
+import logger from '@/utils/logger';
 
 export class Downloader {
     private mediaInfoFetcher: MediaInfoFetcher;
