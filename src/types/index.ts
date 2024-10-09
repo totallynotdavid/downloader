@@ -173,10 +173,10 @@ export interface TwitterMediaItem {
 
 export interface TwitterApiResponse {
     text: string;
-    user: {
-        username: string;
-    };
+    user_name: string;
+    user_screen_name: string;
     views: number;
     likes: number;
+    tweetID: string;
     media_extended: TwitterMediaItem[];
 }
