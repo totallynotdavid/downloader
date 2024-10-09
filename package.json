@@ -1,51 +1,81 @@
 {
-    "name": "@totallynodavid/downloader",
-    "version": "2.0.1",
-    "description": "A Node.js package to retrieve direct media URLs from popular social platforms.",
-    "main": "index.js",
-    "scripts": {
-        "build": "tsc",
-        "dev": "ts-node -r tsconfig-paths/register src/dev.ts",
-        "clean": "shx rm -rf dist node_modules pnpm-lock.yaml",
-        "lint": "eslint --fix --color src/**/*.ts",
-        "prettier": "prettier --write src/**/*.ts"
-    },
-    "keywords": [
-        "imgur",
-        "reddit",
-        "instagram",
-        "facebook",
-        "twitter",
-        "pinterest",
-        "tiktok",
-        "downloader",
-        "media"
-    ],
-    "author": "David Duran <contacto@altmails.com>",
-    "license": "MIT",
-    "dependencies": {
-        "axios": "^1.7.7",
-        "cheerio": "1.0.0",
-        "p-limit": "^3.1.0",
-        "qs": "^6.13.0",
-        "winston": "^3.15.0"
-    },
-    "devDependencies": {
-        "@changesets/cli": "^2.27.9",
-        "@eslint/js": "^9.9.0",
-        "@types/cheerio": "^0.22.35",
-        "@types/node": "^22.7.4",
-        "@types/qs": "^6.9.15",
-        "@typescript-eslint/eslint-plugin": "^8.8.0",
-        "@typescript-eslint/parser": "^8.8.0",
-        "eslint": "^9.9.0",
-        "eslint-config-prettier": "^9.1.0",
-        "eslint-plugin-prettier": "^5.2.1",
-        "globals": "^15.9.0",
-        "prettier": "^3.3.3",
-        "shx": "^0.3.4",
-        "ts-node": "^10.9.2",
-        "tsconfig-paths": "^4.2.0",
-        "typescript": "^5.5.4"
+  "name": "@totallynodavid/downloader",
+  "version": "2.0.1",
+  "description": "Node.js package to fetch/download media & metadata from social platforms. Streamline your backend!",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "pnpm run lint && pnpm run prettier && tsc",
+    "dev": "ts-node -r tsconfig-paths/register src/dev.ts",
+    "clean": "shx rm -rf dist",
+    "lint": "eslint --fix --color src/**/*.ts",
+    "prettier": "prettier --write src/**/*.ts",
+    "prepublishOnly": "pnpm run clean && pnpm run build && npm pack --dry-run",
+    "prepare": "husky",
+    "test": "pnpm run lint"
+  },
+  "keywords": [
+    "imgur",
+    "reddit",
+    "instagram",
+    "facebook",
+    "twitter",
+    "pinterest",
+    "tiktok",
+    "downloader",
+    "media"
+  ],
+  "author": "David Duran <contacto@altmails.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/totallynotdavid/downloader.git"
+  },
+  "bugs": {
+    "url": "https://github.com/totallynotdavid/downloader/issues"
+  },
+  "homepage": "https://github.com/totallynotdavid/downloader#readme",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "dependencies": {
+    "axios": "^1.7.7",
+    "cheerio": "1.0.0",
+    "p-limit": "^3.1.0",
+    "qs": "^6.13.0",
+    "winston": "^3.15.0"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.27.9",
+    "@eslint/js": "^9.9.0",
+    "@types/cheerio": "^0.22.35",
+    "@types/node": "^22.7.5",
+    "@types/qs": "^6.9.15",
+    "@typescript-eslint/eslint-plugin": "^8.8.1",
+    "@typescript-eslint/parser": "^8.8.1",
+    "eslint": "^9.9.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-prettier": "^5.2.1",
+    "globals": "^15.9.0",
+    "husky": "^9.1.6",
+    "lint-staged": "^15.2.10",
+    "prettier": "^3.3.3",
+    "shx": "^0.3.4",
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.5.4"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
     }
+  },
+  "lint-staged": {
+    "*.ts": [
+      "eslint --fix",
+      "prettier --write"
+    ]
+  }
 }
