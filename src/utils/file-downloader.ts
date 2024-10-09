@@ -19,10 +19,11 @@ export class FileDownloader {
     public async downloadFile(
         url: string,
         downloadDir: string,
-        fileName: string
+        fileName: string,
+        options?: {headers?: Record<string, string>}
     ): Promise<string> {
         try {
-            const response = await this.httpClient.stream(url);
+            const response = await this.httpClient.stream(url, options);
 
             const fullPath = path.resolve(downloadDir, fileName);
             await this.createDirectory(downloadDir);

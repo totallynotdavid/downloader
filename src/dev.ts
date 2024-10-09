@@ -11,6 +11,9 @@ const options: DownloadOptions = {
 };
 
 downloader
-    .getMediaInfo('https://www.tiktok.com/@stayc_official/video/7136124191849417985', options)
+    .getMediaInfo(
+        'https://www.tiktok.com/@stayc_official/video/7136124191849417985',
+        options
+    )
     .then(result => console.log(result))
     .catch(error => console.error(error));
