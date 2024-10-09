@@ -11,9 +11,6 @@ const options: DownloadOptions = {
 };
 
 downloader
-    .getMediaInfo(
-        'https://www.reddit.com/r/unixporn/comments/12ruaq1/xperia_10_iii_w_sailfish_w_arch_my_mobile_office/',
-        options
-    )
+    .getMediaInfo('https://www.tiktok.com/@stayc_official/video/7136124191849417985', options)
     .then(result => console.log(result))
     .catch(error => console.error(error));
