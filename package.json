@@ -11,8 +11,7 @@
     "lint": "eslint --fix --color src/**/*.ts",
     "prettier": "prettier --write src/**/*.ts",
     "prepublishOnly": "pnpm run clean && pnpm run build && npm pack --dry-run",
-    "prepare": "husky",
-    "test": "pnpm run lint"
+    "prepare": "husky"
   },
   "keywords": [
     "imgur",
