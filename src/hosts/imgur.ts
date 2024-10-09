@@ -1,10 +1,17 @@
-import {DownloaderConfig, DownloadOptions, MediaInfo, PlatformHandler} from '@/types';
+import {
+    DownloaderConfig,
+    DownloadOptions,
+    MediaInfo,
+    PlatformHandler,
+    ImgurApiData,
+    ImgurApiResponse,
+    ImgurPostV1Response,
+} from '@/types';
 import {HttpClient} from '@/utils/http-client';
 import {FileDownloader} from '@/utils/file-downloader';
 import {MediaNotFoundError} from '@/types/errors';
 import path from 'node:path';
 import logger from '@/utils/logger';
-import {ImgurApiData, ImgurApiResponse, ImgurPostV1Response} from '@/types/imgur';
 
 export default class ImgurHandler implements PlatformHandler {
     private readonly clientId: string;

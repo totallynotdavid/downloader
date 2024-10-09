@@ -1,21 +1,9 @@
-import {DownloaderConfig, DownloadOptions, MediaInfo, PlatformHandler} from '@/types';
+import {DownloaderConfig, DownloadOptions, MediaInfo, PlatformHandler, PinterestMediaInfo} from '@/types';
 import {MediaNotFoundError, DownloadError} from '@/types/errors';
 import {HttpClient} from '@/utils/http-client';
 import {FileDownloader} from '@/utils/file-downloader';
 import logger from '@/utils/logger';
 import crypto from 'node:crypto';
-
-interface PinterestMediaInfo {
-    medias: {
-        videoAvailable: boolean;
-        audioAvailable: boolean;
-        url: string;
-        quality: string;
-        extension: string;
-        size: number;
-    }[];
-    title?: string;
-}
 
 export default class PinterestHandler implements PlatformHandler {
     private readonly BASE_URL: string =

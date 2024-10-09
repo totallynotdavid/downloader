@@ -101,8 +101,8 @@ interface MediaInfo {
         quality: string;
         format: string;
         size: number; // in MB
+        localPath?: string; // Only if downloadMedia is true
     }[];
-    localPath?: string; // Only if downloadMedia is true
     metadata: {
         title: string;
         author: string;

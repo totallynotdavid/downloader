@@ -1,5 +1,11 @@
-import {DownloaderConfig, DownloadOptions, MediaInfo, PlatformHandler} from '@/types';
-import {TwitterApiResponse, TwitterMediaItem} from '@/types/twitter';
+import {
+    DownloaderConfig,
+    DownloadOptions,
+    MediaInfo,
+    PlatformHandler,
+    TwitterApiResponse,
+    TwitterMediaItem,
+} from '@/types';
 import {HttpClient} from '@/utils/http-client';
 import {FileDownloader} from '@/utils/file-downloader';
 import {MediaNotFoundError, DownloadError} from '@/types/errors';
