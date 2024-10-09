@@ -164,7 +164,9 @@ export default class RedditHandler implements PlatformHandler {
     private async getFileSize(url: string): Promise<number> {
         try {
             const response = await this.httpClient.get(url, {method: 'HEAD'});
-            return parseInt(response.headers['content-length'] || '0', 10);
+            return (
+                parseInt(response.headers['content-length'] || '0', 10) / (1024 * 1024)
+            );
         } catch (error) {
             logger.warn(`Failed to get file size for ${url}: ${error}`);
             return 0;

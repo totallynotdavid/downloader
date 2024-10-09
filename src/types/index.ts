@@ -153,15 +153,15 @@ export interface ImgurImageData {
 // Pinterest
 
 export interface PinterestMediaInfo {
-  medias: {
-      videoAvailable: boolean;
-      audioAvailable: boolean;
-      url: string;
-      quality: string;
-      extension: string;
-      size: number;
-  }[];
-  title?: string;
+    medias: {
+        videoAvailable: boolean;
+        audioAvailable: boolean;
+        url: string;
+        quality: string;
+        extension: string;
+        size: number;
+    }[];
+    title?: string;
 }
 
 // Twitter

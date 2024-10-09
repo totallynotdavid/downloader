@@ -1,4 +1,10 @@
-import {DownloaderConfig, DownloadOptions, MediaInfo, PlatformHandler, PinterestMediaInfo} from '@/types';
+import {
+    DownloaderConfig,
+    DownloadOptions,
+    MediaInfo,
+    PlatformHandler,
+    PinterestMediaInfo,
+} from '@/types';
 import {MediaNotFoundError, DownloadError} from '@/types/errors';
 import {HttpClient} from '@/utils/http-client';
 import {FileDownloader} from '@/utils/file-downloader';
