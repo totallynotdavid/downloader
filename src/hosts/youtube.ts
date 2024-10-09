@@ -247,7 +247,7 @@ class YouTubeHandler implements PlatformHandler {
             urls: mediaUrls,
             metadata: {
                 title: analysisData.title,
-                author: analysisData.author,
+                author: analysisData.a,
                 platform: 'YouTube',
                 views: analysisData.views,
                 likes: analysisData.likes,
