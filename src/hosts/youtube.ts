@@ -5,7 +5,6 @@ import logger from '@/utils/logger';
 import {MediaNotFoundError} from '@/types/errors';
 
 class YouTubeHandler implements PlatformHandler {
-    private readonly API_BASE_URL = 'https://www.y2mate.com/mates';
     private readonly VIDEO_URL_BASE = 'https://www.youtube.com/watch?v=';
     private readonly qualityMap: Record<string, number> = {
         auto: 0,
@@ -39,14 +38,20 @@ class YouTubeHandler implements PlatformHandler {
         const videoId = this.extractVideoId(url);
         logger.info(`Extracted video ID: ${videoId}`);
 
-        const cookies = this.getCookies();
+        const apiBaseUrl = config.youtubeApiBaseUrl || 'https://www.y2mate.com/mates'; // Default for safety
+        const cookies = config.youtubeCookies || '';
 
-        const analysisData = await this.analyzeVideo(videoId, cookies);
+        if (!apiBaseUrl) {
+            throw new Error('YouTube API base URL is not configured.');
+        }
+
+        const analysisData = await this.analyzeVideo(videoId, cookies, apiBaseUrl);
         const mediaUrls = await this.getMediaUrls(
             videoId,
             analysisData,
             options,
-            cookies
+            cookies,
+            apiBaseUrl
         );
 
         if (options.downloadMedia && mediaUrls.length > 0) {
@@ -56,16 +61,11 @@ class YouTubeHandler implements PlatformHandler {
         return this.createMediaInfo(mediaUrls, analysisData);
     }
 
-    private getCookies(): string[] {
-        return [
-            '_gid=GA1.2.2055666962.1683248123',
-            '_ga=GA1.1.1570308475.1683248122',
-            '_ga_K8CD7CY0TZ=GS1.1.1683248122.1.1.1683248164.0.0.0',
-            'prefetchAd_3381349=true',
-        ];
-    }
-
-    private async analyzeVideo(videoId: string, cookies: string[]): Promise<any> {
+    private async analyzeVideo(
+        videoId: string,
+        cookies: string,
+        apiBaseUrl: string
+    ): Promise<any> {
         const postData = new URLSearchParams({
             vid: videoId,
             k_query: `${this.VIDEO_URL_BASE}${videoId}`,
@@ -76,7 +76,7 @@ class YouTubeHandler implements PlatformHandler {
 
         try {
             const response = await this.httpClient.post(
-                `${this.API_BASE_URL}/analyzeV2/ajax`,
+                `${apiBaseUrl}/analyzeV2/ajax`,
                 postData,
                 {headers: this.getHeaders(cookies)}
             );
@@ -91,7 +91,8 @@ class YouTubeHandler implements PlatformHandler {
         videoId: string,
         analysisData: any,
         options: Required<DownloadOptions>,
-        cookies: string[]
+        cookies: string,
+        apiBaseUrl: string
     ): Promise<any[]> {
         const mediaUrls: any[] = [];
         const formats = options.preferAudio ? ['mp3'] : ['mp4'];
@@ -106,7 +107,8 @@ class YouTubeHandler implements PlatformHandler {
                     const convertResponse = await this.convertMedia(
                         videoId,
                         bestItem.k,
-                        cookies
+                        cookies,
+                        apiBaseUrl
                     );
                     if (convertResponse.dlink) {
                         mediaUrls.push(
@@ -128,12 +130,13 @@ class YouTubeHandler implements PlatformHandler {
     private async convertMedia(
         videoId: string,
         key: string,
-        cookies: string[]
+        cookies: string,
+        apiBaseUrl: string
     ): Promise<any> {
         const postData = new URLSearchParams({vid: videoId, k: key}).toString();
         try {
             const response = await this.httpClient.post(
-                `${this.API_BASE_URL}/convertV2/index`,
+                `${apiBaseUrl}/convertV2/index`,
                 postData,
                 {headers: this.getHeaders(cookies)}
             );
@@ -197,13 +200,16 @@ class YouTubeHandler implements PlatformHandler {
             .replace(/\s+/g, '-')}.${format}`;
     }
 
-    private getHeaders(cookies: string[]): Record<string, string> {
-        return {
+    private getHeaders(cookies: string): Record<string, string> {
+        const headers: Record<string, string> = {
             'Content-Type': 'application/x-www-form-urlencoded',
-            Cookie: cookies.join('; '),
             'User-Agent':
                 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36',
         };
+        if (cookies) {
+            headers['Cookie'] = cookies;
+        }
+        return headers;
     }
 
     private async downloadMediaFiles(

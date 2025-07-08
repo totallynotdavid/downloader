@@ -13,8 +13,6 @@ import logger from '@/utils/logger';
 import path from 'node:path';
 
 export default class TwitterHandler implements PlatformHandler {
-    private static readonly BASE_URL: string = 'https://api.vxtwitter.com';
-
     constructor(
         private readonly httpClient: HttpClient,
         private readonly fileDownloader: FileDownloader
@@ -31,7 +29,11 @@ export default class TwitterHandler implements PlatformHandler {
         config: DownloaderConfig
     ): Promise<MediaInfo> {
         try {
-            const mediaInfo = await this.fetchMediaInfo(url);
+            const apiBaseUrl = config.twitterApiBaseUrl || 'https://api.vxtwitter.com'; // Default for safety
+            if (!apiBaseUrl) {
+                throw new Error('Twitter API base URL is not configured.');
+            }
+            const mediaInfo = await this.fetchMediaInfo(url, apiBaseUrl);
             const tweetID = mediaInfo.tweetID;
             let mediaUrls = this.extractMediaUrls(mediaInfo.media_extended);
 
@@ -58,9 +60,12 @@ export default class TwitterHandler implements PlatformHandler {
         }
     }
 
-    private async fetchMediaInfo(url: string): Promise<TwitterApiResponse> {
+    private async fetchMediaInfo(
+        url: string,
+        apiBaseUrl: string
+    ): Promise<TwitterApiResponse> {
         try {
-            const apiURL = `${TwitterHandler.BASE_URL}${new URL(url).pathname}`;
+            const apiURL = `${apiBaseUrl}${new URL(url).pathname}`;
             const response = await this.httpClient.get<TwitterApiResponse>(apiURL);
             const data = response.data;
 

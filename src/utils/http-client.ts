@@ -1,4 +1,5 @@
 import axios, {AxiosInstance, AxiosRequestConfig, AxiosResponse} from 'axios';
+import axiosRetry from 'axios-retry';
 import {defaultConfig} from '@/config';
 import {DownloaderConfig} from '@/types';
 import logger from '@/utils/logger';
@@ -20,6 +21,23 @@ export class HttpClient {
         };
 
         this.axiosInstance = axios.create(axiosConfig);
+
+        axiosRetry(this.axiosInstance, {
+            retries: 3,
+            retryDelay: axiosRetry.exponentialDelay,
+            retryCondition: error => {
+                // Retry on network errors or 5xx status codes
+                return (
+                    axiosRetry.isNetworkError(error) ||
+                    (error.response ? error.response.status >= 500 : false)
+                );
+            },
+            onRetry: (retryCount, error, requestConfig) => {
+                logger.warn(
+                    `Retrying request to ${requestConfig.url} (attempt ${retryCount}): ${error.message}`
+                );
+            },
+        });
     }
 
     private parseProxy(proxy: string): AxiosRequestConfig['proxy'] {

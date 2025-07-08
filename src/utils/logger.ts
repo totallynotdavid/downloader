@@ -9,7 +9,9 @@ if (!fs.existsSync(LOG_DIR)) {
     fs.mkdirSync(LOG_DIR, {recursive: true});
 }
 
-const LOG_LEVEL = 'info';
+const VALID_LOG_LEVELS = ['error', 'warn', 'info', 'http', 'verbose', 'debug', 'silly'];
+const envLogLevel = process.env.LOG_LEVEL?.toLowerCase();
+const LOG_LEVEL = VALID_LOG_LEVELS.includes(envLogLevel ?? '') ? envLogLevel : 'info';
 
 const customFormat = printf(({level, message, timestamp, stack, ...meta}) => {
     const baseMessage = stack || message;

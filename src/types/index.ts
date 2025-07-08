@@ -2,6 +2,11 @@ export interface DownloaderConfig {
     downloadDir: string;
     proxy?: string;
     concurrencyLimit?: number;
+    // YouTube specific (y2mate.com)
+    youtubeApiBaseUrl?: string;
+    youtubeCookies?: string; // Cookie string
+    // Twitter specific (e.g., vxtwitter.com)
+    twitterApiBaseUrl?: string;
 }
 
 export interface DownloadOptions {
@@ -34,6 +39,12 @@ export interface PlatformHandler {
         config: DownloaderConfig
     ): Promise<MediaInfo>;
     isValidUrl(url: string): boolean;
+}
+
+export interface BatchResultItem {
+    url: string;
+    data: MediaInfo | null;
+    error: Error | null;
 }
 
 // Imgur

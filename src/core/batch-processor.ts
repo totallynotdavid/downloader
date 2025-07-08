@@ -1,4 +1,9 @@
-import {DownloadOptions, MediaInfo, DownloaderConfig} from '@/types';
+import {
+    DownloadOptions,
+    MediaInfo,
+    DownloaderConfig,
+    BatchResultItem,
+} from '@/types';
 import {MediaInfoFetcher} from '@/core/media-info-fetcher';
 import logger from '@/utils/logger';
 import pLimit from 'p-limit';
@@ -16,19 +21,21 @@ export class BatchProcessor {
     async batchGetMediaInfo(
         urls: string[],
         options: DownloadOptions
-    ): Promise<MediaInfo[]> {
+    ): Promise<BatchResultItem[]> {
         const tasks = urls.map(url =>
-            this.limit(async () => {
+            this.limit(async (): Promise<BatchResultItem> => {
                 try {
-                    return await this.mediaInfoFetcher.getMediaInfo(url, options);
-                } catch (error) {
-                    logger.error(`Error processing URL ${url}: ${error}`);
-                    return null;
+                    const data = await this.mediaInfoFetcher.getMediaInfo(url, options);
+                    return {url, data, error: null};
+                } catch (error: any) {
+                    logger.error(
+                        `Error processing URL ${url}: ${error.message || error}`
+                    );
+                    return {url, data: null, error};
                 }
             })
         );
 
-        const results = await Promise.all(tasks);
-        return results.filter((result): result is MediaInfo => result !== null);
+        return Promise.all(tasks);
     }
 }
