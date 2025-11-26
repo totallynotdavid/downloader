@@ -1,6 +1,6 @@
-import {DownloaderConfig} from '@/types';
+import { DownloaderConfig } from "@/types";
 
 export const defaultConfig: DownloaderConfig = {
-    downloadDir: './storage',
-    proxy: undefined,
+  downloadDir: "./storage",
+  proxy: undefined,
 };
