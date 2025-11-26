@@ -1,34 +1,34 @@
 name: 🚓 Análisis de código
 
 on:
-    workflow_dispatch:
-    push:
-        branches: [master]
-    pull_request:
-    schedule:
-        - cron: '0 11 * * 5' # Ejecutar cada viernes a las 11:00 UTC
+  workflow_dispatch:
+  push:
+    branches: [master]
+  pull_request:
+  schedule:
+    - cron: "0 11 * * 5" # Ejecutar cada viernes a las 11:00 UTC
 
 jobs:
-    analyze:
-        name: Analizar
-        runs-on: ubuntu-latest
-        permissions:
-            actions: read
-            contents: read
-            security-events: write
+  analyze:
+    name: Analizar
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
 
-        strategy:
-            fail-fast: false
-            matrix:
-                language: ['javascript']
+    strategy:
+      fail-fast: false
+      matrix:
+        language: ["javascript"]
 
-        steps:
-            - uses: actions/checkout@v3
+    steps:
+      - uses: actions/checkout@v3
 
-            - uses: github/codeql-action/init@v3
-              with:
-                  languages: ${{ matrix.language }}
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
 
-            - uses: github/codeql-action/autobuild@v3
+      - uses: github/codeql-action/autobuild@v3
 
-            - uses: github/codeql-action/analyze@v3
+      - uses: github/codeql-action/analyze@v3
