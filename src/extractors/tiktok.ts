@@ -1,6 +1,9 @@
 import { ExtractionError } from "../errors.ts";
 import type { Context, MediaResult } from "../types.ts";
 
+const HYDRATION_DATA_REGEX =
+  /<script id="__UNIVERSAL_DATA_FOR_REHYDRATION__" type="application\/json">([^<]+)<\/script>/;
+
 export default async function resolve(
   url: string,
   ctx: Context,
@@ -12,9 +15,7 @@ export default async function resolve(
     const response = await ctx.http.get(targetUrl);
     const html = response.data;
 
-    const match = html.match(
-      /<script id="__UNIVERSAL_DATA_FOR_REHYDRATION__" type="application\/json">([^<]+)<\/script>/,
-    );
+    const match = html.match(HYDRATION_DATA_REGEX);
     if (!match) {
       throw new Error("Could not find hydration data in page");
     }

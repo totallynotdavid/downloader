@@ -1,12 +1,15 @@
 import { ExtractionError } from "../errors.ts";
 import type { Context, MediaItem, MediaResult } from "../types.ts";
 
+const TRAILING_SLASH_REGEX = /\/$/;
+const VIDEO_EXTENSION_REGEX = /\.(mp4|mkv|webm)$/i;
+
 export default async function resolve(
   url: string,
   ctx: Context,
 ): Promise<MediaResult> {
   try {
-    const json_url = `${url.replace(/\/$/, "")}.json`;
+    const json_url = `${url.replace(TRAILING_SLASH_REGEX, "")}.json`;
     const response = await ctx.http.get(json_url);
     const data = response.data;
 
@@ -52,7 +55,7 @@ export default async function resolve(
         /&amp;/g,
         "&",
       );
-      const is_video = direct_url.match(/\.(mp4|mkv|webm)$/i);
+      const is_video = direct_url.match(VIDEO_EXTENSION_REGEX);
       items.push({
         type: is_video ? "video" : "image",
         url: direct_url,

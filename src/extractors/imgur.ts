@@ -3,6 +3,7 @@ import { ExtractionError } from "../errors.ts";
 import type { Context, MediaItem, MediaResult } from "../types.ts";
 
 const CLIENT_ID = "546c25a59c58ad7";
+const ALPHANUMERIC_REGEX = /^[a-zA-Z0-9]+$/;
 
 export default async function resolve(
   url: string,
@@ -27,7 +28,7 @@ export default async function resolve(
     if (is_gallery && id.includes("-")) {
       const parts = id.split("-");
       const potential_id = parts[parts.length - 1];
-      if (potential_id.length >= 5 && /^[a-zA-Z0-9]+$/.test(potential_id)) {
+      if (potential_id.length >= 5 && ALPHANUMERIC_REGEX.test(potential_id)) {
         id = potential_id;
       }
     }
