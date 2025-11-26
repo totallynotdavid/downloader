@@ -5,6 +5,7 @@ const IG_APP_ID = "936619743392459";
 const GRAPHQL_DOC_ID = "8845758582119845";
 const USER_AGENT =
   "Instagram 309.0.0.15.109 Android (31/12; 480dpi; 1080x2228; samsung; SM-G996B; t2s; qcom; en_US; 544099989)";
+const SHORTCODE_REGEX = /(?:p|reel|tv)\/([A-Za-z0-9_-]+)/;
 
 interface MediaNode {
   is_video: boolean;
@@ -69,7 +70,7 @@ export default async function resolve(
   url: string,
   ctx: Context,
 ): Promise<MediaResult> {
-  const match = url.match(/(?:p|reel|tv)\/([A-Za-z0-9_-]+)/);
+  const match = url.match(SHORTCODE_REGEX);
   if (!match?.[1]) {
     throw new ExtractionError("Could not parse post shortcode", "instagram");
   }
