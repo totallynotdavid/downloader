@@ -1,12 +1,5 @@
-# Node modules
 node_modules
+logs
+dist
 
-# Logs
-logs/
-*.log
-*.txt
-*.json
-
-# Build
-dist/
-storage/
+*.ps1
