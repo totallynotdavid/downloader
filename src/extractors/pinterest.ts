@@ -33,12 +33,20 @@ export default async function resolve(
     const media =
       data.medias.find((m: any) => m.videoAvailable) || data.medias[0];
 
+    // images: i.pinimg.com with .jpg
+    // videos: v1.pinimg.com with .mp4
+    const isVideo =
+      media.extension === "mp4" ||
+      media.url.includes("v1.pinimg.com") ||
+      media.url.includes(".mp4");
+    const type = isVideo ? "video" : "image";
+
     return {
       urls: [
         {
-          type: "video",
+          type: type,
           url: media.url,
-          filename: `pin-${Date.now()}.${media.extension || "mp4"}`,
+          filename: `pin-${Date.now()}.${media.extension || (isVideo ? "mp4" : "jpg")}`,
         },
       ],
       headers: {},
