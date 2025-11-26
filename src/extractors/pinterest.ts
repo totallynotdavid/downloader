@@ -25,7 +25,7 @@ export default async function resolve(
 
     const data = response.data;
 
-    if (!(data && data.medias) || data.medias.length === 0) {
+    if (!data?.medias || data.medias.length === 0) {
       throw new Error("No media found");
     }
 

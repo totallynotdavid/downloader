@@ -15,7 +15,7 @@ export default async function resolve(
     const response = await ctx.http.get(api_url);
     const data = response.data;
 
-    if (!(data && data.media_extended) || data.media_extended.length === 0) {
+    if (!data?.media_extended || data.media_extended.length === 0) {
       throw new Error("No media found in tweet");
     }
 
