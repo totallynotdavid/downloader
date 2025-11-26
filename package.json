@@ -33,7 +33,7 @@
   "scripts": {
     "clean": "shx rm -rf dist",
     "format": "biome format --write . && biome check --write . && bun x prettier \"**/*.{md,yml}\" --write --print-width=80 --prose-wrap=always",
-    "build": "bun run biome:check && bun run biome:format && tsc -p tsconfig.json",
+    "build": "bun run format && bun build ./src/index.ts --outdir ./dist --target node",
     "dev": "bun src/dev.ts",
     "prepublishOnly": "bun run clean && bun run build"
   },
