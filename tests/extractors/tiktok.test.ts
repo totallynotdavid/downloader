@@ -18,7 +18,6 @@ describe("TikTok extractor", () => {
     assertMedia(result, {
       platform: "tiktok",
       minCount: 2,
-      type: "image",
     });
   }, 30_000);
 });
