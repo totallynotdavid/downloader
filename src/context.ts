@@ -1,7 +1,7 @@
 import axios from "axios";
-import { DEFAULT_TIMEOUT_MS, DEFAULT_USER_AGENT } from "./constants";
-import { NetworkError } from "./errors";
-import type { Context, ResolveOptions } from "./types";
+import { DEFAULT_TIMEOUT_MS, DEFAULT_USER_AGENT } from "./constants.ts";
+import { NetworkError } from "./errors.ts";
+import type { Context, ResolveOptions } from "./types.ts";
 
 export function create_context(options: ResolveOptions = {}): Context {
   const http = axios.create({

@@ -1,9 +1,9 @@
-export { resolve } from "./api";
+export { resolve } from "./api.ts";
 export {
   ExtractionError,
   NetworkError,
   PlatformNotSupportedError,
-} from "./errors";
+} from "./errors.ts";
 
 export type {
   Context,
@@ -12,6 +12,6 @@ export type {
   MediaResult,
   Platform,
   ResolveOptions,
-} from "./types";
+} from "./types.ts";
 
-export { open_stream } from "./utils/http";
+export { open_stream } from "./utils/http.ts";

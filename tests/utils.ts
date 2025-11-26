@@ -1,5 +1,5 @@
 import { expect } from "bun:test";
-import type { MediaResult, Platform } from "../src/types";
+import type { MediaResult, Platform } from "../src/types.ts";
 
 type AssertionOptions = {
   platform: Platform;

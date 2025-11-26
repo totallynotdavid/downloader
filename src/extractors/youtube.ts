@@ -1,6 +1,6 @@
 import { load as cheerioLoad } from "cheerio";
-import { ExtractionError } from "../errors";
-import type { Context, MediaResult } from "../types";
+import { ExtractionError } from "../errors.ts";
+import type { Context, MediaResult } from "../types.ts";
 
 const API_URL = "https://postsyncer.com/api/social-media-downloader";
 const PAGE_URL = "https://postsyncer.com/tools/youtube-video-downloader";

@@ -1,4 +1,4 @@
-import type { ExtractorFn } from "./types";
+import type { ExtractorFn } from "./types.ts";
 
 type RouteDefinition = [RegExp, () => Promise<{ default: ExtractorFn }>];
 
@@ -8,14 +8,14 @@ type RouteDefinition = [RegExp, () => Promise<{ default: ExtractorFn }>];
  * Modules are lazy-loaded only when a regex matches.
  */
 const routes: RouteDefinition[] = [
-  [/instagram\.com/, () => import("./extractors/instagram")],
-  [/tiktok\.com/, () => import("./extractors/tiktok")],
-  [/(facebook|fb)\.com/, () => import("./extractors/facebook")],
-  [/(twitter\.com|x\.com)/, () => import("./extractors/twitter")],
-  [/(youtube\.com|youtu\.be)/, () => import("./extractors/youtube")],
-  [/(reddit\.com|redd\.it)/, () => import("./extractors/reddit")],
-  [/imgur\.com/, () => import("./extractors/imgur")],
-  [/pinterest\.com/, () => import("./extractors/pinterest")],
+  [/instagram\.com/, () => import("./extractors/instagram.ts")],
+  [/tiktok\.com/, () => import("./extractors/tiktok.ts")],
+  [/(facebook|fb)\.com/, () => import("./extractors/facebook.ts")],
+  [/(twitter\.com|x\.com)/, () => import("./extractors/twitter.ts")],
+  [/(youtube\.com|youtu\.be)/, () => import("./extractors/youtube.ts")],
+  [/(reddit\.com|redd\.it)/, () => import("./extractors/reddit.ts")],
+  [/imgur\.com/, () => import("./extractors/imgur.ts")],
+  [/pinterest\.com/, () => import("./extractors/pinterest.ts")],
 ];
 
 export async function route(url: string): Promise<ExtractorFn | null> {

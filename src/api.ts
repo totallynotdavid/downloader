@@ -1,7 +1,7 @@
-import { create_context } from "./context";
-import { PlatformNotSupportedError } from "./errors";
-import { route } from "./router";
-import type { MediaResult, ResolveOptions } from "./types";
+import { create_context } from "./context.ts";
+import { PlatformNotSupportedError } from "./errors.ts";
+import { route } from "./router.ts";
+import type { MediaResult, ResolveOptions } from "./types.ts";
 
 /**
  * Resolves a social media URL to a direct media link and metadata.

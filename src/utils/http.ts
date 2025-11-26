@@ -1,7 +1,7 @@
 import type { Readable } from "node:stream";
 import axios from "axios";
-import { DEFAULT_TIMEOUT_MS } from "../constants";
-import type { MediaItem } from "../types";
+import { DEFAULT_TIMEOUT_MS } from "../constants.ts";
+import type { MediaItem } from "../types.ts";
 
 /**
  * Creates a readable stream for the given media item.

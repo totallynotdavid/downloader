@@ -1,7 +1,7 @@
 import { describe, test } from "bun:test";
-import { resolve } from "../../src/index";
-import { SAMPLES } from "../fixtures";
-import { assertMedia } from "../utils";
+import { resolve } from "../../src/index.ts";
+import { SAMPLES } from "../fixtures.ts";
+import { assertMedia } from "../utils.ts";
 
 describe("TikTok extractor", () => {
   test("should resolve video", async () => {
