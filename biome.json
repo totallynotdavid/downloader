@@ -17,7 +17,20 @@
     "enabled": true,
     "rules": {
       "recommended": true,
+      "a11y": "on",
+      "complexity": "on",
+      "correctness": "on",
+      "performance": "on",
+      "security": {
+        "recommended": true,
+        "noSecrets": "off"
+      },
+      "style": {
+        "recommended": true,
+        "useNamingConvention": "off"
+      },
       "suspicious": {
+        "recommended": true,
         "noExplicitAny": "off"
       }
     }
