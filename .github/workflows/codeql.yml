@@ -1,17 +1,28 @@
-name: 🚓 Análisis de código
+name: CodeQL
 
 on:
-  workflow_dispatch:
   push:
-    branches: [master]
+    branches:
+      - "master"
+    paths:
+      - "**/*.ts"
+      - "package.json"
+    tags:
+      - "*"
   pull_request:
+    branches:
+      - "master"
+    paths:
+      - "**/*.ts"
+      - "package.json"
   schedule:
-    - cron: "0 11 * * 5" # Ejecutar cada viernes a las 11:00 UTC
+    - cron: "0 5 * * 1" # Ejecutar cada lunes a las 05:00 UTC
+  workflow_dispatch:
 
 jobs:
   analyze:
-    name: Analizar
     runs-on: ubuntu-latest
+
     permissions:
       actions: read
       contents: read
@@ -20,15 +31,18 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: ["javascript"]
+        language: ["javascript-typescript", "actions"]
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v6
 
-      - uses: github/codeql-action/init@v3
+      - uses: github/codeql-action/init@v4
         with:
           languages: ${{ matrix.language }}
+          queries: security-extended
 
-      - uses: github/codeql-action/autobuild@v3
+      - uses: github/codeql-action/autobuild@v4
 
-      - uses: github/codeql-action/analyze@v3
+      - uses: github/codeql-action/analyze@v4
+        with:
+          category: "/language:${{ matrix.language }}"
