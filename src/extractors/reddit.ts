@@ -1,5 +1,5 @@
-import { ExtractionError } from "../errors";
-import type { Context, MediaItem, MediaResult } from "../types";
+import { ExtractionError } from "../errors.ts";
+import type { Context, MediaItem, MediaResult } from "../types.ts";
 
 export default async function resolve(
   url: string,
@@ -10,7 +10,7 @@ export default async function resolve(
     const response = await ctx.http.get(json_url);
     const data = response.data;
 
-    if (!Array.isArray(data) || !data[0]?.data?.children?.[0]?.data) {
+    if (!(Array.isArray(data) && data[0]?.data?.children?.[0]?.data)) {
       throw new Error("Invalid Reddit API response");
     }
 

@@ -1,6 +1,6 @@
 import path from "node:path";
-import { ExtractionError } from "../errors";
-import type { Context, MediaItem, MediaResult } from "../types";
+import { ExtractionError } from "../errors.ts";
+import type { Context, MediaItem, MediaResult } from "../types.ts";
 
 const API_BASE = "https://api.vxtwitter.com";
 
@@ -15,7 +15,7 @@ export default async function resolve(
     const response = await ctx.http.get(api_url);
     const data = response.data;
 
-    if (!data || !data.media_extended || data.media_extended.length === 0) {
+    if (!(data && data.media_extended) || data.media_extended.length === 0) {
       throw new Error("No media found in tweet");
     }
 

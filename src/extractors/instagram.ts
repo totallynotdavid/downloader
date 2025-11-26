@@ -1,5 +1,5 @@
-import { ExtractionError } from "../errors";
-import type { Context, MediaItem, MediaResult } from "../types";
+import { ExtractionError } from "../errors.ts";
+import type { Context, MediaItem, MediaResult } from "../types.ts";
 
 const IG_APP_ID = "936619743392459";
 const GRAPHQL_DOC_ID = "8845758582119845";

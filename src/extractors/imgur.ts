@@ -1,6 +1,6 @@
 import path from "node:path";
-import { ExtractionError } from "../errors";
-import type { Context, MediaItem, MediaResult } from "../types";
+import { ExtractionError } from "../errors.ts";
+import type { Context, MediaItem, MediaResult } from "../types.ts";
 
 const CLIENT_ID = "546c25a59c58ad7";
 

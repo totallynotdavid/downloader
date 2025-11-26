@@ -1,5 +1,5 @@
-import { ExtractionError } from "../errors";
-import type { Context, MediaResult } from "../types";
+import { ExtractionError } from "../errors.ts";
+import type { Context, MediaResult } from "../types.ts";
 
 export default async function resolve(
   url: string,

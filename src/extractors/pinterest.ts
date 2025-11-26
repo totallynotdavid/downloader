@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
-import { ExtractionError } from "../errors";
-import type { Context, MediaResult } from "../types";
+import { ExtractionError } from "../errors.ts";
+import type { Context, MediaResult } from "../types.ts";
 
 const API_URL = "https://getindevice.com/wp-json/aio-dl/video-data/";
 
@@ -25,7 +25,7 @@ export default async function resolve(
 
     const data = response.data;
 
-    if (!data || !data.medias || data.medias.length === 0) {
+    if (!(data && data.medias) || data.medias.length === 0) {
       throw new Error("No media found");
     }
 

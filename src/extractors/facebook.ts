@@ -1,5 +1,5 @@
-import { ExtractionError } from "../errors";
-import type { Context, MediaItem, MediaResult } from "../types";
+import { ExtractionError } from "../errors.ts";
+import type { Context, MediaItem, MediaResult } from "../types.ts";
 
 const USER_AGENT =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36";
