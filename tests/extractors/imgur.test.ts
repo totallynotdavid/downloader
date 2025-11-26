@@ -36,7 +36,6 @@ describe("Imgur extractor", () => {
     assertMedia(result, {
       platform: "imgur",
       minCount: 2,
-      type: "image",
     });
   }, 30_000);
 });

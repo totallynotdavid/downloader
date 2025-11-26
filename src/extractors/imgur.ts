@@ -14,12 +14,24 @@ export default async function resolve(
 
     // i.imgur.com/ID.jpg -> ID
     // imgur.com/gallery/ID -> ID
+    // imgur.com/gallery/title-slug-ID -> ID (extract last part after last hyphen)
     // imgur.com/a/ID -> ID
     const last_part = path_parts[path_parts.length - 1];
-    const id = last_part.split(".")[0];
+    let id = last_part.split(".")[0];
 
     const is_gallery =
       path_parts.includes("gallery") || path_parts.includes("a");
+
+    // For gallery URLs with slugs (e.g., "title-slug-hxXHU13"),
+    // extract the actual ID
+    if (is_gallery && id.includes("-")) {
+      const parts = id.split("-");
+      const potential_id = parts[parts.length - 1];
+      if (potential_id.length >= 5 && /^[a-zA-Z0-9]+$/.test(potential_id)) {
+        id = potential_id;
+      }
+    }
+
     const endpoint_type = is_gallery ? "album" : "image";
     const endpoint = `https://api.imgur.com/3/${endpoint_type}/${id}?client_id=${CLIENT_ID}`;
 
