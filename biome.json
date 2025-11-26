@@ -18,8 +18,13 @@
     "rules": {
       "recommended": true,
       "a11y": "on",
-      "complexity": "on",
-      "correctness": "on",
+      "complexity": {
+        "recommended": true
+      },
+      "correctness": {
+        "recommended": true,
+        "noNodejsModules": "off"
+      },
       "performance": "on",
       "security": {
         "recommended": true,
