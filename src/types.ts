@@ -21,7 +21,7 @@ export type Context = {
 };
 
 export type MediaItem = {
-  type: "image" | "video";
+  type: "image" | "video" | "audio";
   url: string;
   filename: string;
   headers?: Record<string, string>;
