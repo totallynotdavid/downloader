@@ -6,7 +6,7 @@ const USER_AGENT =
 
 function decodeUnicode(text: string): string {
   try {
-    // Handle unicode escapes like \u003C and surrogate pairs
+    // handle unicode escapes like \u003C and surrogate pairs
     return text
       .replace(/\\u([\dA-Fa-f]{4})/g, (_, hex) =>
         String.fromCharCode(Number.parseInt(hex, 16)),
@@ -57,13 +57,21 @@ function parseVideoPage(html: string): {
   const videoUrls: Record<string, string> = {};
   const parts = videoSection.split('FBQualityLabel=\\"');
   for (let i = 1; i < parts.length; i++) {
-    const resolution = parts[i].split('\\"', 1)[0];
-    const urlPart = parts[i].split("BaseURL>", 2)[1];
-    if (urlPart) {
-      const url = decodeUnicode(urlPart.split("\\u003C\\/BaseURL>", 1)[0]);
-      if (url) {
-        videoUrls[resolution] = url;
-      }
+    const part = parts[i];
+    if (!part) continue;
+
+    const resolution = part.split('"', 1)[0];
+    if (!resolution) continue;
+
+    const urlPart = part.split("BaseURL>", 2)[1];
+    if (!urlPart) continue;
+
+    const urlSegment = urlPart.split("\\u003C\\/BaseURL>", 1)[0];
+    if (!urlSegment) continue;
+
+    const url = decodeUnicode(urlSegment);
+    if (url) {
+      videoUrls[resolution] = url;
     }
   }
 
@@ -127,6 +135,10 @@ export default async function resolve(
       const videoUrl = bestQuality
         ? videoUrls[bestQuality]
         : Object.values(videoUrls)[0];
+
+      if (!videoUrl) {
+        throw new Error("Failed to select video URL");
+      }
 
       urls.push({
         type: "video",

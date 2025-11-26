@@ -18,7 +18,14 @@ export default async function resolve(
     // imgur.com/gallery/title-slug-ID -> ID (extract last part after last hyphen)
     // imgur.com/a/ID -> ID
     const last_part = path_parts[path_parts.length - 1];
+    if (!last_part) {
+      throw new Error("Invalid Imgur URL: no path");
+    }
+
     let id = last_part.split(".")[0];
+    if (!id) {
+      throw new Error("Invalid Imgur URL: no ID found");
+    }
 
     const is_gallery =
       path_parts.includes("gallery") || path_parts.includes("a");
@@ -28,7 +35,11 @@ export default async function resolve(
     if (is_gallery && id.includes("-")) {
       const parts = id.split("-");
       const potential_id = parts[parts.length - 1];
-      if (potential_id.length >= 5 && ALPHANUMERIC_REGEX.test(potential_id)) {
+      if (
+        potential_id &&
+        potential_id.length >= 5 &&
+        ALPHANUMERIC_REGEX.test(potential_id)
+      ) {
         id = potential_id;
       }
     }
