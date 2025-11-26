@@ -1,3 +1,4 @@
+// biome-ignore lint/performance/noBarrelFile: Entry point for public API
 export { resolve } from "./api.ts";
 export {
   ExtractionError,

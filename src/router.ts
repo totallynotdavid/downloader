@@ -21,6 +21,7 @@ const routes: RouteDefinition[] = [
 export async function route(url: string): Promise<ExtractorFn | null> {
   for (const [pattern, loader] of routes) {
     if (pattern.test(url)) {
+      // biome-ignore lint/performance/noAwaitInLoops: Sequential loading stops on first match, more efficient than Promise.all
       const module = await loader();
       return module.default;
     }
