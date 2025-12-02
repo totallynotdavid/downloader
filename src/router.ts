@@ -2,6 +2,8 @@ import type { ExtractorFn } from "./types.ts";
 
 type RouteDefinition = [RegExp, () => Promise<{ default: ExtractorFn }>];
 
+const WWW_REGEX = /^www\./;
+
 /**
  * The routing table.
  * Order matters: generic matchers should go last.
@@ -19,7 +21,7 @@ const routes: RouteDefinition[] = [
 ];
 
 export async function route(url: string): Promise<ExtractorFn | null> {
-  const hostname = new URL(url).hostname.replace(/^www\./, "");
+  const hostname = new URL(url).hostname.replace(WWW_REGEX, "");
 
   for (const [pattern, loader] of routes) {
     if (pattern.test(hostname)) {
@@ -28,5 +30,6 @@ export async function route(url: string): Promise<ExtractorFn | null> {
       return module.default;
     }
   }
+
   return null;
 }
