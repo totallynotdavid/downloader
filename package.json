@@ -33,8 +33,7 @@
   "scripts": {
     "clean": "shx rm -rf dist",
     "format": "biome format --write . && biome check --write . && bun x prettier \"**/*.{md,yml}\" --write --print-width=80 --prose-wrap=always",
-    "build": "bun run format && bun build ./src/index.ts --outdir ./dist --target node",
-    "dev": "bun src/dev.ts",
+    "build": "bun run format && bun build src/index.ts --outdir ./dist --target node --minify --external axios --external cheerio",
     "prepublishOnly": "bun run clean && bun run build"
   },
   "dependencies": {
