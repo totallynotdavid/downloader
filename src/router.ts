@@ -17,7 +17,7 @@ const routes: RouteDefinition[] = [
   [/^(youtube\.com|youtu\.be)$/, () => import("./extractors/youtube.ts")],
   [/^(reddit\.com|redd\.it)$/, () => import("./extractors/reddit.ts")],
   [/^(i\.)?imgur\.com$/, () => import("./extractors/imgur.ts")],
-  [/^pinterest\.com$/, () => import("./extractors/pinterest.ts")],
+  [/^([a-z]{2}\.)?pinterest\.com$/, () => import("./extractors/pinterest.ts")],
 ];
 
 export async function route(url: string): Promise<ExtractorFn | null> {
