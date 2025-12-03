@@ -8,8 +8,7 @@ describe("YouTube extractor", () => {
     const result = await resolve(SAMPLES.youtube.video);
     assertMedia(result, {
       platform: "youtube",
-      count: 1,
-      type: "video",
+      minCount: 1, // At least combined stream, possibly + video-only + audio
     });
   }, 30_000);
 
@@ -17,8 +16,7 @@ describe("YouTube extractor", () => {
     const result = await resolve(SAMPLES.youtube.video_short);
     assertMedia(result, {
       platform: "youtube",
-      count: 1,
-      type: "video",
+      minCount: 1,
     });
   }, 30_000);
 });
