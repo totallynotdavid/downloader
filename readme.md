@@ -1,10 +1,12 @@
-# @totallynotdavid/downloader
+# [pkg]: @totallynotdavid/downloader
 
 [![npm version](https://img.shields.io/npm/v/@totallynotdavid/downloader.svg)](https://www.npmjs.com/package/@totallynotdavid/downloader)
 
 Direct URLs from social posts. Skip reverse-engineering and heavy tools. 14 KB,
-fast, TypeScript-first. Supports Instagram, TikTok, Twitter/X, YouTube, Reddit,
-Facebook, Imgur, and Pinterest.
+fast, TypeScript-first.
+
+Supports Instagram, TikTok, Twitter/X, YouTube, Reddit, Facebook, Imgur, and
+Pinterest.
 
 ```sh
 npm install @totallynotdavid/downloader
