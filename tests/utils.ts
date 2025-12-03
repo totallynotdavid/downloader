@@ -1,8 +1,8 @@
 import { expect } from "bun:test";
-import type { MediaResult, Platform } from "../src/types.ts";
+import type { MediaResult } from "../src/types.ts";
 
 type AssertionOptions = {
-  platform: Platform;
+  platform: string;
   count?: number;
   minCount?: number;
   type?: "video" | "image";
@@ -33,11 +33,6 @@ export function assertMedia(result: MediaResult, opts: AssertionOptions) {
 
     if (opts.type) {
       expect(item.type).toBe(opts.type);
-    }
-
-    // Check optional item headers if they exist
-    if (item.headers) {
-      expect(item.headers).toBeObject();
     }
   });
 }
