@@ -41,7 +41,7 @@ platforms use external services:
 | Facebook  | Direct      | ✅     |
 | Reddit    | Direct      | ✅     |
 | Imgur     | Direct      | ✅     |
-| YouTube   | Third-party | WIP    |
+| YouTube   | Third-party | ✅     |
 | Twitter/X | Third-party | WIP    |
 | Pinterest | Third-party | ✅     |
 

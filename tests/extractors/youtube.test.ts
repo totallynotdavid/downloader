@@ -17,8 +17,7 @@ describe("YouTube extractor", () => {
     const result = await resolve(SAMPLES.youtube.video_short);
     assertMedia(result, {
       platform: "youtube",
-      count: 1,
-      type: "video",
+      count: 3, // combined + video-only + audio-only
     });
   }, 30_000);
 });
