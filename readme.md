@@ -43,7 +43,7 @@ platforms use external services:
 | Imgur     | Direct      | ✅     |
 | YouTube   | Third-party | WIP    |
 | Twitter/X | Third-party | WIP    |
-| Pinterest | Third-party | WIP    |
+| Pinterest | Third-party | ✅     |
 
 ## API
 
