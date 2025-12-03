@@ -19,7 +19,8 @@
       "recommended": true,
       "a11y": "on",
       "complexity": {
-        "recommended": true
+        "recommended": true,
+        "useLiteralKeys": "off"
       },
       "correctness": {
         "recommended": true,
