@@ -1,144 +1,97 @@
-# [pkg]: @totallynotdavid/downloader
+# @totallynotdavid/downloader
 
 [![npm version](https://img.shields.io/npm/v/@totallynotdavid/downloader.svg)](https://www.npmjs.com/package/@totallynotdavid/downloader)
 
-Library for resolving social media URLs to direct media links and metadata.
-Returns downloadable URLs, filenames, and post information.
+Direct URLs from social posts. Skip reverse-engineering and heavy tools. 14 KB,
+fast, TypeScript-first. Supports Instagram, TikTok, Twitter/X, YouTube, Reddit,
+Facebook, Imgur, and Pinterest.
 
-## Installation
-
-```bash
+```sh
 npm install @totallynotdavid/downloader
 ```
-
-The library has only two dependencies: `axios` and `cheerio`.
-
-## Quick start
-
-Pass a public post URL to get back media URLs and metadata:
 
 ```typescript
 import { resolve } from "@totallynotdavid/downloader";
 
-const result = await resolve("https://www.instagram.com/p/DDVjCs0PqAW/");
-
-console.log(result.urls[0].url);
-console.log(result.meta.title);
+const result = await resolve("https://www.instagram.com/p/ABC123/");
 ```
 
-The result contains an array of media items with direct download URLs, along
-with post metadata like title, author, and engagement metrics.
+`result.urls[0].url` is the direct media URL. `result.urls[0].filename` is a
+suggested filename. `result.meta` contains post metadata like author and title.
 
-## Platform support
-
-Direct extraction means the library fetches media URLs itself. Third-party
-platforms use external services:
-
-| Platform  | Method      | Status |
-| --------- | ----------- | ------ |
-| Instagram | Direct      | ✅     |
-| TikTok    | Direct      | ✅     |
-| Facebook  | Direct      | ✅     |
-| Reddit    | Direct      | ✅     |
-| Imgur     | Direct      | ✅     |
-| YouTube   | Third-party | ✅     |
-| Twitter/X | Third-party | WIP    |
-| Pinterest | Third-party | ✅     |
-
-## API
-
-### resolve
-
-Resolves a social media URL to media links and metadata:
+Some platforms require headers to download. Pass `result.headers` when fetching:
 
 ```typescript
-resolve(url: string, options?: ResolveOptions): Promise<MediaResult>
-```
-
-Options accepts proxy URL and timeout in milliseconds. Timeout defaults to
-10000ms:
-
-```typescript
-const result = await resolve(url, {
-  proxy: "http://proxy.example.com:8080",
-  timeout: 15000,
+const response = await fetch(result.urls[0].url, {
+  headers: result.headers,
 });
 ```
 
-Returns a MediaResult with three fields:
+## Reference
 
-1. The urls array contains media items with type, direct URL, suggested
-   filename, and optional headers.
-2. The headers object contains request headers used for fetching.
-3. The meta object includes title, author, platform name, and optional view and
-   like counts:
-
-   ```typescript
-   type MediaResult = {
-     urls: MediaItem[];
-     headers: Record<string, string>;
-     meta: {
-       title: string;
-       author: string;
-       platform: Platform;
-       views?: number;
-       likes?: number;
-     };
-   };
-
-   type MediaItem = {
-     type: "image" | "video" | "audio";
-     url: string;
-     filename: string;
-     headers?: Record<string, string>;
-   };
-   ```
-
-### open_stream
-
-Creates a readable stream for downloading a media item:
+<details>
+<summary>Options</summary>
 
 ```typescript
-open_stream(
-  item: MediaItem,
-  globalHeaders?: Record<string, string>
-): Promise<Readable>
+await resolve(url, {
+  timeout: 15000,
+  headers: {
+    "User-Agent": "...",
+  },
+});
 ```
 
-The function merges global headers with item-specific headers and returns a
-Node.js Readable stream. Useful for piping directly to files or responses:
+Default timeout is 10 seconds.
 
-```typescript
-import { open_stream } from "@totallynotdavid/downloader";
-import { createWriteStream } from "fs";
+</details>
 
-const stream = await open_stream(result.urls[0], result.headers);
-stream.pipe(createWriteStream("output.mp4"));
-```
+<details>
+<summary>Errors</summary>
 
-## Error handling
-
-The library throws typed errors for different failure modes:
+- `PlatformNotSupportedError`: URL hostname not recognized
+- `NetworkError`: request failed (timeout, DNS, HTTP error)
+- `ParseError`: platform response changed, extractor needs update
 
 ```typescript
 import {
+  resolve,
   PlatformNotSupportedError,
-  ExtractionError,
   NetworkError,
+  ParseError,
 } from "@totallynotdavid/downloader";
-
-try {
-  const result = await resolve(url);
-} catch (error) {
-  if (error instanceof PlatformNotSupportedError) {
-    // URL platform not supported
-  } else if (error instanceof ExtractionError) {
-    // Failed to extract media, includes platform name
-  } else if (error instanceof NetworkError) {
-    // Network request failed
-  }
-}
 ```
+
+</details>
+
+<details>
+<summary>Types</summary>
+
+```typescript
+type MediaResult = {
+  urls: MediaItem[];
+  headers: Record<string, string>;
+  meta: {
+    title: string;
+    author: string;
+    platform: string;
+    views?: number;
+    likes?: number;
+  };
+};
+
+type MediaItem = {
+  type: "image" | "video" | "audio";
+  url: string;
+  filename: string;
+};
+
+type ResolveOptions = {
+  timeout?: number;
+  headers?: Record<string, string>;
+};
+```
+
+</details>
 
 ## License
 
