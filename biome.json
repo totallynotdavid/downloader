@@ -25,10 +25,12 @@
         "recommended": true,
         "noNodejsModules": "off"
       },
-      "performance": "on",
-      "security": {
+      "performance": {
         "recommended": true,
-        "noSecrets": "off"
+        "useTopLevelRegex": "off"
+      },
+      "security": {
+        "recommended": true
       },
       "style": {
         "recommended": true,
@@ -49,7 +51,7 @@
     "enabled": true,
     "actions": {
       "source": {
-        "organizeImports": "on"
+        "organizeImports": "off"
       }
     }
   }
