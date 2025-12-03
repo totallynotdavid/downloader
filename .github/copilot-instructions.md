@@ -31,7 +31,7 @@ src/
 
 ```sh
 bun test
-bun test tests/extractors/instagram.test.ts
+bun test instagram # equivalent to "bun test tests/extractors/instagram.test.ts"
 bun run build
 bun run format
 ```
