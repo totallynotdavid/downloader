@@ -1,8 +1,7 @@
 # [pkg]: @totallynotdavid/downloader
 
-[![npm version](https://img.shields.io/npm/v/@totallynotdavid/downloader.svg)](https://www.npmjs.com/package/@totallynotdavid/downloader)
-[![CodeQL](https://github.com/totallynotdavid/downloader/actions/workflows/codeql.yml/badge.svg)](https://github.com/totallynotdavid/downloader/actions/workflows/codeql.yml)
-[![Biome CI](https://github.com/totallynotdavid/downloader/actions/workflows/quality.yml/badge.svg)](https://github.com/totallynotdavid/downloader/actions/workflows/quality.yml)
+[![NPM Version](https://img.shields.io/npm/v/@totallynotdavid/downloader?logo=npm&logoColor=212121&label=version&labelColor=ffc44e&color=212121)](https://www.npmjs.com/package/@totallynotdavid/downloader)
+[![codecov](https://codecov.io/gh/totallynotdavid/downloader/graph/badge.svg?token=8OBBAZG8MN)](https://codecov.io/gh/totallynotdavid/downloader)
 
 Direct URLs from social posts. Skip reverse-engineering and heavy tools.
 Supports Instagram, TikTok, Twitter/X, YouTube, Reddit, Facebook, Imgur, and
