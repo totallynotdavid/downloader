@@ -1,18 +1,9 @@
-// biome-ignore lint/performance/noBarrelFile: Entry point for public API
-export { resolve } from "./api.ts";
+export { resolve } from "./resolve.ts";
+
+export type { MediaResult, MediaItem, ResolveOptions } from "./types.ts";
+
 export {
-  ExtractionError,
-  NetworkError,
   PlatformNotSupportedError,
+  NetworkError,
+  ParseError,
 } from "./errors.ts";
-
-export type {
-  Context,
-  ExtractorFn,
-  MediaItem,
-  MediaResult,
-  Platform,
-  ResolveOptions,
-} from "./types.ts";
-
-export { open_stream } from "./utils/http.ts";

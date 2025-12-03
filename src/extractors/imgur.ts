@@ -1,37 +1,32 @@
 import path from "node:path";
-import { ExtractionError } from "../errors.ts";
-import type { Context, MediaItem, MediaResult } from "../types.ts";
+import { http_get } from "../http.ts";
+import { NetworkError, ParseError } from "../errors.ts";
+import type { MediaItem, MediaResult, ResolveOptions } from "../types.ts";
 
 const CLIENT_ID = "546c25a59c58ad7";
 const ALPHANUMERIC_REGEX = /^[a-zA-Z0-9]+$/;
 
 export default async function resolve(
   url: string,
-  ctx: Context,
+  options: ResolveOptions,
 ): Promise<MediaResult> {
   try {
     const url_obj = new URL(url);
     const path_parts = url_obj.pathname.split("/").filter(Boolean);
 
-    // i.imgur.com/ID.jpg -> ID
-    // imgur.com/gallery/ID -> ID
-    // imgur.com/gallery/title-slug-ID -> ID (extract last part after last hyphen)
-    // imgur.com/a/ID -> ID
     const last_part = path_parts[path_parts.length - 1];
     if (!last_part) {
-      throw new Error("Invalid Imgur URL: no path");
+      throw new ParseError("Invalid Imgur URL: no path", "imgur");
     }
 
     let id = last_part.split(".")[0];
     if (!id) {
-      throw new Error("Invalid Imgur URL: no ID found");
+      throw new ParseError("Invalid Imgur URL: no ID found", "imgur");
     }
 
     const is_gallery =
       path_parts.includes("gallery") || path_parts.includes("a");
 
-    // For gallery URLs with slugs (e.g., "title-slug-hxXHU13"),
-    // extract the actual ID
     if (is_gallery && id.includes("-")) {
       const parts = id.split("-");
       const potential_id = parts[parts.length - 1];
@@ -47,14 +42,26 @@ export default async function resolve(
     const endpoint_type = is_gallery ? "album" : "image";
     const endpoint = `https://api.imgur.com/3/${endpoint_type}/${id}?client_id=${CLIENT_ID}`;
 
-    const response = await ctx.http.get(endpoint);
-    const data = response.data?.data;
+    const response = await http_get(endpoint, options);
+    const json = (await response.json()) as {
+      data?: {
+        id: string;
+        title: string | null;
+        account_url: string | null;
+        views: number;
+        ups?: number;
+        downs?: number;
+        type: string;
+        link: string;
+        images?: Array<{ id: string; type: string; link: string }>;
+      };
+    };
+    const data = json?.data;
 
     if (!data) {
-      throw new Error("Imgur API returned no data");
+      throw new ParseError("Imgur API returned no data", "imgur");
     }
 
-    // Normalize images: If album, use `images` array. If single, wrap `data` in array.
     const raw_images = data.images || [data];
     const items: MediaItem[] = [];
 
@@ -70,7 +77,7 @@ export default async function resolve(
     }
 
     if (items.length === 0) {
-      throw new Error("No media links found");
+      throw new ParseError("No media links found", "imgur");
     }
 
     return {
@@ -85,6 +92,7 @@ export default async function resolve(
       },
     };
   } catch (e: any) {
-    throw new ExtractionError(e.message, "imgur");
+    if (e instanceof NetworkError || e instanceof ParseError) throw e;
+    throw new ParseError(e.message, "imgur");
   }
 }

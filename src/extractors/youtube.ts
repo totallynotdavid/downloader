@@ -1,25 +1,34 @@
-import { load as cheerioLoad } from "cheerio";
-import { ExtractionError } from "../errors.ts";
-import type { Context, MediaResult } from "../types.ts";
+import { load as cheerio_load } from "cheerio";
+import { http_get, http_post } from "../http.ts";
+import { NetworkError, ParseError } from "../errors.ts";
+import type { MediaResult, ResolveOptions } from "../types.ts";
 
 const API_URL = "https://postsyncer.com/api/social-media-downloader";
 const PAGE_URL = "https://postsyncer.com/tools/youtube-video-downloader";
 
 export default async function resolve(
   url: string,
-  ctx: Context,
+  options: ResolveOptions,
 ): Promise<MediaResult> {
   try {
-    const pageRes = await ctx.http.get(PAGE_URL);
-    const $ = cheerioLoad(pageRes.data);
+    const page_res = await http_get(PAGE_URL, options);
+    const html = await page_res.text();
+    const $ = cheerio_load(html);
 
-    const csrfToken = $('meta[name="csrf-token"]').attr("content");
-    if (!csrfToken) throw new Error("Could not get CSRF token");
+    const csrf_token = $('meta[name="csrf-token"]').attr("content");
+    if (!csrf_token) {
+      throw new ParseError("Could not get CSRF token", "youtube");
+    }
 
-    const setCookies = pageRes.headers["set-cookie"] || [];
-    const cookieString = setCookies.map((c) => c.split(";")[0]).join("; ");
+    const set_cookies = page_res.headers.get("set-cookie");
+    const cookie_string = set_cookies
+      ? set_cookies
+          .split(",")
+          .map((c) => c.split(";")[0])
+          .join("; ")
+      : "";
 
-    const res = await ctx.http.post(
+    const res = await http_post(
       API_URL,
       JSON.stringify({ url, platform: "youtube" }),
       {
@@ -27,22 +36,34 @@ export default async function resolve(
           "content-type": "application/json",
           accept: "*/*",
           referer: PAGE_URL,
-          "x-csrf-token": csrfToken,
-          cookie: cookieString,
+          "x-csrf-token": csrf_token,
+          cookie: cookie_string,
+          ...options.headers,
         },
+        timeout: options.timeout,
       },
     );
 
-    const data = res.data;
+    const data = (await res.json()) as {
+      error?: boolean;
+      title?: string;
+      author?: string;
+      medias?: {
+        videos?: Array<{
+          url: string;
+          is_audio?: boolean;
+        }>;
+      };
+    };
 
     if (data.error) {
-      throw new Error("API returned error");
+      throw new ParseError("API returned error", "youtube");
     }
 
-    const video = data.medias.videos.find((v: any) => v.is_audio);
+    const video = data.medias?.videos?.find((v) => v.is_audio);
 
     if (!video) {
-      throw new Error("No video with audio found");
+      throw new ParseError("No video with audio found", "youtube");
     }
 
     return {
@@ -53,16 +74,15 @@ export default async function resolve(
           filename: `${data.title || "video"}.mp4`,
         },
       ],
-      headers: {
-        "User-Agent": ctx.http.defaults.headers["User-Agent"] as string,
-      },
+      headers: {},
       meta: {
-        title: data.title,
+        title: data.title || "YouTube video",
         author: data.author || "Unknown",
         platform: "youtube",
       },
     };
   } catch (e: any) {
-    throw new ExtractionError(e.message, "youtube");
+    if (e instanceof NetworkError || e instanceof ParseError) throw e;
+    throw new ParseError(e.message, "youtube");
   }
 }

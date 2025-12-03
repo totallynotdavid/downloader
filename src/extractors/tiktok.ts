@@ -1,49 +1,56 @@
-import { ExtractionError } from "../errors.ts";
-import type { Context, MediaResult } from "../types.ts";
+import { http_get } from "../http.ts";
+import { NetworkError, ParseError } from "../errors.ts";
+import type { MediaResult, ResolveOptions } from "../types.ts";
 
 const HYDRATION_DATA_REGEX =
   /<script id="__UNIVERSAL_DATA_FOR_REHYDRATION__" type="application\/json">([^<]+)<\/script>/;
 
 export default async function resolve(
   url: string,
-  ctx: Context,
+  options: ResolveOptions,
 ): Promise<MediaResult> {
-  // Replacing with /video/ forces the standard video-detail structure.
-  const targetUrl = url.replace("/photo/", "/video/");
+  const target_url = url.replace("/photo/", "/video/");
 
   try {
-    const response = await ctx.http.get(targetUrl);
-    const html = response.data;
+    const response = await http_get(target_url, options);
+    const html = await response.text();
 
     const match = html.match(HYDRATION_DATA_REGEX);
-    if (!match) {
-      throw new Error("Could not find hydration data in page");
+    if (!match?.[1]) {
+      throw new ParseError("Could not find hydration data", "tiktok");
     }
 
-    const json = JSON.parse(match[1]);
+    const json = JSON.parse(match[1]) as {
+      __DEFAULT_SCOPE__?: {
+        "webapp.video-detail"?: {
+          itemInfo?: { itemStruct?: any };
+          shareMeta?: { desc?: string };
+        };
+      };
+    };
     const details = json.__DEFAULT_SCOPE__?.["webapp.video-detail"];
     const item = details?.itemInfo?.itemStruct;
 
     if (!item) {
-      throw new Error("Metadata not found in JSON");
+      throw new ParseError("Metadata not found", "tiktok");
     }
 
-    const resultUrls: MediaResult["urls"] = [];
+    const result_urls: MediaResult["urls"] = [];
 
     if (item.imagePost?.images) {
       item.imagePost.images.forEach((img: any, index: number) => {
-        const directUrl = img.imageURL?.urlList?.[0];
-        if (directUrl) {
-          resultUrls.push({
+        const direct_url = img.imageURL?.urlList?.[0];
+        if (direct_url) {
+          result_urls.push({
             type: "image",
-            url: directUrl,
+            url: direct_url,
             filename: `tiktok-${item.id}-${index + 1}.jpg`,
           });
         }
       });
 
       if (item.music?.playUrl) {
-        resultUrls.push({
+        result_urls.push({
           type: "audio",
           url: item.music.playUrl,
           filename: `tiktok-${item.id}-audio.mp3`,
@@ -57,7 +64,7 @@ export default async function resolve(
           : item.video.playAddr;
 
       if (direct_url) {
-        resultUrls.push({
+        result_urls.push({
           type: "video",
           url: direct_url,
           filename: `tiktok-${item.id}.mp4`,
@@ -65,15 +72,14 @@ export default async function resolve(
       }
     }
 
-    if (resultUrls.length === 0) {
-      throw new Error("No media content found");
+    if (result_urls.length === 0) {
+      throw new ParseError("No media content found", "tiktok");
     }
 
     return {
-      urls: resultUrls,
+      urls: result_urls,
       headers: {
         Referer: "https://www.tiktok.com/",
-        "User-Agent": ctx.http.defaults.headers["User-Agent"] as string,
       },
       meta: {
         title: details.shareMeta?.desc || item.desc || "TikTok Post",
@@ -84,6 +90,7 @@ export default async function resolve(
       },
     };
   } catch (e: any) {
-    throw new ExtractionError(e.message, "tiktok");
+    if (e instanceof NetworkError || e instanceof ParseError) throw e;
+    throw new ParseError(e.message, "tiktok");
   }
 }

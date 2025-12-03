@@ -5,19 +5,22 @@ export class PlatformNotSupportedError extends Error {
   }
 }
 
-export class ExtractionError extends Error {
+export class NetworkError extends Error {
+  constructor(
+    message: string,
+    public statusCode?: number,
+  ) {
+    super(message);
+    this.name = "NetworkError";
+  }
+}
+
+export class ParseError extends Error {
   constructor(
     message: string,
     public platform: string,
   ) {
     super(`[${platform}] ${message}`);
-    this.name = "ExtractionError";
-  }
-}
-
-export class NetworkError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "NetworkError";
+    this.name = "ParseError";
   }
 }
