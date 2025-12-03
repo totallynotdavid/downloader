@@ -638,8 +638,12 @@ Video pin (story pin):
 }
 ```
 
-For images, use `images.orig.url`. For videos, check `videos.video_list` or
-`story_pin_data.pages[].video.video_list`. Quality keys: `V_720P`, `V_EXP7`,
-`V_EXP6`, `V_EXP5`, `V_EXP4` (in priority order).
+For images, use `images.orig.url`.
+
+For videos, check `videos.video_list` or
+`story_pin_data.pages[].video.video_list`.
+
+Quality keys: `V_720P`, `V_EXP7`, `V_EXP6`, `V_EXP5`, `V_EXP4` (in priority
+order).
 
 </details>
