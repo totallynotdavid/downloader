@@ -32,8 +32,9 @@ const EXTRACTORS = new Map<string, ExtractorFn>([
 export function route(url: string): ExtractorFn | null {
   const hostname = new URL(url).hostname.replace(/^www\./, "");
 
-  if (EXTRACTORS.has(hostname)) {
-    return EXTRACTORS.get(hostname)!;
+  const extractor = EXTRACTORS.get(hostname);
+  if (extractor) {
+    return extractor;
   }
 
   if (hostname.endsWith(".pinterest.com")) {
