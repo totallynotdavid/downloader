@@ -32,7 +32,7 @@
   ],
   "scripts": {
     "clean": "bun x shx rm -rf dist",
-    "format": "biome format --write . && biome check --write . && bun x prettier \"**/*.{md,yml}\" --write --print-width=80 --prose-wrap=always",
+    "check": "biome format --write . && biome check --write . && bun x prettier \"**/*.{md,yml}\" --write --print-width=80 --prose-wrap=always",
     "build": "bun run format && bun x bunup",
     "test": "bun test",
     "prepublishOnly": "bun run clean && bun run build"
