@@ -25,7 +25,7 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: biomejs/setup-biome@c85108fbae920b30935e40f1062c70ad098dda29 # v2.6.0
+      - uses: biomejs/setup-biome@edd13ef7d6fa532b11f6143f1a0c21e8b22b5b5b # v2.6.0
         with:
           version: "2.3.7"
 
