@@ -32,7 +32,7 @@ jobs:
         with:
           bun-version: "1.3.3"
 
-      - uses: biomejs/setup-biome@90a7f4195889c36bb3a4bfef5b2f9a4adf9728a3 # v2.7.0
+      - uses: biomejs/setup-biome@457faf560af5ba38f4b478da856cbae78268186f # v2.7.0
         with:
           version: "2.3.8"
 
