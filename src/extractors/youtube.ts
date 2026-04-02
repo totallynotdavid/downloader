@@ -1,22 +1,38 @@
-import { http_post } from "../http.ts";
+import { http_get, http_post } from "../http.ts";
 import { NetworkError, ParseError } from "../errors.ts";
 import type { MediaItem, MediaResult, ResolveOptions } from "../types.ts";
 
-const INNERTUBE_API_URL =
-  "https://www.youtube.com/youtubei/v1/player?key=AIzaSyA8eiZmM1FaDVjRy-df2KTyQ_vz_yYM39w";
+const INNERTUBE_API_URL = "https://www.youtube.com/youtubei/v1/player?key=";
 
-const INNERTUBE_CLIENT = {
+const ANDROID_CLIENT = {
   clientName: "ANDROID",
-  clientVersion: "19.09.37",
+  clientVersion: "21.02.35",
   androidSdkVersion: 30,
   hl: "en",
   gl: "US",
-  timeZone: "UTC",
-  utcOffsetMinutes: 0,
+  userAgent: "com.google.android.youtube/21.02.35 (Linux; U; Android 11) gzip",
 };
 
-const USER_AGENT =
-  "com.google.android.youtube/19.09.37 (Linux; U; Android 11) gzip";
+type YoutubePlayerResponse = {
+  playabilityStatus?: { status: string; reason?: string };
+  videoDetails?: {
+    title: string;
+    author: string;
+    viewCount: string;
+  };
+  streamingData?: {
+    formats?: Array<YoutubeFormat>;
+    adaptiveFormats?: Array<YoutubeFormat>;
+  };
+};
+
+type YoutubeFormat = {
+  url?: string;
+  mimeType: string;
+  width?: number;
+  bitrate: number;
+  audioChannels?: number;
+};
 
 function extract_video_id(url: string): string | null {
   const patterns = [
@@ -34,6 +50,102 @@ function sanitize_filename(title: string): string {
   return title.replace(/[<>:"/\\|?*]/g, "").trim();
 }
 
+function extract_innertube_key(html: string): string | null {
+  const match = html.match(/"INNERTUBE_API_KEY":"([^"]+)"/);
+  return match?.[1] || null;
+}
+
+function select_urls(
+  data: YoutubePlayerResponse,
+  video_id: string,
+): MediaItem[] {
+  if (data.playabilityStatus?.status !== "OK") {
+    throw new ParseError(
+      data.playabilityStatus?.reason || "Video not playable",
+      "youtube",
+    );
+  }
+
+  if (!data.streamingData) {
+    throw new ParseError("No streaming data available", "youtube");
+  }
+
+  const formats = [
+    ...(data.streamingData.formats || []),
+    ...(data.streamingData.adaptiveFormats || []),
+  ];
+
+  const urls: MediaItem[] = [];
+
+  const combined = formats
+    .filter(
+      (f) =>
+        f.url &&
+        f.audioChannels &&
+        f.audioChannels > 0 &&
+        f.width &&
+        f.width > 0,
+    )
+    .sort((a, b) => (b.width || 0) - (a.width || 0))[0];
+
+  if (combined?.url) {
+    urls.push({
+      type: "video",
+      url: combined.url,
+      filename: `youtube-${video_id}.mp4`,
+    });
+  }
+
+  const video_only = formats
+    .filter(
+      (f) =>
+        f.url &&
+        f.width &&
+        f.width > 0 &&
+        (!f.audioChannels || f.audioChannels === 0) &&
+        f.mimeType.includes("video/mp4"),
+    )
+    .sort((a, b) => (b.width || 0) - (a.width || 0))[0];
+
+  const audio_only = formats
+    .filter(
+      (f) =>
+        f.url &&
+        f.audioChannels &&
+        f.audioChannels > 0 &&
+        (!f.width || f.width === 0) &&
+        f.mimeType.includes("audio/mp4"),
+    )
+    .sort((a, b) => b.bitrate - a.bitrate)[0];
+
+  if (
+    video_only?.url &&
+    video_only.width &&
+    video_only.width > (combined?.width || 0)
+  ) {
+    const ext = video_only.mimeType.includes("webm") ? "webm" : "mp4";
+    urls.push({
+      type: "video",
+      url: video_only.url,
+      filename: `youtube-${video_id}-video.${ext}`,
+    });
+
+    if (audio_only?.url) {
+      urls.push({
+        type: "audio",
+        url: audio_only.url,
+        filename: `youtube-${video_id}-audio.m4a`,
+      });
+    }
+  }
+
+  if (urls.length === 0) {
+    throw new ParseError("No downloadable formats found", "youtube");
+  }
+
+  return urls;
+}
+
 export default async function resolve(
   url: string,
   options: ResolveOptions,
@@ -44,132 +156,47 @@ export default async function resolve(
       throw new ParseError("Could not extract video ID from URL", "youtube");
     }
 
-    const payload = {
-      videoId: video_id,
-      context: { client: INNERTUBE_CLIENT },
-      contentCheckOk: true,
-      racyCheckOk: true,
+    const timeout = options.timeout ?? 15_000;
+    const request_headers = {
+      "Accept-Language": "en-US,en;q=0.9",
+      ...options.headers,
     };
 
-    const res = await http_post(INNERTUBE_API_URL, JSON.stringify(payload), {
-      headers: {
-        "Content-Type": "application/json",
-        "User-Agent": USER_AGENT,
-        "X-Youtube-Client-Name": "3",
-        "X-Youtube-Client-Version": INNERTUBE_CLIENT.clientVersion,
-        ...options.headers,
-      },
-      timeout: options.timeout ?? 15_000,
+    const page = await http_get(`https://www.youtube.com/watch?v=${video_id}`, {
+      headers: request_headers,
+      timeout,
     });
 
-    const data = (await res.json()) as {
-      playabilityStatus?: { status: string; reason?: string };
-      videoDetails?: {
-        title: string;
-        author: string;
-        viewCount: string;
-      };
-      streamingData?: {
-        formats?: Array<{
-          url?: string;
-          mimeType: string;
-          width?: number;
-          bitrate: number;
-          audioChannels?: number;
-        }>;
-        adaptiveFormats?: Array<{
-          url?: string;
-          mimeType: string;
-          width?: number;
-          bitrate: number;
-          audioChannels?: number;
-        }>;
-      };
-    };
+    const html = await page.text();
+    const api_key = extract_innertube_key(html);
 
-    if (data.playabilityStatus?.status !== "OK") {
-      throw new ParseError(
-        data.playabilityStatus?.reason || "Video not playable",
-        "youtube",
-      );
+    if (!api_key) {
+      throw new ParseError("Could not find Innertube API key", "youtube");
     }
 
-    if (!data.streamingData) {
-      throw new ParseError("No streaming data available", "youtube");
-    }
+    const innertube_response = await http_post(
+      `${INNERTUBE_API_URL}${api_key}`,
+      JSON.stringify({
+        videoId: video_id,
+        context: { client: ANDROID_CLIENT },
+        contentCheckOk: true,
+        racyCheckOk: true,
+      }),
+      {
+        headers: {
+          ...request_headers,
+          "Content-Type": "application/json",
+          "User-Agent": ANDROID_CLIENT.userAgent,
+          "X-Youtube-Client-Name": "3",
+          "X-Youtube-Client-Version": ANDROID_CLIENT.clientVersion,
+        },
+        timeout,
+      },
+    );
 
-    const formats = [
-      ...(data.streamingData.formats || []),
-      ...(data.streamingData.adaptiveFormats || []),
-    ];
+    const data = (await innertube_response.json()) as YoutubePlayerResponse;
 
-    const urls: MediaItem[] = [];
-
-    const combined = formats
-      .filter(
-        (f) =>
-          f.url &&
-          f.audioChannels &&
-          f.audioChannels > 0 &&
-          f.width &&
-          f.width > 0,
-      )
-      .sort((a, b) => (b.width || 0) - (a.width || 0))[0];
-
-    if (combined?.url) {
-      urls.push({
-        type: "video",
-        url: combined.url,
-        filename: `youtube-${video_id}.mp4`,
-      });
-    }
-
-    const video_only = formats
-      .filter(
-        (f) =>
-          f.url &&
-          f.width &&
-          f.width > 0 &&
-          (!f.audioChannels || f.audioChannels === 0) &&
-          f.mimeType.includes("video/mp4"),
-      )
-      .sort((a, b) => (b.width || 0) - (a.width || 0))[0];
-
-    const audio_only = formats
-      .filter(
-        (f) =>
-          f.url &&
-          f.audioChannels &&
-          f.audioChannels > 0 &&
-          (!f.width || f.width === 0) &&
-          f.mimeType.includes("audio/mp4"),
-      )
-      .sort((a, b) => b.bitrate - a.bitrate)[0];
-
-    if (
-      video_only?.url &&
-      video_only.width &&
-      video_only.width > (combined?.width || 0)
-    ) {
-      const ext = video_only.mimeType.includes("webm") ? "webm" : "mp4";
-      urls.push({
-        type: "video",
-        url: video_only.url,
-        filename: `youtube-${video_id}-video.${ext}`,
-      });
-
-      if (audio_only?.url) {
-        urls.push({
-          type: "audio",
-          url: audio_only.url,
-          filename: `youtube-${video_id}-audio.m4a`,
-        });
-      }
-    }
-
-    if (urls.length === 0) {
-      throw new ParseError("No downloadable formats found", "youtube");
-    }
+    const urls = select_urls(data, video_id);
 
     const title = data.videoDetails?.title || "YouTube video";
     const author = data.videoDetails?.author || "Unknown";
