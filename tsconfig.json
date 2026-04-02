@@ -1,26 +1,35 @@
 {
   "compilerOptions": {
-    "lib": ["ESNext"],
     "target": "ESNext",
+    "lib": ["ESNext"],
     "module": "Preserve",
-    "moduleDetection": "force",
-    "jsx": "react-jsx",
-    "allowJs": true,
+    "useDefineForClassFields": true,
+    "noEmit": true,
 
+    /* modules */
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
-    "noEmit": true,
+    "moduleDetection": "force",
 
+    /* strictness */
     "strict": true,
-    "skipLibCheck": true,
-    "noFallthroughCasesInSwitch": true,
+    "exactOptionalPropertyTypes": true,
     "noUncheckedIndexedAccess": true,
+    "noPropertyAccessFromIndexSignature": true,
     "noImplicitOverride": true,
 
+    /* safety */
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "noPropertyAccessFromIndexSignature": true
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedSideEffectImports": true,
+    "allowUnusedLabels": false,
+    "allowUnreachableCode": false,
+
+    "skipLibCheck": true,
+    "erasableSyntaxOnly": true,
+    "types": ["node"]
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules"]
