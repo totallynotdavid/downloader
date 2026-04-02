@@ -7,5 +7,4 @@ export default defineConfig({
   target: "node",
   dts: true,
   minify: true,
-  external: ["cheerio"],
 });
