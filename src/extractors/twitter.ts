@@ -42,16 +42,22 @@ export default async function resolve(
       },
     );
 
+    const meta: MediaResult["meta"] = {
+      title: data.text || "Twitter post",
+      author: `${data.user_name} (@${data.user_screen_name})`,
+      platform: "twitter",
+    };
+    if (data.likes !== undefined) {
+      meta.likes = data.likes;
+    }
+    if (data.views !== undefined) {
+      meta.views = data.views;
+    }
+
     return {
       urls: items,
       headers: {},
-      meta: {
-        title: data.text || "Twitter post",
-        author: `${data.user_name} (@${data.user_screen_name})`,
-        platform: "twitter",
-        likes: data.likes,
-        views: data.views,
-      },
+      meta,
     };
   } catch (e: any) {
     if (e instanceof NetworkError || e instanceof ParseError) throw e;

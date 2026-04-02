@@ -30,13 +30,20 @@ export default async function resolve(
         }),
       );
 
-    const response = await http_get(api_url, {
+    const request_options: {
+      headers: Record<string, string>;
+      timeout?: number;
+    } = {
       headers: {
         "X-Pinterest-PWS-Handler": "www/[username].js",
         ...options.headers,
       },
-      timeout: options.timeout,
-    });
+    };
+    if (options.timeout !== undefined) {
+      request_options.timeout = options.timeout;
+    }
+
+    const response = await http_get(api_url, request_options);
 
     const json = (await response.json()) as {
       resource_response?: {

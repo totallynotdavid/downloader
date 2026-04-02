@@ -6,21 +6,23 @@ export class PlatformNotSupportedError extends Error {
 }
 
 export class NetworkError extends Error {
-  constructor(
-    message: string,
-    public statusCode?: number,
-  ) {
+  public readonly statusCode?: number;
+
+  constructor(message: string, statusCode?: number) {
     super(message);
     this.name = "NetworkError";
+    if (statusCode !== undefined) {
+      this.statusCode = statusCode;
+    }
   }
 }
 
 export class ParseError extends Error {
-  constructor(
-    message: string,
-    public platform: string,
-  ) {
+  public readonly platform: string;
+
+  constructor(message: string, platform: string) {
     super(`[${platform}] ${message}`);
     this.name = "ParseError";
+    this.platform = platform;
   }
 }

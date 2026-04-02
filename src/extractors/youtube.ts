@@ -173,18 +173,23 @@ export default async function resolve(
 
     const title = data.videoDetails?.title || "YouTube video";
     const author = data.videoDetails?.author || "Unknown";
+    const views = data.videoDetails?.viewCount
+      ? Number.parseInt(data.videoDetails.viewCount, 10)
+      : undefined;
+
+    const meta: MediaResult["meta"] = {
+      title: sanitize_filename(title),
+      author,
+      platform: "youtube",
+    };
+    if (views !== undefined && Number.isFinite(views)) {
+      meta.views = views;
+    }
 
     return {
       urls,
       headers: {},
-      meta: {
-        title: sanitize_filename(title),
-        author,
-        platform: "youtube",
-        views: data.videoDetails?.viewCount
-          ? Number.parseInt(data.videoDetails.viewCount, 10)
-          : undefined,
-      },
+      meta,
     };
   } catch (e: any) {
     if (e instanceof NetworkError || e instanceof ParseError) throw e;

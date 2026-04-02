@@ -97,7 +97,10 @@ export default async function resolve(
   options: ResolveOptions,
 ): Promise<MediaResult> {
   try {
-    const response = await http_get(url, {
+    const request_options: {
+      headers: Record<string, string>;
+      timeout?: number;
+    } = {
       headers: {
         "User-Agent": USER_AGENT,
         Accept:
@@ -108,8 +111,12 @@ export default async function resolve(
         "Sec-Fetch-Site": "none",
         ...options.headers,
       },
-      timeout: options.timeout,
-    });
+    };
+    if (options.timeout !== undefined) {
+      request_options.timeout = options.timeout;
+    }
+
+    const response = await http_get(url, request_options);
 
     const html = await response.text();
     const is_video = html.includes('\\"video_id\\":\\"');

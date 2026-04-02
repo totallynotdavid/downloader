@@ -72,22 +72,29 @@ export default async function resolve(
   });
 
   try {
+    const request_options: {
+      headers: Record<string, string>;
+      timeout?: number;
+    } = {
+      headers: {
+        "User-Agent": USER_AGENT,
+        "Content-Type": "application/x-www-form-urlencoded",
+        "X-IG-App-ID": IG_APP_ID,
+        "X-IG-WWW-Claim": "0",
+        "X-Requested-With": "XMLHttpRequest",
+        Accept: "*/*",
+        "Accept-Language": "en-US,en;q=0.9",
+        ...options.headers,
+      },
+    };
+    if (options.timeout !== undefined) {
+      request_options.timeout = options.timeout;
+    }
+
     const response = await http_post(
       "https://www.instagram.com/graphql/query",
       params,
-      {
-        headers: {
-          "User-Agent": USER_AGENT,
-          "Content-Type": "application/x-www-form-urlencoded",
-          "X-IG-App-ID": IG_APP_ID,
-          "X-IG-WWW-Claim": "0",
-          "X-Requested-With": "XMLHttpRequest",
-          Accept: "*/*",
-          "Accept-Language": "en-US,en;q=0.9",
-          ...options.headers,
-        },
-        timeout: options.timeout,
-      },
+      request_options,
     );
 
     const json = (await response.json()) as {
