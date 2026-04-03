@@ -99,11 +99,13 @@ export default async function resolve(
     ];
 
     const image_urls = [
-      ...(item.imagePost?.images
-        ?.map((img) => img.imageURL?.urlList?.[0])
-        .filter((u): u is string => Boolean(u)) || []),
-      ...(item.covers || []),
-      ...carousel_images,
+      ...new Set([
+        ...(item.imagePost?.images
+          ?.map((img) => img.imageURL?.urlList?.[0])
+          .filter((u): u is string => Boolean(u)) || []),
+        ...(item.covers || []),
+        ...carousel_images,
+      ]),
     ];
 
     const urls: MediaResult["urls"] = [];
