@@ -37,7 +37,7 @@ export default async function resolve(
         return {
           type: type,
           url: media.url,
-          filename: `twitter-${data.tweetID}-${index}${ext}`,
+          filename: `twitter-${data.tweetID}-${index + 1}${ext}`,
         };
       },
     );
