@@ -2,9 +2,6 @@ import { http_get } from "../http.ts";
 import { NetworkError, ParseError } from "../errors.ts";
 import type { MediaResult, ResolveOptions } from "../types.ts";
 
-const HYDRATION_DATA_REGEX =
-  /<script id="__UNIVERSAL_DATA_FOR_REHYDRATION__" type="application\/json">([\s\S]*?)<\/script>/;
-
 const EMBED_STATE_REGEX =
   /<script id="__FRONTITY_CONNECT_STATE__" type="application\/json">([\s\S]*?)<\/script>/;
 
@@ -14,8 +11,6 @@ type TiktokMediaPayload = {
   author?: { nickname?: string; uniqueId?: string };
   stats?: { diggCount?: number; playCount?: number };
   covers?: string[];
-  coversOrigin?: string[];
-  coversDynamic?: string[];
   imagePost?: { images?: Array<{ imageURL?: { urlList?: string[] } }> };
   music?: { playUrl?: string };
   video?: {
@@ -24,175 +19,51 @@ type TiktokMediaPayload = {
   };
 };
 
-type ParsedPayload = {
-  item?: TiktokMediaPayload;
-  title?: string;
-};
-
-function parse_hydration_media(html: string): ParsedPayload {
-  const match = html.match(HYDRATION_DATA_REGEX);
-  if (!match?.[1]) {
-    return {};
-  }
-
-  const json = JSON.parse(match[1]) as {
-    __DEFAULT_SCOPE__?: {
-      "webapp.video-detail"?: {
-        itemInfo?: { itemStruct?: TiktokMediaPayload };
-        shareMeta?: { desc?: string };
-      };
-    };
-  };
-
-  const details = json.__DEFAULT_SCOPE__?.["webapp.video-detail"];
-  return {
-    item: details?.itemInfo?.itemStruct,
-    title: details?.shareMeta?.desc,
-  };
-}
-
-function parse_embed_media(html: string, id: string): ParsedPayload {
+function extract_media(
+  html: string,
+  post_id: string,
+): TiktokMediaPayload | undefined {
   const match = html.match(EMBED_STATE_REGEX);
-  if (!match?.[1]) {
-    return {};
-  }
+  if (!match?.[1]) return undefined;
 
-  const json = JSON.parse(match[1]) as {
-    source?: {
-      data?: Record<
-        string,
-        {
-          videoData?: {
-            itemInfos?: {
-              id?: string;
-              text?: string;
-              diggCount?: number;
-              playCount?: number;
-              covers?: string[];
-              coversOrigin?: string[];
-              coversDynamic?: string[];
-              authorInfos?: { nickName?: string; uniqueId?: string };
-              video?: { urls?: string[] };
-              musicInfos?: { playUrl?: string[] };
-              imagePostInfo?: {
-                displayImages?: Array<{ urlList?: string[] }>;
-              };
-            };
-          };
-        }
-      >;
-    };
-  };
-
+  const json = JSON.parse(match[1]) as any;
   const data = json.source?.data || {};
-  const key = Object.keys(data).find((k) => k.startsWith(`/embed/v2/${id}`));
-  const item_infos = key ? data[key]?.videoData?.itemInfos : undefined;
+  const key = Object.keys(data).find((k) =>
+    k.startsWith(`/embed/v2/${post_id}`),
+  );
+  const info = key ? data[key]?.videoData?.itemInfos : undefined;
+  if (!info) return undefined;
 
-  if (!item_infos) {
-    return {};
-  }
-
-  return {
-    item: {
-      id: item_infos.id,
-      desc: item_infos.text,
-      covers: item_infos.covers,
-      coversOrigin: item_infos.coversOrigin,
-      coversDynamic: item_infos.coversDynamic,
-      author: {
-        nickname: item_infos.authorInfos?.nickName,
-        uniqueId: item_infos.authorInfos?.uniqueId,
-      },
-      stats: {
-        diggCount: item_infos.diggCount,
-        playCount: item_infos.playCount,
-      },
-      music: {
-        playUrl: item_infos.musicInfos?.playUrl?.[0],
-      },
-      video: {
-        playAddr: item_infos.video?.urls?.[0],
-      },
-      imagePost: {
-        images: item_infos.imagePostInfo?.displayImages?.map((img) => ({
-          imageURL: { urlList: img.urlList },
-        })),
-      },
-    },
-    title: item_infos.text,
+  const item: TiktokMediaPayload = {
+    ...(info.id && { id: info.id }),
+    ...(info.text && { desc: info.text }),
+    ...(info.covers && { covers: info.covers }),
+    ...(info.video?.urls?.[0] && { video: { playAddr: info.video.urls[0] } }),
+    ...(info.musicInfos?.playUrl?.[0] && {
+      music: { playUrl: info.musicInfos.playUrl[0] },
+    }),
   };
-}
 
-function parse_embed_photomode_urls(html: string): string[] {
-  const matches =
-    html.match(/https:\/\/[^"\s]+tplv-photomode-image[^"\s]*/g) || [];
-  const urls = matches
-    .map((url) => url.replaceAll("\\u0026", "&").replaceAll("&amp;", "&"))
-    .filter((url) => url.includes("x-signature="));
-  return [...new Set(urls)];
-}
+  const images = info.imagePostInfo?.displayImages?.map((img: any) => ({
+    imageURL: { urlList: img.urlList },
+  }));
+  if (images?.length) item.imagePost = { images };
 
-function has_primary_media(item: TiktokMediaPayload): boolean {
-  return Boolean(get_video_url(item) || get_image_urls(item).length > 0);
-}
-
-function get_video_url(item: TiktokMediaPayload): string | undefined {
-  const bitrate_info = item.video?.bitrateInfo || [];
-  return bitrate_info.length > 0
-    ? bitrate_info[0].PlayAddr?.UrlList?.[0]
-    : item.video?.playAddr;
-}
-
-function get_image_urls(item: TiktokMediaPayload): string[] {
-  const urls = [
-    ...(item.imagePost?.images
-      ?.map((img) => img.imageURL?.urlList?.[0])
-      .filter(Boolean) || []),
-    ...(item.covers || []),
-    ...(item.coversOrigin || []),
-    ...(item.coversDynamic || []),
-  ];
-  return [...new Set(urls)];
-}
-
-function build_result_urls(
-  item: TiktokMediaPayload,
-  embed_photomode_urls: string[],
-): MediaResult["urls"] {
-  const result_urls: MediaResult["urls"] = [];
-  const video_url = get_video_url(item);
-  const image_urls = [
-    ...new Set([...get_image_urls(item), ...embed_photomode_urls]),
-  ];
-
-  if (image_urls.length > 0 && !video_url) {
-    image_urls.forEach((direct_url, index) => {
-      result_urls.push({
-        type: "image",
-        url: direct_url,
-        filename: `tiktok-${item.id}-${index + 1}.jpg`,
-      });
-    });
-
-    if (item.music?.playUrl) {
-      result_urls.push({
-        type: "audio",
-        url: item.music.playUrl,
-        filename: `tiktok-${item.id}-audio.mp3`,
-      });
-    }
-    return result_urls;
+  if (info.authorInfos?.nickName || info.authorInfos?.uniqueId) {
+    item.author = {
+      ...(info.authorInfos.nickName && { nickname: info.authorInfos.nickName }),
+      ...(info.authorInfos.uniqueId && { uniqueId: info.authorInfos.uniqueId }),
+    };
   }
 
-  if (video_url) {
-    result_urls.push({
-      type: "video",
-      url: video_url,
-      filename: `tiktok-${item.id}.mp4`,
-    });
+  if (info.diggCount !== undefined || info.playCount !== undefined) {
+    item.stats = {
+      ...(info.diggCount !== undefined && { diggCount: info.diggCount }),
+      ...(info.playCount !== undefined && { playCount: info.playCount }),
+    };
   }
 
-  return result_urls;
+  return item;
 }
 
 export default async function resolve(
@@ -204,57 +75,83 @@ export default async function resolve(
     throw new ParseError("Could not parse TikTok post id", "tiktok");
   }
 
-  const target_urls = [url, `https://www.tiktok.com/embed/v2/${post_id}`];
-
   try {
-    let item: TiktokMediaPayload | undefined;
-    let title: string | undefined;
-    const embed_photomode_urls: string[] = [];
-
-    for (const target_url of target_urls) {
-      const response = await http_get(target_url, options);
-      const html = await response.text();
-
-      if (target_url.includes("/embed/v2/")) {
-        embed_photomode_urls.push(...parse_embed_photomode_urls(html));
-      }
-
-      const hydration = parse_hydration_media(html);
-      if (hydration.item && has_primary_media(hydration.item)) {
-        item = hydration.item;
-        title = hydration.title;
-        break;
-      }
-
-      const embed = parse_embed_media(html, post_id);
-      if (embed.item && has_primary_media(embed.item)) {
-        item = embed.item;
-        title = embed.title;
-        break;
-      }
-    }
+    const embed_url = `https://www.tiktok.com/embed/v2/${post_id}`;
+    const html = await http_get(embed_url, options).then((r) => r.text());
+    const item = extract_media(html, post_id);
 
     if (!item) {
       throw new ParseError("Metadata not found", "tiktok");
     }
 
-    const result_urls = build_result_urls(item, embed_photomode_urls);
-    if (result_urls.length === 0) {
+    const video_url =
+      item.video?.bitrateInfo?.[0]?.PlayAddr?.UrlList?.[0] ||
+      item.video?.playAddr;
+
+    const carousel_urls =
+      html.match(/https:\/\/[^"\s]+tplv-photomode-image[^"\s]*/g) || [];
+    const carousel_images = [
+      ...new Set(
+        carousel_urls
+          .map((u) => u.replaceAll("\\u0026", "&").replaceAll("&amp;", "&"))
+          .filter((u) => u.includes("x-signature=")),
+      ),
+    ];
+
+    const image_urls = [
+      ...(item.imagePost?.images
+        ?.map((img) => img.imageURL?.urlList?.[0])
+        .filter((u): u is string => Boolean(u)) || []),
+      ...(item.covers || []),
+      ...carousel_images,
+    ];
+
+    const urls: MediaResult["urls"] = [];
+    if (image_urls.length > 0 && !video_url) {
+      image_urls.forEach((url, i) => {
+        urls.push({
+          type: "image",
+          url,
+          filename: `tiktok-${item.id}-${i + 1}.jpg`,
+        });
+      });
+      if (item.music?.playUrl) {
+        urls.push({
+          type: "audio",
+          url: item.music.playUrl,
+          filename: `tiktok-${item.id}-audio.mp3`,
+        });
+      }
+    } else if (video_url) {
+      urls.push({
+        type: "video",
+        url: video_url,
+        filename: `tiktok-${item.id}.mp4`,
+      });
+    }
+
+    if (!urls.length) {
       throw new ParseError("No media content found", "tiktok");
     }
 
+    const meta = {
+      title: item.desc || "TikTok Post",
+      author: item.author?.nickname || item.author?.uniqueId || "Unknown",
+      platform: "tiktok",
+      ...(item.stats?.diggCount && { likes: item.stats.diggCount }),
+      ...(item.stats?.playCount && { views: item.stats.playCount }),
+    } as {
+      title: string;
+      author: string;
+      platform: string;
+      likes?: number;
+      views?: number;
+    };
+
     return {
-      urls: result_urls,
-      headers: {
-        Referer: "https://www.tiktok.com/",
-      },
-      meta: {
-        title: title || item.desc || "TikTok Post",
-        author: item.author?.nickname || item.author?.uniqueId || "Unknown",
-        platform: "tiktok",
-        likes: item.stats?.diggCount,
-        views: item.stats?.playCount,
-      },
+      urls,
+      headers: { Referer: "https://www.tiktok.com/" },
+      meta,
     };
   } catch (e: any) {
     if (e instanceof NetworkError || e instanceof ParseError) throw e;
