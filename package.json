@@ -19,7 +19,7 @@
   "description": "Get direct download URLs from YouTube, Instagram, TikTok, X, and more.",
   "files": [
     "dist",
-    "README.md",
+    "readme.md",
     "LICENSE"
   ],
   "homepage": "https://github.com/totallynotdavid/downloader#readme",
