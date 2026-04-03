@@ -11,7 +11,7 @@ export const SAMPLES = {
   instagram: {
     video_reel: "https://www.instagram.com/p/DQjE79kETsb/",
     carousel: "https://www.instagram.com/p/DJ69JfcSGmL/",
-    single_image: "https://www.instagram.com/p/DDgcwUfJMzT/",
+    single_image: "https://www.instagram.com/p/DUbb_owkx0I/",
   },
   twitter: {
     video: "https://x.com/_DaveMullins/status/1129038424130899969",
