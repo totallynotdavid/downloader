@@ -19,6 +19,16 @@ type TiktokMediaPayload = {
   };
 };
 
+function normalize_tiktok_url_entities(url: string): string {
+  if (url.includes("\\u0026")) {
+    return url.replaceAll("\\u0026", "&");
+  }
+  if (url.includes("&amp;")) {
+    return url.replaceAll("&amp;", "&");
+  }
+  return url;
+}
+
 function extract_media(
   html: string,
   post_id: string,
@@ -93,7 +103,7 @@ export default async function resolve(
     const carousel_images = [
       ...new Set(
         carousel_urls
-          .map((u) => u.replaceAll("\\u0026", "&").replaceAll("&amp;", "&"))
+          .map((u) => normalize_tiktok_url_entities(u))
           .filter((u) => u.includes("x-signature=")),
       ),
     ];
