@@ -146,19 +146,17 @@ export default async function resolve(
       throw new ParseError("No media content found", "tiktok");
     }
 
-    const meta = {
+    const meta: MediaResult["meta"] = {
       title: item.desc || "TikTok Post",
       author: item.author?.nickname || item.author?.uniqueId || "Unknown",
       platform: "tiktok",
-      ...(item.stats?.diggCount && { likes: item.stats.diggCount }),
-      ...(item.stats?.playCount && { views: item.stats.playCount }),
-    } as {
-      title: string;
-      author: string;
-      platform: string;
-      likes?: number;
-      views?: number;
     };
+    if (item.stats?.diggCount !== undefined) {
+      meta.likes = item.stats.diggCount;
+    }
+    if (item.stats?.playCount !== undefined) {
+      meta.views = item.stats.playCount;
+    }
 
     return {
       urls,
