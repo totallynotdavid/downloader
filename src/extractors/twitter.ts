@@ -22,6 +22,9 @@ export default async function resolve(
       user_screen_name?: string;
       likes?: number;
       views?: number;
+      replies?: number;
+      retweets?: number;
+      date_epoch?: number;
     };
 
     if (!data?.media_extended || data.media_extended.length === 0) {
@@ -52,6 +55,15 @@ export default async function resolve(
     }
     if (data.views !== undefined) {
       meta.views = data.views;
+    }
+    if (data.replies !== undefined) {
+      meta.comments = data.replies;
+    }
+    if (data.retweets !== undefined) {
+      meta.reposts = data.retweets;
+    }
+    if (data.date_epoch !== undefined) {
+      meta.timestamp = data.date_epoch;
     }
 
     return {

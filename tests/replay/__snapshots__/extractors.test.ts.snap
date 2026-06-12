@@ -128,8 +128,11 @@ exports[`twitter video 1`] = `
     "headers": {},
     "meta": {
       "author": "Dave Mullins (@_DaveMullins)",
+      "comments": 26,
       "likes": 4598,
       "platform": "twitter",
+      "reposts": 400,
+      "timestamp": 1558018711,
       "title": "Final animation on my Helen phone shots on #TheIncredibles. The cord was animated by hand... #nosim",
     },
     "urls": [
@@ -151,8 +154,11 @@ exports[`twitter multi_image 1`] = `
     "headers": {},
     "meta": {
       "author": "kyle🇯🇲🇫🇷 (@toofarST)",
+      "comments": 48,
       "likes": 1296,
       "platform": "twitter",
+      "reposts": 83,
+      "timestamp": 1763922866,
       "title": "this deserves way more flowers than it gets because that was so fucking awesome",
     },
     "urls": [
