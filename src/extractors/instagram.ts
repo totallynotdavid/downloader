@@ -12,9 +12,13 @@ interface MediaNode {
   is_video: boolean;
   video_url?: string;
   display_url?: string;
+  thumbnail_src?: string;
   __typename?: string;
   owner?: { username?: string };
+  taken_at_timestamp?: number | null;
   edge_media_to_caption?: { edges?: Array<{ node?: { text?: string } }> };
+  edge_media_preview_like?: { count?: number };
+  edge_media_to_parent_comment?: { count?: number };
   edge_sidecar_to_children?: { edges?: Array<{ node: MediaNode }> };
 }
 
@@ -115,6 +119,21 @@ export default async function resolve(
 
     const caption = data.edge_media_to_caption?.edges?.[0]?.node?.text;
     const username = data.owner?.username;
+    const thumbnail = data.display_url ?? data.thumbnail_src;
+    const taken_at = data.taken_at_timestamp;
+    const like_count = data.edge_media_preview_like?.count;
+    const comment_count = data.edge_media_to_parent_comment?.count;
+
+    const meta: MediaResult["meta"] = {
+      platform: "instagram",
+      title: caption || "Instagram post",
+      author: username || "Unknown",
+    };
+    if (caption) meta.description = caption;
+    if (thumbnail) meta.thumbnail = thumbnail;
+    if (taken_at != null && taken_at > 0) meta.timestamp = taken_at;
+    if (like_count !== undefined) meta.likes = like_count;
+    if (comment_count !== undefined) meta.comments = comment_count;
 
     return {
       urls: items,
@@ -122,11 +141,7 @@ export default async function resolve(
         "User-Agent": USER_AGENT,
         Referer: "https://www.instagram.com/",
       },
-      meta: {
-        platform: "instagram",
-        title: caption || "Instagram post",
-        author: username || "Unknown",
-      },
+      meta,
     };
   } catch (e: unknown) {
     if (e instanceof NetworkError || e instanceof ParseError) throw e;
