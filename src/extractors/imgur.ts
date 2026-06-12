@@ -91,8 +91,9 @@ export default async function resolve(
         likes: (data.ups || 0) - (data.downs || 0),
       },
     };
-  } catch (e: any) {
+  } catch (e: unknown) {
     if (e instanceof NetworkError || e instanceof ParseError) throw e;
-    throw new ParseError(e.message, "imgur");
+    const message = e instanceof Error ? e.message : "Unknown error";
+    throw new ParseError(message, "imgur");
   }
 }

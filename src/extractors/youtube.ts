@@ -218,8 +218,9 @@ export default async function resolve(
       headers: {},
       meta,
     };
-  } catch (e: any) {
+  } catch (e: unknown) {
     if (e instanceof NetworkError || e instanceof ParseError) throw e;
-    throw new ParseError(e.message, "youtube");
+    const message = e instanceof Error ? e.message : "Unknown error";
+    throw new ParseError(message, "youtube");
   }
 }

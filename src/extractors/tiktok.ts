@@ -163,8 +163,9 @@ export default async function resolve(
       headers: { Referer: "https://www.tiktok.com/" },
       meta,
     };
-  } catch (e: any) {
+  } catch (e: unknown) {
     if (e instanceof NetworkError || e instanceof ParseError) throw e;
-    throw new ParseError(e.message, "tiktok");
+    const message = e instanceof Error ? e.message : "Unknown error";
+    throw new ParseError(message, "tiktok");
   }
 }

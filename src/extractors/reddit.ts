@@ -70,8 +70,9 @@ export default async function resolve(
         views: post.view_count,
       },
     };
-  } catch (e: any) {
+  } catch (e: unknown) {
     if (e instanceof NetworkError || e instanceof ParseError) throw e;
-    throw new ParseError(e.message, "reddit");
+    const message = e instanceof Error ? e.message : "Unknown error";
+    throw new ParseError(message, "reddit");
   }
 }

@@ -37,12 +37,13 @@ export async function http_get(
     }
 
     return res;
-  } catch (e: any) {
-    if (e.name === "AbortError") {
+  } catch (e: unknown) {
+    if (e instanceof Error && e.name === "AbortError") {
       throw new NetworkError("Request timeout", 408);
     }
     if (e instanceof NetworkError) throw e;
-    throw new NetworkError(e.message);
+    const message = e instanceof Error ? e.message : "Unknown error";
+    throw new NetworkError(message);
   } finally {
     clearTimeout(timeout);
   }
@@ -82,12 +83,13 @@ export async function http_post(
     }
 
     return res;
-  } catch (e: any) {
-    if (e.name === "AbortError") {
+  } catch (e: unknown) {
+    if (e instanceof Error && e.name === "AbortError") {
       throw new NetworkError("Request timeout", 408);
     }
     if (e instanceof NetworkError) throw e;
-    throw new NetworkError(e.message);
+    const message = e instanceof Error ? e.message : "Unknown error";
+    throw new NetworkError(message);
   } finally {
     clearTimeout(timeout);
   }

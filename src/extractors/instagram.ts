@@ -128,8 +128,9 @@ export default async function resolve(
         author: username || "Unknown",
       },
     };
-  } catch (e: any) {
+  } catch (e: unknown) {
     if (e instanceof NetworkError || e instanceof ParseError) throw e;
-    throw new ParseError(e.message, "instagram");
+    const message = e instanceof Error ? e.message : "Unknown error";
+    throw new ParseError(message, "instagram");
   }
 }

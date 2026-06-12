@@ -160,8 +160,9 @@ export default async function resolve(
       headers: {},
       meta: { title, author, platform: "pinterest" },
     };
-  } catch (e: any) {
+  } catch (e: unknown) {
     if (e instanceof NetworkError || e instanceof ParseError) throw e;
-    throw new ParseError(e.message, "pinterest");
+    const message = e instanceof Error ? e.message : "Unknown error";
+    throw new ParseError(message, "pinterest");
   }
 }
