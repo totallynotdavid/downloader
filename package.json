@@ -38,7 +38,11 @@
     "clean": "bun x shx rm -rf dist",
     "check": "biome format --write . && biome check --write . && bun x prettier \"**/*.{md,yml}\" --write --print-width=80 --prose-wrap=always",
     "build": "bun run check && bun x bunup",
-    "test": "bun test",
+    "test": "bun test tests/extractors",
+    "test:replay": "bun test tests/replay",
+    "test:replay:update": "bun test tests/replay --update-snapshots",
+    "eval": "bun scripts/eval.ts",
+    "record": "bun scripts/record.ts",
     "prepublishOnly": "bun run clean && bun run build"
   },
   "type": "module",

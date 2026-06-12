@@ -5,21 +5,17 @@
     "module": "Preserve",
     "useDefineForClassFields": true,
     "noEmit": true,
-
-    /* modules */
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
     "moduleDetection": "force",
 
-    /* strictness */
     "strict": true,
     "exactOptionalPropertyTypes": true,
     "noUncheckedIndexedAccess": true,
     "noPropertyAccessFromIndexSignature": true,
     "noImplicitOverride": true,
 
-    /* safety */
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
@@ -29,7 +25,7 @@
 
     "skipLibCheck": true,
     "erasableSyntaxOnly": true,
-    "types": ["node"]
+    "types": ["node", "bun"]
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules"]

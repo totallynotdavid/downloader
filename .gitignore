@@ -3,3 +3,4 @@ logs
 dist
 
 *.ps1
+.env
