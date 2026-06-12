@@ -16,7 +16,14 @@ export type MediaResult = {
     title: string;
     author: string;
     platform: string;
+    // Optional enrichment, populated per platform when the response exposes it.
+    description?: string;
+    thumbnail?: string;
     views?: number;
     likes?: number;
+    comments?: number;
+    shares?: number;
+    reposts?: number;
+    timestamp?: number;
   };
 };
