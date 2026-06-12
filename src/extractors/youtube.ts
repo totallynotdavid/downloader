@@ -2,7 +2,8 @@ import { http_get, http_post } from "../http.ts";
 import { NetworkError, ParseError } from "../errors.ts";
 import type { MediaItem, MediaResult, ResolveOptions } from "../types.ts";
 
-const INNERTUBE_API_URL = "https://www.youtube.com/youtubei/v1/player?key=";
+const INNERTUBE_PLAYER_URL = "https://www.youtube.com/youtubei/v1/player?key=";
+const INNERTUBE_NEXT_URL = "https://www.youtube.com/youtubei/v1/next?key=";
 
 const ANDROID_CLIENT = {
   clientName: "ANDROID",
@@ -13,12 +14,26 @@ const ANDROID_CLIENT = {
   userAgent: "com.google.android.youtube/21.02.35 (Linux; U; Android 11) gzip",
 };
 
+// The player response carries no engagement counts; the TVHTML5 /next endpoint
+// does (likeCount, commentCount), so we fetch it in parallel and treat it as
+// best-effort enrichment.
+const TV_CLIENT = {
+  clientName: "TVHTML5",
+  clientVersion: "7.20240101",
+  hl: "en",
+  gl: "US",
+};
+
 type YoutubePlayerResponse = {
   playabilityStatus?: { status: string; reason?: string };
   videoDetails?: {
     title: string;
     author: string;
     viewCount: string;
+    shortDescription?: string;
+    thumbnail?: {
+      thumbnails: Array<{ url: string; width: number; height: number }>;
+    };
   };
   streamingData?: {
     formats?: Array<YoutubeFormat>;
@@ -53,6 +68,34 @@ function sanitize_filename(title: string): string {
 function extract_innertube_key(html: string): string | null {
   const match = html.match(/"INNERTUBE_API_KEY":"([^"]+)"/);
   return match?.[1] || null;
+}
+
+function extract_publish_timestamp(html: string): number | undefined {
+  const match = html.match(/"publishDate":"([^"]+)"/);
+  if (!match?.[1]) return undefined;
+  const ts = Math.floor(new Date(match[1]).getTime() / 1000);
+  return Number.isFinite(ts) ? ts : undefined;
+}
+
+// The /next response nests engagement counts deep inside renderer trees whose
+// exact path shifts across clients, so we search by key rather than hard-code a
+// brittle path. Returns the first match in traversal order.
+function deep_find(obj: unknown, key: string): unknown {
+  if (typeof obj !== "object" || obj === null) return undefined;
+  for (const [k, v] of Object.entries(obj as Record<string, unknown>)) {
+    if (k === key) return v;
+    const found = deep_find(v, key);
+    if (found !== undefined) return found;
+  }
+  return undefined;
+}
+
+function parse_abbreviated_number(text: string): number | undefined {
+  const match = text.trim().match(/^([\d.]+)\s*([KkMmBb]?)$/);
+  if (!match?.[1]) return undefined;
+  const multipliers: Record<string, number> = { k: 1e3, m: 1e6, b: 1e9 };
+  const suffix = (match[2] ?? "").toLowerCase();
+  return Math.round(Number.parseFloat(match[1]) * (multipliers[suffix] ?? 1));
 }
 
 function select_urls(
@@ -174,27 +217,45 @@ export default async function resolve(
       throw new ParseError("Could not find Innertube API key", "youtube");
     }
 
-    const innertube_response = await http_post(
-      `${INNERTUBE_API_URL}${api_key}`,
-      JSON.stringify({
-        videoId: video_id,
-        context: { client: ANDROID_CLIENT },
-        contentCheckOk: true,
-        racyCheckOk: true,
-      }),
-      {
-        headers: {
-          ...request_headers,
-          "Content-Type": "application/json",
-          "User-Agent": ANDROID_CLIENT.userAgent,
-          "X-Youtube-Client-Name": "3",
-          "X-Youtube-Client-Version": ANDROID_CLIENT.clientVersion,
+    const [player_response, next_response] = await Promise.all([
+      http_post(
+        `${INNERTUBE_PLAYER_URL}${api_key}`,
+        JSON.stringify({
+          videoId: video_id,
+          context: { client: ANDROID_CLIENT },
+          contentCheckOk: true,
+          racyCheckOk: true,
+        }),
+        {
+          headers: {
+            ...request_headers,
+            "Content-Type": "application/json",
+            "User-Agent": ANDROID_CLIENT.userAgent,
+            "X-Youtube-Client-Name": "3",
+            "X-Youtube-Client-Version": ANDROID_CLIENT.clientVersion,
+          },
+          timeout,
         },
-        timeout,
-      },
-    );
+      ),
+      http_post(
+        `${INNERTUBE_NEXT_URL}${api_key}`,
+        JSON.stringify({ videoId: video_id, context: { client: TV_CLIENT } }),
+        {
+          headers: {
+            ...request_headers,
+            "Content-Type": "application/json",
+            "X-Youtube-Client-Name": "7",
+            "X-Youtube-Client-Version": TV_CLIENT.clientVersion,
+          },
+          timeout,
+        },
+      ).catch(() => null),
+    ]);
 
-    const data = (await innertube_response.json()) as YoutubePlayerResponse;
+    const data = (await player_response.json()) as YoutubePlayerResponse;
+    const next_data: unknown = next_response
+      ? await next_response.json()
+      : null;
 
     const urls = select_urls(data, video_id);
 
@@ -203,14 +264,40 @@ export default async function resolve(
     const views = data.videoDetails?.viewCount
       ? Number.parseInt(data.videoDetails.viewCount, 10)
       : undefined;
+    const thumbnails = data.videoDetails?.thumbnail?.thumbnails;
+    const thumbnail_url = thumbnails?.length
+      ? thumbnails[thumbnails.length - 1]?.url
+      : undefined;
 
     const meta: MediaResult["meta"] = {
       title: sanitize_filename(title),
       author,
       platform: "youtube",
     };
+    if (data.videoDetails?.shortDescription) {
+      meta.description = data.videoDetails.shortDescription;
+    }
+    if (thumbnail_url) {
+      meta.thumbnail = thumbnail_url;
+    }
     if (views !== undefined && Number.isFinite(views)) {
       meta.views = views;
+    }
+    const publish_ts = extract_publish_timestamp(html);
+    if (publish_ts !== undefined) {
+      meta.timestamp = publish_ts;
+    }
+    if (next_data) {
+      const likes = deep_find(next_data, "likeCount");
+      if (typeof likes === "number" && Number.isFinite(likes)) {
+        meta.likes = likes;
+      }
+      const comment_count = deep_find(next_data, "commentCount");
+      if (typeof comment_count === "object" && comment_count !== null) {
+        const text = (comment_count as { simpleText?: string }).simpleText;
+        const parsed = text ? parse_abbreviated_number(text) : undefined;
+        if (parsed !== undefined) meta.comments = parsed;
+      }
     }
 
     return {

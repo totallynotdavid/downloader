@@ -370,7 +370,22 @@ exports[`youtube video 1`] = `
     "headers": {},
     "meta": {
       "author": "jawed",
+      "comments": 10000000,
+      "description": 
+"Microplastics are accumulating in human brains at an alarming rate
+https://www.youtube.com/watch?v=0PT5c1z3LL8
+
+“Nanoplastics and Human Health” with Matthew J Campen, PhD, MSPH
+https://www.youtube.com/watch?v=RRBN_4L09Mg
+
+00:00 Intro
+00:05 The cool thing
+00:17 End"
+,
+      "likes": 18972356,
       "platform": "youtube",
+      "thumbnail": "https://i.ytimg.com/vi/jNQXAC9IVRw/hqdefault.jpg",
+      "timestamp": 1114313512,
       "title": "Me at the zoo",
       "views": 394628170,
     },
@@ -393,7 +408,12 @@ exports[`youtube video_short 1`] = `
     "headers": {},
     "meta": {
       "author": "The Pragmatic Engineer",
+      "comments": 0,
+      "description": "From Martin Fowler, Chief Scientist at Thoughtworks. Full video: https://www.youtube.com/watch?v=CQmI4XKTa0U",
+      "likes": 35,
       "platform": "youtube",
+      "thumbnail": "https://i.ytimg.com/vi/9RrdDM_9Cqk/sddefault.jpg",
+      "timestamp": 1764105004,
       "title": "How was the Thoughtworks Radar created",
       "views": 2357,
     },
