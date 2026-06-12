@@ -1,0 +1,534 @@
+// Bun Snapshot v1, https://bun.sh/docs/test/snapshots
+
+exports[`instagram video_reel 1`] = `
+{
+  "error": undefined,
+  "ok": true,
+  "result": {
+    "headers": {
+      "Referer": "https://www.instagram.com/",
+      "User-Agent": "Instagram 309.0.0.15.109 Android (31/12; 480dpi; 1080x2228; samsung; SM-G996B; t2s; qcom; en_US; 544099989)",
+    },
+    "meta": {
+      "author": "yeetbrew",
+      "platform": "instagram",
+      "title": "Who was better?🤔 #trending #fyp #viral #ziasandblou #zias",
+    },
+    "urls": [
+      {
+        "filename": "instagram-DQjE79kETsb.mp4",
+        "type": "video",
+        "url": "https://instagram.fjog8-1.fna.fbcdn.net/o1/v/t2/f2/m86/AQPEH77FA5WGKavaP45PmhP6Pof4tLzKvdCg3az4Qo9nW03l65Yqgnl3WtFNIMXALnLnaby-rZpuYoLc4S79ScoeYKSuj7S-K2BGsV0.mp4",
+      },
+    ],
+  },
+}
+`;
+
+exports[`instagram carousel 1`] = `
+{
+  "error": undefined,
+  "ok": true,
+  "result": {
+    "headers": {
+      "Referer": "https://www.instagram.com/",
+      "User-Agent": "Instagram 309.0.0.15.109 Android (31/12; 480dpi; 1080x2228; samsung; SM-G996B; t2s; qcom; en_US; 544099989)",
+    },
+    "meta": {
+      "author": "_imyour_joy",
+      "platform": "instagram",
+      "title": "🪽",
+    },
+    "urls": [
+      {
+        "filename": "instagram-DJ69JfcSGmL-1.jpg",
+        "type": "image",
+        "url": "https://instagram.fjog8-1.fna.fbcdn.net/v/t51.2885-15/498698649_18121949554466999_5715260499704601099_n.jpg",
+      },
+      {
+        "filename": "instagram-DJ69JfcSGmL-2.jpg",
+        "type": "image",
+        "url": "https://instagram.fjog8-1.fna.fbcdn.net/v/t51.2885-15/500115018_18121949563466999_6570406411815023586_n.jpg",
+      },
+      {
+        "filename": "instagram-DJ69JfcSGmL-3.jpg",
+        "type": "image",
+        "url": "https://instagram.fjog8-1.fna.fbcdn.net/v/t51.2885-15/499448379_18121949572466999_174797400505815203_n.jpg",
+      },
+      {
+        "filename": "instagram-DJ69JfcSGmL-4.jpg",
+        "type": "image",
+        "url": "https://instagram.fjog8-1.fna.fbcdn.net/v/t51.2885-15/499479357_18121949581466999_2251744631086776048_n.jpg",
+      },
+      {
+        "filename": "instagram-DJ69JfcSGmL-5.jpg",
+        "type": "image",
+        "url": "https://instagram.fjog8-1.fna.fbcdn.net/v/t51.2885-15/499682695_18121949599466999_5797874033434251691_n.jpg",
+      },
+      {
+        "filename": "instagram-DJ69JfcSGmL-6.jpg",
+        "type": "image",
+        "url": "https://instagram.fjog8-1.fna.fbcdn.net/v/t51.2885-15/499406353_18121949596466999_3932274473304057352_n.jpg",
+      },
+      {
+        "filename": "instagram-DJ69JfcSGmL-7.jpg",
+        "type": "image",
+        "url": "https://instagram.fjog8-1.fna.fbcdn.net/v/t51.2885-15/499546452_18121949608466999_6367571451693114436_n.jpg",
+      },
+    ],
+  },
+}
+`;
+
+exports[`instagram single_image 1`] = `
+{
+  "error": undefined,
+  "ok": true,
+  "result": {
+    "headers": {
+      "Referer": "https://www.instagram.com/",
+      "User-Agent": "Instagram 309.0.0.15.109 Android (31/12; 480dpi; 1080x2228; samsung; SM-G996B; t2s; qcom; en_US; 544099989)",
+    },
+    "meta": {
+      "author": "natgeo",
+      "platform": "instagram",
+      "title": "Photo by Javier Aznar @javier_aznar_photography I Couch’s spadefoot toads are remarkable desert amphibians known for their explosive breeding strategy. After heavy summer rains, they emerge from underground burrows to breed in ephemeral ponds that may last only a few days. Females deposit eggs that hatch rapidly, and the tadpoles develop at exceptional speed to complete metamorphosis before the ponds dry. This accelerated development is a well‑documented adaptation among spadefoot toads living in highly unpredictable desert environments. Research on related spadefoot species shows that tadpoles can dramatically speed up growth and metamorphosis in response to declining water levels, a crucial survival mechanism in temporary ponds.",
+    },
+    "urls": [
+      {
+        "filename": "instagram-DUbb_owkx0I.jpg",
+        "type": "image",
+        "url": "https://instagram.fjog8-1.fna.fbcdn.net/v/t51.82787-15/627580743_18625670917019133_6283069350069567563_n.jpg",
+      },
+    ],
+  },
+}
+`;
+
+exports[`twitter video 1`] = `
+{
+  "error": undefined,
+  "ok": true,
+  "result": {
+    "headers": {},
+    "meta": {
+      "author": "Dave Mullins (@_DaveMullins)",
+      "likes": 4598,
+      "platform": "twitter",
+      "title": "Final animation on my Helen phone shots on #TheIncredibles. The cord was animated by hand... #nosim",
+    },
+    "urls": [
+      {
+        "filename": "twitter-1129038424130899969-1.mp4",
+        "type": "video",
+        "url": "https://video.twimg.com/ext_tw_video/1129038339946844160/pu/vid/640x480/Sn5ziraTJI8A8U3t.mp4",
+      },
+    ],
+  },
+}
+`;
+
+exports[`twitter multi_image 1`] = `
+{
+  "error": undefined,
+  "ok": true,
+  "result": {
+    "headers": {},
+    "meta": {
+      "author": "kyle🇯🇲🇫🇷 (@toofarST)",
+      "likes": 1296,
+      "platform": "twitter",
+      "title": "this deserves way more flowers than it gets because that was so fucking awesome",
+    },
+    "urls": [
+      {
+        "filename": "twitter-1992663043185275367-1.jpg",
+        "type": "image",
+        "url": "https://pbs.twimg.com/media/G6dcecnXcAAfCYi.jpg",
+      },
+      {
+        "filename": "twitter-1992663043185275367-2.jpg",
+        "type": "image",
+        "url": "https://pbs.twimg.com/media/G6dcecmWwAA4rmu.jpg",
+      },
+      {
+        "filename": "twitter-1992663043185275367-3.jpg",
+        "type": "image",
+        "url": "https://pbs.twimg.com/media/G6dcecnW4AAWCv1.jpg",
+      },
+      {
+        "filename": "twitter-1992663043185275367-4.jpg",
+        "type": "image",
+        "url": "https://pbs.twimg.com/media/G6dcecmWEAEJLik.jpg",
+      },
+    ],
+  },
+}
+`;
+
+exports[`imgur single_image 1`] = `
+{
+  "error": undefined,
+  "ok": true,
+  "result": {
+    "headers": {},
+    "meta": {
+      "author": "Unknown",
+      "likes": 0,
+      "platform": "imgur",
+      "title": "Imgur Media",
+      "views": 0,
+    },
+    "urls": [
+      {
+        "filename": "imgur-7q4TxW7.png",
+        "type": "image",
+        "url": "https://i.imgur.com/7q4TxW7.png",
+      },
+    ],
+  },
+}
+`;
+
+exports[`imgur gallery_single_image 1`] = `
+{
+  "error": undefined,
+  "ok": true,
+  "result": {
+    "headers": {},
+    "meta": {
+      "author": "Unknown",
+      "likes": 0,
+      "platform": "imgur",
+      "title": "!",
+      "views": 41314,
+    },
+    "urls": [
+      {
+        "filename": "imgur-7q4TxW7.png",
+        "type": "image",
+        "url": "https://i.imgur.com/7q4TxW7.png",
+      },
+    ],
+  },
+}
+`;
+
+exports[`imgur gallery_single_video 1`] = `
+{
+  "error": undefined,
+  "ok": true,
+  "result": {
+    "headers": {},
+    "meta": {
+      "author": "Unknown",
+      "likes": 0,
+      "platform": "imgur",
+      "title": "The mouth movements…",
+      "views": 47056,
+    },
+    "urls": [
+      {
+        "filename": "imgur-gQhZkkr.mp4",
+        "type": "video",
+        "url": "https://i.imgur.com/gQhZkkr.mp4",
+      },
+    ],
+  },
+}
+`;
+
+exports[`imgur gallery_multi_image 1`] = `
+{
+  "error": undefined,
+  "ok": true,
+  "result": {
+    "headers": {},
+    "meta": {
+      "author": "Unknown",
+      "likes": 0,
+      "platform": "imgur",
+      "title": "The Art Gallery (ready to heist) - Free DnD / TTRPG maps",
+      "views": 8292,
+    },
+    "urls": [
+      {
+        "filename": "imgur-8uaFtPB.jpeg",
+        "type": "image",
+        "url": "https://i.imgur.com/8uaFtPB.jpeg",
+      },
+      {
+        "filename": "imgur-OYCfrIG.jpeg",
+        "type": "image",
+        "url": "https://i.imgur.com/OYCfrIG.jpeg",
+      },
+      {
+        "filename": "imgur-36LpJKy.mp4",
+        "type": "video",
+        "url": "https://i.imgur.com/36LpJKy.mp4",
+      },
+      {
+        "filename": "imgur-XYxqnOe.jpeg",
+        "type": "image",
+        "url": "https://i.imgur.com/XYxqnOe.jpeg",
+      },
+      {
+        "filename": "imgur-n9YrRQo.jpeg",
+        "type": "image",
+        "url": "https://i.imgur.com/n9YrRQo.jpeg",
+      },
+      {
+        "filename": "imgur-zkJezdc.jpeg",
+        "type": "image",
+        "url": "https://i.imgur.com/zkJezdc.jpeg",
+      },
+      {
+        "filename": "imgur-YuKNe04.jpeg",
+        "type": "image",
+        "url": "https://i.imgur.com/YuKNe04.jpeg",
+      },
+      {
+        "filename": "imgur-Y5MRgeq.jpeg",
+        "type": "image",
+        "url": "https://i.imgur.com/Y5MRgeq.jpeg",
+      },
+      {
+        "filename": "imgur-AbSdcNi.jpeg",
+        "type": "image",
+        "url": "https://i.imgur.com/AbSdcNi.jpeg",
+      },
+      {
+        "filename": "imgur-619pvcy.jpeg",
+        "type": "image",
+        "url": "https://i.imgur.com/619pvcy.jpeg",
+      },
+      {
+        "filename": "imgur-SVlQf7y.jpeg",
+        "type": "image",
+        "url": "https://i.imgur.com/SVlQf7y.jpeg",
+      },
+      {
+        "filename": "imgur-Ji4vSWl.jpeg",
+        "type": "image",
+        "url": "https://i.imgur.com/Ji4vSWl.jpeg",
+      },
+      {
+        "filename": "imgur-NCyC1se.jpeg",
+        "type": "image",
+        "url": "https://i.imgur.com/NCyC1se.jpeg",
+      },
+      {
+        "filename": "imgur-J4daS8B.jpeg",
+        "type": "image",
+        "url": "https://i.imgur.com/J4daS8B.jpeg",
+      },
+      {
+        "filename": "imgur-ispYqGr.jpeg",
+        "type": "image",
+        "url": "https://i.imgur.com/ispYqGr.jpeg",
+      },
+      {
+        "filename": "imgur-KajhHsY.jpeg",
+        "type": "image",
+        "url": "https://i.imgur.com/KajhHsY.jpeg",
+      },
+      {
+        "filename": "imgur-QnWjveY.jpeg",
+        "type": "image",
+        "url": "https://i.imgur.com/QnWjveY.jpeg",
+      },
+      {
+        "filename": "imgur-7LDDUoj.jpeg",
+        "type": "image",
+        "url": "https://i.imgur.com/7LDDUoj.jpeg",
+      },
+    ],
+  },
+}
+`;
+
+exports[`youtube video 1`] = `
+{
+  "error": undefined,
+  "ok": true,
+  "result": {
+    "headers": {},
+    "meta": {
+      "author": "jawed",
+      "platform": "youtube",
+      "title": "Me at the zoo",
+      "views": 394628170,
+    },
+    "urls": [
+      {
+        "filename": "youtube-jNQXAC9IVRw.mp4",
+        "type": "video",
+        "url": "https://rr1---sn-5auxa-unxe.googlevideo.com/videoplayback",
+      },
+    ],
+  },
+}
+`;
+
+exports[`youtube video_short 1`] = `
+{
+  "error": undefined,
+  "ok": true,
+  "result": {
+    "headers": {},
+    "meta": {
+      "author": "The Pragmatic Engineer",
+      "platform": "youtube",
+      "title": "How was the Thoughtworks Radar created",
+      "views": 2357,
+    },
+    "urls": [
+      {
+        "filename": "youtube-9RrdDM_9Cqk.mp4",
+        "type": "video",
+        "url": "https://rr2---sn-5auxa-unxe.googlevideo.com/videoplayback",
+      },
+    ],
+  },
+}
+`;
+
+exports[`tiktok video 1`] = `
+{
+  "error": undefined,
+  "ok": true,
+  "result": {
+    "headers": {
+      "Referer": "https://www.tiktok.com/",
+    },
+    "meta": {
+      "author": "Unknown",
+      "likes": 107700,
+      "platform": "tiktok",
+      "title": "💖STAY IN CHICAGO💖 #STAYC #스테이씨 #STAYC_tiktok ",
+      "views": 497000,
+    },
+    "urls": [
+      {
+        "filename": "tiktok-7136124191849417985.mp4",
+        "type": "video",
+        "url": "https://v77.tiktokcdn.com/7bcff238927d2072100f3fa9c78b58a6/6a2e8e05/video/tos/alisg/tos-alisg-pve-0037/c8d7400695454cea8d66c6f1d17fd3b2/",
+      },
+    ],
+  },
+}
+`;
+
+exports[`tiktok carousel 1`] = `
+{
+  "error": undefined,
+  "ok": true,
+  "result": {
+    "headers": {
+      "Referer": "https://www.tiktok.com/",
+    },
+    "meta": {
+      "author": "Unknown",
+      "likes": 60,
+      "platform": "tiktok",
+      "title": "cttro ⊹ || #fyp #fypage #fypシ゚ #foryou #viral #blowthisup #actives? #dontletthisflop #famous #unflopme #makemefamous #xyzbca #xuhuong #watchthisyall #fyppppppppppppppppppppppp #kpop #cttro #hair #haistyle #hairstyleideas #cutebun #yunjin #yunjinism ",
+      "views": 459,
+    },
+    "urls": [
+      {
+        "filename": "tiktok-7431630383940193569-1.jpg",
+        "type": "image",
+        "url": "https://p16-common-sign.tiktokcdn.com/tos-maliva-i-photomode-us/add1b8f6d5e9446fbe46e9e8844ff217~tplv-photomode-image.jpeg",
+      },
+      {
+        "filename": "tiktok-7431630383940193569-2.jpg",
+        "type": "image",
+        "url": "https://p19-common-sign.tiktokcdn.com/tos-maliva-i-photomode-us/add1b8f6d5e9446fbe46e9e8844ff217~tplv-photomode-image.jpeg",
+      },
+      {
+        "filename": "tiktok-7431630383940193569-3.jpg",
+        "type": "image",
+        "url": "https://p16-common-sign.tiktokcdn.com/tos-maliva-i-photomode-us/956a9da1a06047698c4e5aaab6f789d5~tplv-photomode-image.jpeg",
+      },
+      {
+        "filename": "tiktok-7431630383940193569-4.jpg",
+        "type": "image",
+        "url": "https://p19-common-sign.tiktokcdn.com/tos-maliva-i-photomode-us/956a9da1a06047698c4e5aaab6f789d5~tplv-photomode-image.jpeg",
+      },
+    ],
+  },
+}
+`;
+
+exports[`pinterest single_image 1`] = `
+{
+  "error": undefined,
+  "ok": true,
+  "result": {
+    "headers": {},
+    "meta": {
+      "author": "jay",
+      "platform": "pinterest",
+      "title": "Winter Walks",
+    },
+    "urls": [
+      {
+        "filename": "pinterest-805651820858880488.jpg",
+        "type": "image",
+        "url": "https://i.pinimg.com/originals/12/8c/9b/128c9b2e3f543c1a836daccc28a5b267.jpg",
+      },
+    ],
+  },
+}
+`;
+
+exports[`pinterest video 1`] = `
+{
+  "error": undefined,
+  "ok": true,
+  "result": {
+    "headers": {},
+    "meta": {
+      "author": "jay",
+      "platform": "pinterest",
+      "title": "100 painted eyes challenge #artchallenge",
+    },
+    "urls": [
+      {
+        "filename": "pinterest-805651820863629473.mp4",
+        "type": "video",
+        "url": "https://v1.pinimg.com/videos/mc/720p/19/1c/59/191c591c08fc8038c096130939bec04c.mp4",
+      },
+    ],
+  },
+}
+`;
+
+exports[`facebook video 1`] = `
+{
+  "error": undefined,
+  "ok": true,
+  "result": {
+    "headers": {
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+    },
+    "meta": {
+      "author": "Universidad Nacional Mayor de San Marcos",
+      "platform": "facebook",
+      "title": "Facebook Video",
+    },
+    "urls": [
+      {
+        "filename": "fb-2126724314377208.mp4",
+        "type": "video",
+        "url": "https://video.fclj1-2.fna.fbcdn.net/o1/v/t2/f2/m366/AQMxfAlUZkvA3n-WPn5uvDPNXjqE6iMN38qK4ZZ80QxS1erQARyZB6_sJSbQpzqmxMfbPT_m36QZBtHdyy7UL4KBIpOip3pDoxsqAhMfrA6V8Q.mp4",
+      },
+      {
+        "filename": "fb-2126724314377208.m4a",
+        "type": "audio",
+        "url": "https://video.fclj1-2.fna.fbcdn.net/o1/v/t2/f2/m412/AQN8l9A7MDt6KDITC-1XC2X6Xx2Eakd1TM99A1ia2VmOmvLq63EjtXqGZLED8e5N97g3Y9LcTpauIiFnUVsD470.mp4",
+      },
+    ],
+  },
+}
+`;
