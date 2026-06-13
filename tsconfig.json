@@ -27,6 +27,6 @@
     "erasableSyntaxOnly": true,
     "types": ["node", "bun"]
   },
-  "include": ["src/**/*", "tests/**/*"],
+  "include": ["src/**/*", "scripts/**/*", "tests/**/*"],
   "exclude": ["node_modules"]
 }
