@@ -74,17 +74,25 @@ export default async function resolve(
       throw new ParseError("No media found in post", "reddit");
     }
 
-    return {
-      urls: items,
-      headers: {},
-      meta: {
-        title: post.title,
-        author: post.author,
-        platform: "reddit",
-        likes: post.score,
-        views: post.view_count,
-      },
+    const meta: MediaResult["meta"] = {
+      title: post.title,
+      author: post.author,
+      platform: "reddit",
     };
+    // view_count is a deprecated field that the public JSON returns as null;
+    // only surface likes/views when they are real numbers so we never write a
+    // null into a number-typed meta field.
+    if (typeof post.score === "number" && Number.isFinite(post.score)) {
+      meta.likes = post.score;
+    }
+    if (
+      typeof post.view_count === "number" &&
+      Number.isFinite(post.view_count)
+    ) {
+      meta.views = post.view_count;
+    }
+
+    return { urls: items, headers: {}, meta };
   } catch (e: unknown) {
     if (e instanceof NetworkError || e instanceof ParseError) throw e;
     const message = e instanceof Error ? e.message : "Unknown error";
