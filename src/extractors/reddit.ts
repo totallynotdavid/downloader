@@ -4,13 +4,28 @@ import type { MediaItem, MediaResult, ResolveOptions } from "../types.ts";
 
 const VIDEO_EXTENSION_REGEX = /\.(mp4|mkv|webm)$/i;
 
+// Reddit JSON requires a primed anonymous cookie. Include over18=1 so
+// age-gated subreddit media stays reachable.
+async function reddit_cookie(options: ResolveOptions): Promise<string> {
+  const prime = await http_get("https://old.reddit.com/", options);
+  const cookies = prime.headers
+    .getSetCookie()
+    .map((c) => c.split(";")[0])
+    .filter(Boolean);
+  return [...cookies, "over18=1"].join("; ");
+}
+
 export default async function resolve(
   url: string,
   options: ResolveOptions,
 ): Promise<MediaResult> {
   try {
+    const cookie = await reddit_cookie(options);
     const json_url = `${url.replace(/\/$/, "")}.json`;
-    const response = await http_get(json_url, options);
+    const response = await http_get(json_url, {
+      ...options,
+      headers: { ...options.headers, Cookie: cookie },
+    });
     const data = await response.json();
 
     if (!(Array.isArray(data) && data[0]?.data?.children?.[0]?.data)) {

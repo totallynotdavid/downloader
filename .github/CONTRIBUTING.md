@@ -227,6 +227,12 @@ For image carousels, `imagePost.images` contains the array. For videos,
 
 `GET https://www.reddit.com/r/{sub}/comments/{id}.json`
 
+Reddit now answers cold requests to this endpoint with HTTP 403. It only serves
+the JSON once an anonymous-session `loid` cookie is present, which it sets on
+the first hit to `https://old.reddit.com/`. The extractor primes that cookie,
+then replays every `Set-Cookie` value (plus `over18=1` for age-gated subreddits)
+on the API request.
+
 Video post:
 
 ```json
