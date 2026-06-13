@@ -21,7 +21,6 @@ export default async function resolve(
   const response = await http_get(url, options);
   const html = await response.text();
 
-  // Extract media URL from response
   const media_url = /* ... */;
 
   if (!media_url) {
