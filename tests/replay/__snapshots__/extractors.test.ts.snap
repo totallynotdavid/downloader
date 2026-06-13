@@ -1,5 +1,102 @@
 // Bun Snapshot v1, https://bun.sh/docs/test/snapshots
 
+exports[`reddit video 1`] = `
+{
+  "error": undefined,
+  "ok": true,
+  "result": {
+    "headers": {},
+    "meta": {
+      "author": "Harry_the_space_man",
+      "likes": 67189,
+      "platform": "reddit",
+      "title": "The Chinese Tianlong-3 Rocket Accidentally Launched During A Engine Test",
+    },
+    "urls": [
+      {
+        "filename": "reddit-1drzauu.mp4",
+        "type": "video",
+        "url": "https://v.redd.it/z8nfr7ek1p9d1/DASH_1080.mp4",
+      },
+    ],
+  },
+}
+`;
+
+exports[`reddit gallery 1`] = `
+{
+  "error": undefined,
+  "ok": true,
+  "result": {
+    "headers": {},
+    "meta": {
+      "author": "Wild-Department3737",
+      "likes": 20118,
+      "platform": "reddit",
+      "title": "🐈‍⬛🥊🐈",
+    },
+    "urls": [
+      {
+        "filename": "reddit-7a8hge8cgs9d1.jpg",
+        "type": "image",
+        "url": "https://preview.redd.it/7a8hge8cgs9d1.jpg",
+      },
+      {
+        "filename": "reddit-y42eje8cgs9d1.jpg",
+        "type": "image",
+        "url": "https://preview.redd.it/y42eje8cgs9d1.jpg",
+      },
+    ],
+  },
+}
+`;
+
+exports[`reddit single_image 1`] = `
+{
+  "error": undefined,
+  "ok": true,
+  "result": {
+    "headers": {},
+    "meta": {
+      "author": "kingpubcrisps",
+      "likes": 884,
+      "platform": "reddit",
+      "title": "[Xperia 10 III w/ Sailfish w/ Arch] My mobile office.",
+    },
+    "urls": [
+      {
+        "filename": "reddit-12ruaq1.jpg",
+        "type": "image",
+        "url": "https://i.redd.it/3b59od9gkuua1.jpg",
+      },
+    ],
+  },
+}
+`;
+
+exports[`reddit post_with_thumbnail 1`] = `
+{
+  "error": undefined,
+  "ok": true,
+  "result": {
+    "headers": {},
+    "meta": {
+      "author": "[deleted]",
+      "likes": 54,
+      "platform": "reddit",
+      "title": "Ningen Isu - Ringo No Namida (a metal song about an apple and related metaphors).",
+    },
+    "urls": [
+      {
+        "filename": "reddit-12spx82.jpg",
+        "type": "image",
+        "url": "https://www.youtube.com/watch",
+      },
+    ],
+  },
+}
+`;
+
 exports[`instagram video_reel 1`] = `
 {
   "error": undefined,
@@ -399,7 +496,7 @@ https://www.youtube.com/watch?v=RRBN_4L09Mg
       {
         "filename": "youtube-jNQXAC9IVRw.mp4",
         "type": "video",
-        "url": "https://rr1---sn-5auxa-unxe.googlevideo.com/videoplayback",
+        "url": "https://rr1---sn-5auxa-unxe.googlevideo.com/videoplayback?itag=18&mime=video/mp4",
       },
     ],
   },
@@ -427,7 +524,17 @@ exports[`youtube video_short 1`] = `
       {
         "filename": "youtube-9RrdDM_9Cqk.mp4",
         "type": "video",
-        "url": "https://rr2---sn-5auxa-unxe.googlevideo.com/videoplayback",
+        "url": "https://rr2---sn-5auxa-unxe.googlevideo.com/videoplayback?itag=18&mime=video/mp4",
+      },
+      {
+        "filename": "youtube-9RrdDM_9Cqk-video.mp4",
+        "type": "video",
+        "url": "https://rr3---sn-cu-ba5e.googlevideo.com/videoplayback?itag=137&mime=video/mp4",
+      },
+      {
+        "filename": "youtube-9RrdDM_9Cqk-audio.m4a",
+        "type": "audio",
+        "url": "https://rr3---sn-cu-ba5e.googlevideo.com/videoplayback?itag=140&mime=audio/mp4",
       },
     ],
   },
@@ -574,6 +681,35 @@ exports[`facebook video 1`] = `
         "filename": "fb-2126724314377208.m4a",
         "type": "audio",
         "url": "https://video.fclj1-2.fna.fbcdn.net/o1/v/t2/f2/m412/AQN8l9A7MDt6KDITC-1XC2X6Xx2Eakd1TM99A1ia2VmOmvLq63EjtXqGZLED8e5N97g3Y9LcTpauIiFnUVsD470.mp4",
+      },
+    ],
+  },
+}
+`;
+
+exports[`facebook video_short_url 1`] = `
+{
+  "error": undefined,
+  "ok": true,
+  "result": {
+    "headers": {
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+    },
+    "meta": {
+      "author": "Universidad Nacional Mayor de San Marcos",
+      "platform": "facebook",
+      "title": "Facebook Video",
+    },
+    "urls": [
+      {
+        "filename": "fb-2126724314377208.mp4",
+        "type": "video",
+        "url": "https://video-sjc3-1.xx.fbcdn.net/o1/v/t2/f2/m366/AQMxfAlUZkvA3n-WPn5uvDPNXjqE6iMN38qK4ZZ80QxS1erQARyZB6_sJSbQpzqmxMfbPT_m36QZBtHdyy7UL4KBIpOip3pDoxsqAhMfrA6V8Q.mp4",
+      },
+      {
+        "filename": "fb-2126724314377208.m4a",
+        "type": "audio",
+        "url": "https://video-sjc3-1.xx.fbcdn.net/o1/v/t2/f2/m412/AQN8l9A7MDt6KDITC-1XC2X6Xx2Eakd1TM99A1ia2VmOmvLq63EjtXqGZLED8e5N97g3Y9LcTpauIiFnUVsD470.mp4",
       },
     ],
   },

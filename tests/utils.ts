@@ -1,46 +1,25 @@
-import { expect } from "bun:test";
 import type { MediaResult } from "../src/types.ts";
 
-type AssertionOptions = {
-  platform: string;
-  count?: number;
-  minCount?: number;
-  type?: "video" | "image";
-};
+// Replay snapshots compare asset identity, not signed CDN params. Most
+// platforms encode identity in the path, so keep origin + pathname and drop the
+// query. YouTube is the exception: every googlevideo stream shares the same
+// /videoplayback path and carries its format identity (itag, mime) in the
+// query, so dropping the whole query would collapse every video/audio stream to
+// one indistinguishable URL. Keep those two keys; everything else in the query
+// is signed/ephemeral (expire, sig, ip, and the o-... `id` render token) and
+// churns on every re-record, so it stays stripped.
+const STABLE_QUERY_KEYS = new Set(["itag", "mime"]);
 
-export function assertMedia(result: MediaResult, opts: AssertionOptions) {
-  expect(result).toBeDefined();
-  expect(result.meta.platform).toBe(opts.platform);
-  expect(result.meta.title).toBeString();
-  expect(result.meta.title.length).toBeGreaterThan(0);
-
-  expect(result.headers).toBeObject();
-
-  if (opts.count) {
-    expect(result.urls.length).toBe(opts.count);
-  } else if (opts.minCount) {
-    expect(result.urls.length).toBeGreaterThanOrEqual(opts.minCount);
-  } else {
-    expect(result.urls.length).toBeGreaterThan(0);
-  }
-
-  result.urls.forEach((item) => {
-    expect(item.url).toBeString();
-    expect(item.url.startsWith("http")).toBe(true);
-    expect(item.filename).toBeString();
-
-    if (opts.type) {
-      expect(item.type).toBe(opts.type);
-    }
-  });
-}
-
-// Replay snapshots compare asset identity, not signed CDN params. Keep origin
-// and pathname, which identify the asset, and drop expiring query params.
 function strip_query(u: string): string {
   try {
     const parsed = new URL(u);
-    return `${parsed.origin}${parsed.pathname}`;
+    const kept = [...parsed.searchParams]
+      .filter(([key]) => STABLE_QUERY_KEYS.has(key))
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([key, value]) => `${key}=${value}`)
+      .join("&");
+    const base = `${parsed.origin}${parsed.pathname}`;
+    return kept ? `${base}?${kept}` : base;
   } catch {
     return u;
   }
