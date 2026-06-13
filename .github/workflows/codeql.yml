@@ -16,7 +16,7 @@ on:
       - "**/*.ts"
       - "package.json"
   schedule:
-    - cron: "0 5 * * 1" # Ejecutar cada lunes a las 05:00 UTC
+    - cron: "0 5 * * 1"
   workflow_dispatch:
 
 jobs:

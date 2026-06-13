@@ -41,7 +41,7 @@ jobs:
 
       - run: npm install -g npm@latest
 
-      # The prepublishOnly script runs 'bun run clean && bun run build'
+      # npm publish relies on prepublishOnly to build publish artifacts.
       - run: npm publish
 
   github:
