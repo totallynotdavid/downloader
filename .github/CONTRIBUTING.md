@@ -324,6 +324,12 @@ has the full-size URL.
 
 Headers: `User-Agent` (Android YouTube app), `X-Youtube-Client-Name: 3`.
 
+`api_key` is the public WEB innertube key
+(`AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8`), embedded in every watch page as
+`INNERTUBE_API_KEY` and stable for years, so the extractor hardcodes it. The
+watch-page HTML is still fetched (best-effort, in parallel) only for the
+`publishDate` timestamp, which none of the player client responses carry.
+
 Body:
 
 ```json
@@ -403,6 +409,16 @@ Response (truncated, full response is ~50KB):
 separate video-only and audio-only streams at higher qualities. Video-only
 formats have `width`/`height` but no `audioChannels`. Audio-only formats have
 `audioChannels` but no `width`.
+
+The `ANDROID` client returns the progressive `formats` stream with a direct
+`url`, but its `adaptiveFormats` now arrive signature-ciphered with no `url`, so
+the higher-resolution video-only / audio-only tracks are unreachable through it.
+The `IOS` client (`X-Youtube-Client-Name: 5`, clientVersion `20.10.4`) still
+returns `adaptiveFormats` with direct URLs, so the extractor queries it in
+parallel and merges its formats. The ANDROID player is the only required
+request; the IOS player, the TVHTML5 `/next` engagement call, and the watch-page
+HTML are best-effort and each degrades to omitting its fields. If IOS stops
+returning direct URLs the extractor keeps only the ANDROID progressive stream.
 
 </details>
 

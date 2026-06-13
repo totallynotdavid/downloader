@@ -2,8 +2,11 @@ import { http_get, http_post } from "../http.ts";
 import { NetworkError, ParseError } from "../errors.ts";
 import type { MediaItem, MediaResult, ResolveOptions } from "../types.ts";
 
-const INNERTUBE_PLAYER_URL = "https://www.youtube.com/youtubei/v1/player?key=";
-const INNERTUBE_NEXT_URL = "https://www.youtube.com/youtubei/v1/next?key=";
+// The public WEB innertube key is stable enough to hardcode. Avoid scraping
+// watch-page HTML before player requests.
+const INNERTUBE_KEY = "AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8";
+const INNERTUBE_PLAYER_URL = `https://www.youtube.com/youtubei/v1/player?key=${INNERTUBE_KEY}`;
+const INNERTUBE_NEXT_URL = `https://www.youtube.com/youtubei/v1/next?key=${INNERTUBE_KEY}`;
 
 const ANDROID_CLIENT = {
   clientName: "ANDROID",
@@ -12,6 +15,18 @@ const ANDROID_CLIENT = {
   hl: "en",
   gl: "US",
   userAgent: "com.google.android.youtube/21.02.35 (Linux; U; Android 11) gzip",
+};
+
+// IOS supplies direct adaptive format URLs when ANDROID returns only
+// signature-ciphered adaptive formats. IOS is best-effort.
+const IOS_CLIENT = {
+  clientName: "IOS",
+  clientVersion: "20.10.4",
+  deviceModel: "iPhone16,2",
+  hl: "en",
+  gl: "US",
+  userAgent:
+    "com.google.ios.youtube/20.10.4 (iPhone16,2; U; CPU iOS 18_3_2 like Mac OS X)",
 };
 
 // The player response carries no engagement counts; the TVHTML5 /next endpoint
@@ -65,11 +80,6 @@ function sanitize_filename(title: string): string {
   return title.replace(/[<>:"/\\|?*]/g, "").trim();
 }
 
-function extract_innertube_key(html: string): string | null {
-  const match = html.match(/"INNERTUBE_API_KEY":"([^"]+)"/);
-  return match?.[1] || null;
-}
-
 function extract_publish_timestamp(html: string): number | undefined {
   const match = html.match(/"publishDate":"([^"]+)"/);
   if (!match?.[1]) return undefined;
@@ -98,26 +108,15 @@ function parse_abbreviated_number(text: string): number | undefined {
   return Math.round(Number.parseFloat(match[1]) * (multipliers[suffix] ?? 1));
 }
 
-function select_urls(
-  data: YoutubePlayerResponse,
-  video_id: string,
-): MediaItem[] {
-  if (data.playabilityStatus?.status !== "OK") {
-    throw new ParseError(
-      data.playabilityStatus?.reason || "Video not playable",
-      "youtube",
-    );
-  }
-
-  if (!data.streamingData) {
-    throw new ParseError("No streaming data available", "youtube");
-  }
-
-  const formats = [
+function collect_formats(data: YoutubePlayerResponse | null): YoutubeFormat[] {
+  if (!data?.streamingData) return [];
+  return [
     ...(data.streamingData.formats || []),
     ...(data.streamingData.adaptiveFormats || []),
   ];
+}
 
+function select_urls(formats: YoutubeFormat[], video_id: string): MediaItem[] {
   const urls: MediaItem[] = [];
 
   const combined = formats
@@ -205,24 +204,17 @@ export default async function resolve(
       ...options.headers,
     };
 
-    const page = await http_get(`https://www.youtube.com/watch?v=${video_id}`, {
-      headers: request_headers,
-      timeout,
-    });
-
-    const html = await page.text();
-    const api_key = extract_innertube_key(html);
-
-    if (!api_key) {
-      throw new ParseError("Could not find Innertube API key", "youtube");
-    }
-
-    const [player_response, next_response] = await Promise.all([
+    // ANDROID is required for media. IOS, /next, and watch-page HTML are
+    // best-effort enrichments that degrade by omitting their fields.
+    const player_post = (
+      client: { clientVersion: string; userAgent: string },
+      client_name: string,
+    ) =>
       http_post(
-        `${INNERTUBE_PLAYER_URL}${api_key}`,
+        INNERTUBE_PLAYER_URL,
         JSON.stringify({
           videoId: video_id,
-          context: { client: ANDROID_CLIENT },
+          context: { client },
           contentCheckOk: true,
           racyCheckOk: true,
         }),
@@ -230,15 +222,23 @@ export default async function resolve(
           headers: {
             ...request_headers,
             "Content-Type": "application/json",
-            "User-Agent": ANDROID_CLIENT.userAgent,
-            "X-Youtube-Client-Name": "3",
-            "X-Youtube-Client-Version": ANDROID_CLIENT.clientVersion,
+            "User-Agent": client.userAgent,
+            "X-Youtube-Client-Name": client_name,
+            "X-Youtube-Client-Version": client.clientVersion,
           },
           timeout,
         },
+      );
+
+    const [data, ios_data, next_data, html] = await Promise.all([
+      player_post(ANDROID_CLIENT, "3").then(
+        (r) => r.json() as Promise<YoutubePlayerResponse>,
       ),
+      player_post(IOS_CLIENT, "5")
+        .then((r) => r.json() as Promise<YoutubePlayerResponse>)
+        .catch(() => null),
       http_post(
-        `${INNERTUBE_NEXT_URL}${api_key}`,
+        INNERTUBE_NEXT_URL,
         JSON.stringify({ videoId: video_id, context: { client: TV_CLIENT } }),
         {
           headers: {
@@ -249,15 +249,29 @@ export default async function resolve(
           },
           timeout,
         },
-      ).catch(() => null),
+      )
+        .then((r) => r.json() as Promise<unknown>)
+        .catch(() => null),
+      http_get(`https://www.youtube.com/watch?v=${video_id}`, {
+        headers: request_headers,
+        timeout,
+      })
+        .then((r) => r.text())
+        .catch(() => null),
     ]);
 
-    const data = (await player_response.json()) as YoutubePlayerResponse;
-    const next_data: unknown = next_response
-      ? await next_response.json()
-      : null;
+    if (data.playabilityStatus?.status !== "OK") {
+      throw new ParseError(
+        data.playabilityStatus?.reason || "Video not playable",
+        "youtube",
+      );
+    }
+    if (!data.streamingData) {
+      throw new ParseError("No streaming data available", "youtube");
+    }
 
-    const urls = select_urls(data, video_id);
+    const formats = [...collect_formats(data), ...collect_formats(ios_data)];
+    const urls = select_urls(formats, video_id);
 
     const title = data.videoDetails?.title || "YouTube video";
     const author = data.videoDetails?.author || "Unknown";
@@ -283,7 +297,7 @@ export default async function resolve(
     if (views !== undefined && Number.isFinite(views)) {
       meta.views = views;
     }
-    const publish_ts = extract_publish_timestamp(html);
+    const publish_ts = html ? extract_publish_timestamp(html) : undefined;
     if (publish_ts !== undefined) {
       meta.timestamp = publish_ts;
     }
