@@ -27,16 +27,24 @@ type Cassette = {
   status: number;
   status_text: string;
   headers: Record<string, string>;
+  set_cookies: string[];
   body_b64: string;
   recorded_at: string;
 };
 
 // content-encoding/length describe the on-the-wire bytes; we store the decoded
 // body, so replaying these headers would corrupt text()/json(). Drop them.
+//
+// set-cookie is dropped from the flat map and stored as cassette.set_cookies
+// instead: Headers.entries() folds multiple Set-Cookie into one comma-joined
+// value, and rebuilding from that collapses getSetCookie() to a single broken
+// cookie. Reddit's loid cookie prime depends on getSetCookie() returning each
+// cookie intact, so we round-trip them as a list and re-append on replay.
 const VOLATILE_HEADERS = new Set([
   "content-encoding",
   "content-length",
   "transfer-encoding",
+  "set-cookie",
 ]);
 
 function strip_headers(h: Record<string, string>): Record<string, string> {
@@ -45,6 +53,22 @@ function strip_headers(h: Record<string, string>): Record<string, string> {
     if (!VOLATILE_HEADERS.has(k.toLowerCase())) out[k] = v;
   }
   return out;
+}
+
+// Rebuild a Response with set-cookie restored as discrete headers so
+// getSetCookie() sees each cookie, not one folded value.
+function build_response(
+  body: Buffer,
+  rec: Pick<Cassette, "status" | "status_text" | "headers" | "set_cookies">,
+): Response {
+  const headers = new Headers(strip_headers(rec.headers));
+  for (const cookie of rec.set_cookies ?? [])
+    headers.append("set-cookie", cookie);
+  return new Response(body, {
+    status: rec.status,
+    statusText: rec.status_text,
+    headers,
+  });
 }
 
 function cassette_path(url: string, method: string, body: string): string {
@@ -93,11 +117,7 @@ function cassette_hit(key: RequestKey): Response | undefined {
     source: "cassette",
     status: rec.status,
   });
-  return new Response(Buffer.from(rec.body_b64, "base64"), {
-    status: rec.status,
-    statusText: rec.status_text,
-    headers: strip_headers(rec.headers),
-  });
+  return build_response(Buffer.from(rec.body_b64, "base64"), rec);
 }
 
 function install_fetch(fetch: typeof globalThis.fetch): () => void {
@@ -129,6 +149,20 @@ export function install_replay(): () => void {
   }) as typeof fetch);
 }
 
+// Reddit serves its cookie-primed JSON to a direct connection but 403s the
+// residential proxy exits, so record reddit hosts direct. Every other platform
+// goes through the proxy to avoid rate-limits / IP flagging when hammering the
+// same fixtures repeatedly.
+const DIRECT_RECORD_HOSTS = ["reddit.com"];
+
+function record_proxy(url: string, proxy: string): string | undefined {
+  const host = new URL(url).hostname;
+  const direct = DIRECT_RECORD_HOSTS.some(
+    (h) => host === h || host.endsWith(`.${h}`),
+  );
+  return direct ? undefined : proxy;
+}
+
 export function install_record(): () => void {
   // Resolve the proxy now so a misconfigured run fails before the first request.
   const proxy = resolve_proxy();
@@ -142,19 +176,30 @@ export function install_record(): () => void {
     const hit = cassette_hit(key);
     if (hit) return hit;
 
-    // Bun routes the miss through one sticky residential exit.
-    const res = await real_fetch(key.url, { ...init, proxy });
+    // record_proxy returns undefined for direct-record hosts. Omit the proxy
+    // key entirely rather than passing proxy: undefined so the request goes
+    // direct instead of through the sticky exit.
+    const exit = record_proxy(key.url, proxy);
+    const res = await real_fetch(key.url, {
+      ...init,
+      ...(exit ? { proxy: exit } : {}),
+    });
     const buf = Buffer.from(await res.arrayBuffer());
     const headers = Object.fromEntries(res.headers.entries());
+    const set_cookies = res.headers.getSetCookie();
+    const rec = {
+      status: res.status,
+      status_text: res.statusText,
+      headers,
+      set_cookies,
+    };
     write_cassette(key.path, {
       url: key.url,
       final_url: res.url,
       method: key.method,
-      status: res.status,
-      status_text: res.statusText,
-      headers,
       body_b64: buf.toString("base64"),
       recorded_at: new Date().toISOString(),
+      ...rec,
     });
     net_log.push({
       method: key.method,
@@ -162,10 +207,6 @@ export function install_record(): () => void {
       source: "network",
       status: res.status,
     });
-    return new Response(buf, {
-      status: res.status,
-      statusText: res.statusText,
-      headers: strip_headers(headers),
-    });
+    return build_response(buf, rec);
   }) as typeof fetch);
 }
