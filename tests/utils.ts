@@ -54,8 +54,8 @@ export type NormalizedResult = {
 
 export function normalize(result: MediaResult): NormalizedResult {
   const meta: Record<string, unknown> = { ...result.meta };
-  if (typeof meta.thumbnail === "string") {
-    meta.thumbnail = strip_query(meta.thumbnail);
+  if (typeof meta["thumbnail"] === "string") {
+    meta["thumbnail"] = strip_query(meta["thumbnail"]);
   }
   return {
     urls: result.urls.map((m) => ({
