@@ -1,9 +1,6 @@
 // Offline regression suite. Replays committed cassettes and snapshots each
 // fixture's normalized result. Deterministic, no network, no proxy, no creds.
 //
-//   bun test tests/replay                      run the gate
-//   bun test tests/replay --update-snapshots   accept current output as golden
-//
 // Snapshots are strict (frozen cassette in, exact result out), unlike the live
 // tests/extractors suite which asserts loosely because live data drifts. Do not
 // run both suites in one `bun test` call: this file installs a fetch
@@ -12,7 +9,7 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { SAMPLES } from "../fixtures.ts";
 import { type Outcome, run_fixtures } from "../support/runner.ts";
-import { install } from "../support/transport.ts";
+import { install_replay } from "../support/transport.ts";
 
 // Skipped until reliable cassettes can be recorded. Reddit proxy exits return
 // 403, and the Facebook share/v short URL needs redirect handling.
@@ -28,7 +25,7 @@ const results = new Map<string, Outcome>();
 let uninstall: () => void;
 
 beforeAll(async () => {
-  uninstall = install({ mode: "replay" });
+  uninstall = install_replay();
   for (const outcome of await run_fixtures())
     results.set(outcome.label, outcome);
 });

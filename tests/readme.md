@@ -12,10 +12,26 @@ Two suites over one set of fixtures (`fixtures.ts`):
 ```sh
 bun run test            # live suite (tests/extractors)
 bun run test:replay     # offline gate (tests/replay)
+bun run test:replay:update
+bun run eval [platform]
+bun run record [platform]
 ```
 
 Do not run `bun test` with no path: it would load both suites in one process,
 and the replay suite installs a `fetch` interceptor the live suite must not see.
+
+## Replay, eval, and record
+
+`bun run test:replay` is the gate. It replays every fixture and compares the
+normalized result against snapshots. Use `bun run test:replay:update` only when
+the parser change intentionally changes output.
+
+`bun run eval [platform]` is a human-facing replay run. It prints media counts,
+types, and populated metadata so parser changes are easy to inspect without
+reading the full snapshot.
+
+`bun run record [platform]` refreshes cassettes from live platforms. It is a
+maintainer command for platform changes, not the everyday regression path.
 
 ## How replay works
 
@@ -38,7 +54,7 @@ fixtures -> resolve() -> src/http.ts -> fetch -> transport
 3. If intended, `bun run test:replay:update` and commit the `.snap` diff with
    the code. The diff is the reviewable artifact.
 
-For a human-readable dump of every fixture's media + metadata, use
+For a human-readable dump of every fixture's media and metadata, use
 `bun run eval [platform]`.
 
 ## Recording (maintainers)
