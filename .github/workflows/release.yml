@@ -41,6 +41,10 @@ jobs:
 
       - run: npm install -g npm@latest
 
+      # prepublishOnly runs the typecheck, which needs @types/node and
+      # @types/bun from node_modules.
+      - run: bun install --frozen-lockfile
+
       # npm publish relies on prepublishOnly to build publish artifacts.
       - run: npm publish
 
