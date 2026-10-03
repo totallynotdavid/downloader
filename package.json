@@ -9,7 +9,7 @@
   "main": "dist/index.js",
   "devDependencies": {
     "@types/bun": "^1.3.14",
-    "@types/node": "^26.1.1",
+    "@types/node": "^26.6.4",
     "bunup": "^0.16.32",
     "shx": "^0.4.0"
   },
