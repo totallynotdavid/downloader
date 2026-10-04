@@ -17,6 +17,14 @@ export class NetworkError extends Error {
   }
 }
 
+// The platform refused anonymous access. Retrying from the same IP rarely helps.
+export class BlockedError extends NetworkError {
+  constructor(message: string, statusCode?: number) {
+    super(message, statusCode);
+    this.name = "BlockedError";
+  }
+}
+
 export class ParseError extends Error {
   public readonly platform: string;
 

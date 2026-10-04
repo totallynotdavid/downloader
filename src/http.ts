@@ -7,6 +7,8 @@ const DEFAULT_TIMEOUT = 10_000;
 type FetchOptions = {
   headers?: Record<string, string>;
   timeout?: number;
+  // "manual" turns a redirect into a thrown NetworkError instead of following it.
+  redirect?: "manual";
 };
 
 export async function http_get(
@@ -72,6 +74,7 @@ export async function http_post(
         ...options.headers,
       },
       body: body.toString(),
+      ...(options.redirect ? { redirect: options.redirect } : {}),
       signal: controller.signal,
     });
 
