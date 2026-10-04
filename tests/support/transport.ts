@@ -6,7 +6,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { gunzipSync, gzipSync } from "node:zlib";
 import { env } from "./env.ts";
-import { redact, resolve_proxy } from "./proxy.ts";
+import { DIRECT, redact, resolve_proxy } from "./proxy.ts";
 
 const CASSETTE_DIR =
   env.cassetteDir ?? join(import.meta.dir, "..", "cassettes");
@@ -53,6 +53,16 @@ function strip_headers(h: Record<string, string>): Record<string, string> {
     if (!VOLATILE_HEADERS.has(k.toLowerCase())) out[k] = v;
   }
   return out;
+}
+
+// Cassettes are committed, so recording drops Set-Cookie for every host except
+// these. The Reddit extractor reads Set-Cookie from a priming request, so replay
+// needs it. It is an anonymous session cookie, not a credential.
+const COOKIE_HOSTS = ["reddit.com"];
+
+function keeps_cookies(url: string): boolean {
+  const host = new URL(url).hostname;
+  return COOKIE_HOSTS.some((h) => host === h || host.endsWith(`.${h}`));
 }
 
 // Rebuild a Response with set-cookie restored as discrete headers so
@@ -156,6 +166,7 @@ export function install_replay(): () => void {
 const DIRECT_RECORD_HOSTS = ["reddit.com"];
 
 function record_proxy(url: string, proxy: string): string | undefined {
+  if (proxy === DIRECT) return undefined;
   const host = new URL(url).hostname;
   const direct = DIRECT_RECORD_HOSTS.some(
     (h) => host === h || host.endsWith(`.${h}`),
@@ -185,8 +196,10 @@ export function install_record(): () => void {
       ...(exit ? { proxy: exit } : {}),
     });
     const buf = Buffer.from(await res.arrayBuffer());
-    const headers = Object.fromEntries(res.headers.entries());
-    const set_cookies = res.headers.getSetCookie();
+    const headers = strip_headers(Object.fromEntries(res.headers.entries()));
+    const set_cookies = keeps_cookies(key.url)
+      ? res.headers.getSetCookie()
+      : [];
     const rec = {
       status: res.status,
       status_text: res.statusText,

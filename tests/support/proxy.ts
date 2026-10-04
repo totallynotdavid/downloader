@@ -5,10 +5,14 @@
 //   1. EVAL_PROXY_URL: full "http://user:pass@host:port" (explicit, wins).
 //   2. GEONODE_USERNAME/PASSWORD -> assembled into the Geonode residential
 //      gateway at a sticky exit port.
-// Recording without either is a hard error: a direct exit gets rate-limited and
-// IP-flagged, which would only produce poisoned cassettes.
+//   3. EVAL_PROXY_URL=direct: no proxy for a host with a clean residential IP.
+//      A flagged or datacenter IP records block pages instead of responses.
+// Recording without any of them is a hard error: a direct exit gets
+// rate-limited and IP-flagged, which would only produce poisoned cassettes.
 
 import { env } from "./env.ts";
+
+export const DIRECT = "direct";
 
 // Ports 9000-9010 each map to a different residential exit IP. One sticky exit
 // is chosen per process so a multi-request extraction flow looks like one user.
@@ -23,6 +27,7 @@ export function resolve_proxy(): string {
 
 // host:port only, so the record log never prints credentials.
 export function redact(proxyUrl: string): string {
+  if (proxyUrl === DIRECT) return DIRECT;
   const u = new URL(proxyUrl);
   return `${u.hostname}:${u.port || "80"}`;
 }

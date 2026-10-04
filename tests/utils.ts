@@ -1,4 +1,4 @@
-import type { MediaResult } from "../src/types.ts";
+import type { MediaResult, Post } from "../src/types.ts";
 
 // Replay snapshots compare asset identity, not signed CDN params. Most
 // platforms encode identity in the path, so keep origin + pathname and drop the
@@ -45,4 +45,12 @@ export function normalize(result: MediaResult): NormalizedResult {
     headers: result.headers,
     meta,
   };
+}
+
+export function normalize_post(post: Post): Post {
+  const out: Post = { ...post, thumbnail: strip_query(post.thumbnail) };
+  if (post.media) {
+    out.media = post.media.map((m) => ({ ...m, url: strip_query(m.url) }));
+  }
+  return out;
 }

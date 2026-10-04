@@ -1,0 +1,805 @@
+// Bun Snapshot v1, https://bun.sh/docs/test/snapshots
+
+exports[`account listing collabs snapshot 1`] = `
+{
+  "more": true,
+  "ok": true,
+  "pages": [
+    [
+      {
+        "author": "uni_oficial",
+        "caption": 
+"#Top5 | Descubre las noticias más destacadas de la semana 📰
+
+Una semana de reconocimientos, investigación, innovación y nuevos logros que siguen marcando nuestra comunidad UNI.
+
+💬 ¿Qué noticia sumarías a nuestro Top 5?
+
+#NoticiasUNI #ComunidadUNI #UNI"
+,
+        "shortcode": "DeAL9c0FNDL",
+        "thumbnail": "https://scontent.cdninstagram.com/v/t51.82787-15/833363157_18386606890228519_4672765839989317671_n.jpg",
+        "type": "video",
+        "url": "https://www.instagram.com/reel/DeAL9c0FNDL/",
+      },
+      {
+        "author": "ceculturaluni",
+        "caption": 
+"🌿✨ ¡Así vivimos nuestro Paseo de Integración 2026! ✨🌿
+
+Un día para salir de la rutina, compartir, conocernos y, sobre todo, fortalecer los lazos que nos unen como Elencos Culturales de la UNI. 💛❤️
+
+El pasado domingo 27 de septiembre, nos reunimos para disfrutar de una jornada llena de alegría, juegos, dinámicas y mucha energía en el Club Campestre “Las Retamas”. 🏞️🎶
+
+Más que un paseo, fue una oportunidad para compartir nuevas experiencias y seguir construyendo una comunidad donde el arte y la cultura nos unen. 🤝✨
+
+Porque detrás de cada presentación hay personas, historias y una gran familia cultural. ❤️
+
+📸 Les compartimos la primera parte de las fotografías de este día.
+
+#CentroCulturalUNI #ElencosCulturalesUNI #PaseoDeIntegración2026 #CulturaUNI #SomosUNI MásArteMásCienciaMásCultura"
+,
+        "shortcode": "DeCi8E3nBjB",
+        "thumbnail": "https://scontent.cdninstagram.com/v/t51.82787-15/832777556_18379262587233172_1009159243376536849_n.jpg",
+        "type": "carousel",
+        "url": "https://www.instagram.com/p/DeCi8E3nBjB/",
+      },
+      {
+        "author": "uni_oficial",
+        "caption": 
+"#OrgulloUNI | 🏆 Primer puesto para estudiantes UNI en IDEATECH
+
+Alexandra Peralta, de Ingeniería de Sistemas (FIIS), y Kevin Pinto, de Ingeniería de Telecomunicaciones (FIEE), lograron el primer puesto en la categoría Universidades de IDEATECH, iniciativa del Women in Technology Council desarrollada en el marco del Women in Technology Summit LATAM 2026.
+
+Junto a su equipo, presentaron HEROW, una propuesta que busca ayudar a jóvenes, especialmente mujeres, a reconocer sus talentos, explorar caminos profesionales y conectar sus habilidades con oportunidades reales.
+
+🥇 Este reconocimiento destaca el talento, la creatividad y la capacidad de nuestros estudiantes para llevar una propuesta desarrollada desde la UNI a un espacio internacional y competir junto a talento universitario de Latinoamérica.
+
+🙌 ¡Felicitaciones, Alexandra y Kevin! Este logro también es motivo de orgullo para nuestra comunidad UNI.
+
+#TalentoUNI #InnovaciónUNI #ComunidadUNI"
+,
+        "shortcode": "DeAFAiLjZkk",
+        "thumbnail": "https://scontent.cdninstagram.com/v/t39.30808-6/834392759_1445392894351881_5380248374502743913_n.jpg",
+        "type": "carousel",
+        "url": "https://www.instagram.com/p/DeAFAiLjZkk/",
+      },
+      {
+        "author": "uni_oficial",
+        "caption": 
+"👀 ¿Ya adivinaste qué carreras son? 
+Ahora cuéntanos la tuya sin decirlo. 👇🎓
+
+#ComunidadUNI #UNI #SomosUNI"
+,
+        "shortcode": "Dd_we7NH1cN",
+        "thumbnail": "https://scontent.cdninstagram.com/v/t51.82787-15/832836350_18386571304228519_4356639024893672455_n.jpg",
+        "type": "video",
+        "url": "https://www.instagram.com/reel/Dd_we7NH1cN/",
+      },
+      {
+        "author": "grupoyuyai_uni",
+        "caption": 
+"El Álbum de las UNIfotos forma parte del proyecto de investigación: “¡Repensar la UNI como paisaje! Estudio de caso de valoración cultural del paisaje del campus de la Universidad Nacional de Ingeniería y su entorno urbano, Lima-Perú (2026)”, financiado por el Vicerrectorado de Investigación de la UNI.
+¡Construyamos juntos el álbum de las UNIfotos!
+
+Bases: https://drive.google.com/file/d/1VFIJPHGw3vfZfINCX1sumXhxjkq_Cw6r/view?usp=sharing
+
+Participa completando este formulario: https://docs.google.com/forms/d/e/1FAIpQLSfQ8rTM6hM3rW0drZd_CLUvYe8ewQd4SNAWPCiakNP5mK3ydg/viewform?usp=header"
+,
+        "shortcode": "Dd-G0NsNQJB",
+        "thumbnail": "https://scontent.cdninstagram.com/v/t51.71878-15/834130692_1354007636569776_1747371725878171913_n.jpg",
+        "type": "video",
+        "url": "https://www.instagram.com/reel/Dd-G0NsNQJB/",
+      },
+      {
+        "author": "uni_oficial",
+        "caption": 
+"#EventosUNI | 🎓 Un reconocimiento a nuestras agrupaciones estudiantiles
+
+En el marco del Sesquicentenario de la UNI, 13 agrupaciones estudiantiles recibieron diplomas por su participación en proyectos, congresos, ferias y diversas actividades que aportaron desde la ciencia, la tecnología y la cultura.
+
+👏Celebramos su iniciativa, talento y el aporte que realizan a la sociedad desde la UNI.
+
+#OrgulloUNI #UNI #ReconocimientoUNI"
+,
+        "shortcode": "Dd99xqDFWAn",
+        "thumbnail": "https://scontent.cdninstagram.com/v/t39.30808-6/831641572_1444652864425884_4115493799172344389_n.jpg",
+        "type": "carousel",
+        "url": "https://www.instagram.com/p/Dd99xqDFWAn/",
+      },
+      {
+        "author": "bienestar.uni",
+        "caption": 
+"📢 COMUNICADO | COMEDOR UNIVERSITARIO UNI
+
+Estimados estudiantes, les informamos que, de acuerdo con el comunicado del Órgano Oficial de la UNI (La Gaceta N.° 197), las actividades académicas y administrativas se desarrollarán en modalidad virtual los días viernes 2 y lunes 5 de octubre de 2026.
+
+Por este motivo, el Comedor Universitario suspenderá sus atenciones desde el viernes 2 hasta el lunes 5 de octubre, reanudando sus servicios con normalidad el martes 6 de octubre. 🍽️
+
+Agradecemos su comprensión y les invitamos a tomar las precauciones necesarias.
+
+DBUUNI – Dirección de Bienestar Universitario
+Bienestar en cada etapa.
+
+#DBUUNI #BienestarUNI #ComedorUniversitario #UNI #ComunicadoOficial"
+,
+        "shortcode": "Dd9w4BPB2Af",
+        "thumbnail": "https://scontent.cdninstagram.com/v/t51.82787-15/829381141_18108407081064356_2441846613411878415_n.jpg",
+        "type": "image",
+        "url": "https://www.instagram.com/p/Dd9w4BPB2Af/",
+      },
+      {
+        "author": "bcrpoficial",
+        "caption": 
+"🎓 𝐉𝐮𝐥𝐢𝐨 𝐕𝐞𝐥𝐚𝐫𝐝𝐞 𝐫𝐞𝐜𝐢𝐛𝐞 𝐃𝐨𝐜𝐭𝐨𝐫 𝐇𝐨𝐧𝐨𝐫𝐢𝐬 𝐂𝐚𝐮𝐬𝐚 𝐝𝐞 𝐥𝐚 𝐔𝐍𝐈
+Hay reconocimientos que trascienden a una persona porque también reflejan el valor de las instituciones, el trabajo en equipo y el compromiso con el país.
+La Universidad Nacional de Ingeniería distinguió a Julio Velarde con el grado de Doctor Honoris Causa, en reconocimiento a su trayectoria profesional y a su aporte al desarrollo económico del Perú.
+Durante la ceremonia, destacó que los logros alcanzados en materia de estabilidad monetaria son resultado del trabajo de generaciones de profesionales del BCRP y resaltó la importancia de seguir construyendo un país con más oportunidades para todos.
+Asimismo, felicitó a la UNI por sus 150 años de historia y destacó el rol que tendrán las nuevas generaciones de ingenieros en el desarrollo y prosperidad del Perú.
+🇵🇪 Un reconocimiento que nos recuerda que el conocimiento, la excelencia y la vocación de servicio pueden dejar huella en el país.
+#BCRP #JulioVelarde #DoctorHonorisCausa #UNI150"
+,
+        "shortcode": "Dd9bmzvibUs",
+        "thumbnail": "https://scontent.cdninstagram.com/v/t51.82787-15/828506842_18583001380070772_8220148851106296579_n.jpg",
+        "type": "carousel",
+        "url": "https://www.instagram.com/p/Dd9bmzvibUs/",
+      },
+      {
+        "author": "uni_oficial",
+        "caption": 
+"#NoticiasUNI | La UNI llega a Huacho 🌱 
+
+Firmamos un convenio para impulsar el futuro Centro UNI Norte chico, un espacio de 10 000 m² dedicado a la investigación, innovación y formación especializada.
+
+🎥 Conoce los detalles de esta nueva etapa de la UNI en el Norte Chico."
+,
+        "shortcode": "Dd9SkkWjRcu",
+        "thumbnail": "https://scontent.cdninstagram.com/v/t51.82787-15/830594128_18386416519228519_804905305452518932_n.jpg",
+        "type": "video",
+        "url": "https://www.instagram.com/reel/Dd9SkkWjRcu/",
+      },
+      {
+        "author": "uni_oficial",
+        "caption": 
+"#ReconocimientoUNI | 🎓 La UNI otorgó el grado honorífico de Doctor Honoris Causa al Dr. Julio Velarde, presidente del Directorio del Banco Central de Reserva del Perú, en reconocimiento a su trayectoria profesional y aporte al ámbito económico del país.
+
+La ceremonia contó con la participación del vicerrector Académico, Dr. José Carlos Matías León; el vicerrector de Investigación, Dr. Warren Reátegui Romero; la secretaria general, Abog. Catterine Anco Alarcón; el decano de la FIEECS, Dr. Luis Américo Cabezas Vega; y decanos de las facultades de la UNI.
+
+Durante su intervención, el rector, Dr. Arturo Talledo Coronado, recordó el paso del Dr. Julio Velarde por la UNI y destacó su trayectoria. Por su parte, el homenajeado resaltó el talento de la comunidad UNI y su aporte al desarrollo del país.
+
+Un reconocimiento que celebra una trayectoria vinculada a la UNI y reafirma el valor de quienes, desde nuestra comunidad, contribuyen al desarrollo del Perú. 🇵🇪"
+,
+        "shortcode": "Dd7D7GuFWR-",
+        "thumbnail": "https://scontent.cdninstagram.com/v/t39.30808-6/828051546_1443542041203633_7548055046326631987_n.jpg",
+        "type": "carousel",
+        "url": "https://www.instagram.com/p/Dd7D7GuFWR-/",
+      },
+      {
+        "author": "uni_oficial",
+        "caption": "#ComunidadUNI | ¿Y tú? ¿Cómo recuerdas a la UNI?",
+        "shortcode": "Dd44_P-DdfN",
+        "thumbnail": "https://scontent.cdninstagram.com/v/t51.82787-15/825325686_18386151487228519_799638943405272073_n.jpg",
+        "type": "carousel",
+        "url": "https://www.instagram.com/p/Dd44_P-DdfN/",
+      },
+      {
+        "author": "bienestar.uni",
+        "caption": 
+"❤️🩺 Así vivimos la Feria de la Salud en el Centro Médico UNI
+
+Nuestra comunidad universitaria participó en una jornada dedicada a la prevención, el cuidado y la promoción de la salud, compartiendo información y experiencias que nos recuerdan que cuidar de nosotros también es parte de nuestro bienestar. 🩺✨
+
+Agradecemos a todos los estudiantes y miembros de la comunidad UNI que fueron parte de esta actividad. 🙌
+
+Desde DBU – Dirección de Bienestar Universitario, continuamos generando espacios que contribuyen a una vida universitaria más saludable e integral. ❤️
+
+📸 ¡Mira algunos momentos de lo que vivimos en esta jornada!
+
+#DBUUNI #BienestarUNI #FeriaDeLaSalud #CentroMédicoUNI #SaludYBienestar BienestarEnCadaEtapa"
+,
+        "shortcode": "Dd4rg66Acv5",
+        "thumbnail": "https://scontent.cdninstagram.com/v/t51.82787-15/829647701_18107945906064356_4368155768449150562_n.jpg",
+        "type": "carousel",
+        "url": "https://www.instagram.com/p/Dd4rg66Acv5/",
+      },
+    ],
+    [
+      {
+        "author": "uni_oficial",
+        "caption": 
+"#EventosUNI | ¿Listo para transformar tu futuro? 💡
+
+Vive CLEIN Perú 2026: networking, innovación y visitas técnicas.
+
+📅 Del 1 al 6 de noviembre de 2026
+📝 Inscripciones, programa y brochure: https://linktr.ee/CLEINPERU2026
+
+📣¡No te quedes fuera! 
+
+#CLEIN2026 #IngenieríaIndustrial #UNI"
+,
+        "shortcode": "Dd4WoGpkc94",
+        "thumbnail": "https://scontent.cdninstagram.com/v/t51.82787-15/825324691_18386132479228519_314601629935213542_n.jpg",
+        "type": "video",
+        "url": "https://www.instagram.com/reel/Dd4WoGpkc94/",
+      },
+      {
+        "author": "uni_oficial",
+        "caption": 
+"🙌¡Voluntarios del Sesquicentenario, presentes en UNICTEC 2026!
+
+Del 8 al 10 de setiembre, fueron parte esencial de esta feria, demostrando compromiso, entusiasmo y vocación de servicio en cada jornada. 🚀
+Ser voluntario también es dejar huella. 💪
+
+#UNICTEC2026 #VoluntariosSesquicentenario #UNI150"
+,
+        "shortcode": "Dd4I5_3ly5P",
+        "thumbnail": "https://scontent.cdninstagram.com/v/t39.30808-6/830177750_1441748558049648_8234785757197177106_n.jpg",
+        "type": "carousel",
+        "url": "https://www.instagram.com/p/Dd4I5_3ly5P/",
+      },
+      {
+        "author": "uni_oficial",
+        "caption": 
+"🚀 Innovación que transforma recursos en nuevas soluciones
+
+Desde la Universidad Nacional de Ingeniería, a través de la DITT y Startup UNI, seguimos acompañando iniciativas que convierten tecnología e innovación en soluciones con potencial de aplicación en distintos sectores.
+
+En el marco de Startup Perú 11G, presentamos los resultados de dos proyectos desarrollados con el cofinanciamiento de ProInnóvate – Ministerio de la Producción:
+
+🧪 ALGITECH desarrolló una propuesta orientada a la obtención de insumos a partir de algas para su aplicación en la industria cosmética.
+🌱⚡ Kawsay Energy (Kurkuwind) trabajó en el desarrollo de un aerogenerador para la generación de energía eléctrica en entornos urbanos y rurales, aprovechando el potencial del viento.
+
+Ambas iniciativas compartieron sus avances, resultados y aprendizajes, mostrando cómo el emprendimiento tecnológico puede generar soluciones frente a desafíos de diferentes sectores productivos.
+
+💡 Innovar también es desarrollar, validar y llevar las ideas hacia soluciones concretas.
+
+#StartupUNI #UNI #Innovación #Emprendimiento #StartupPerú #ProInnóvate #ALGITECH #KawsayEnergy #KURKUWIND #Tecnología"
+,
+        "shortcode": "Dd2EvgYGaHC",
+        "thumbnail": "https://scontent.cdninstagram.com/v/t39.30808-6/825271271_1441691678055336_3163562144759582055_n.jpg",
+        "type": "carousel",
+        "url": "https://www.instagram.com/p/Dd2EvgYGaHC/",
+      },
+      {
+        "author": "grupoyuyai_uni",
+        "caption": 
+"El Álbum de las UNIfotos forma parte del proyecto de investigación: “¡Repensar la UNI como paisaje! Estudio de caso de valoración cultural del paisaje del campus de la Universidad Nacional de Ingeniería y su entorno urbano, Lima-Perú (2026)”, financiado por el Vicerrectorado de Investigación de la UNI.
+
+A través de esta convocatoria buscamos recoger la mayor variedad de miradas y sensibilidades sobre el paisaje cultural del campus de la UNI y su entorno, valorando los conceptos, los significados y las narrativas sobre la calidad técnica de la foto.
+Las fotografías nos permitirán reconocer los espacios y los momentos, las experiencias y los sueños, de este paisaje que tienen mayor carga emotiva y así dar respuesta a estas interrogantes: ¿cómo sentimos el paisaje de nuestro campus?, ¿cómo nos relacionamos con él? y ¿qué lugares o eventos permanecen en nuestra memoria?
+
+¡Construyamos juntos el álbum de las UNIfotos!
+
+Bases: https://drive.google.com/file/d/1VFIJPHGw3vfZfINCX1sumXhxjkq_Cw6r/view?usp=sharing
+
+Participa completando este formulario: https://docs.google.com/forms/d/e/1FAIpQLSfQ8rTM6hM3rW0drZd_CLUvYe8ewQd4SNAWPCiakNP5mK3ydg/viewform?usp=header"
+,
+        "shortcode": "DdwtBp1GAcQ",
+        "thumbnail": "https://scontent.cdninstagram.com/v/t51.82787-15/825325305_18067892015750298_2146228834398807317_n.webp",
+        "type": "carousel",
+        "url": "https://www.instagram.com/p/DdwtBp1GAcQ/",
+      },
+      {
+        "author": "uni_oficial",
+        "caption": 
+"Nueva semana, nuevos retos. ¡A darle con todo! 💪
+#UNI #LunesUNI #OrgulloUNI"
+,
+        "shortcode": "Dd1WWrmjA1E",
+        "thumbnail": "https://scontent.cdninstagram.com/v/t39.30808-6/825267901_1438825475008623_1992731606983291314_n.jpg",
+        "type": "image",
+        "url": "https://www.instagram.com/p/Dd1WWrmjA1E/",
+      },
+      {
+        "author": "uni_oficial",
+        "caption": 
+"🚀 #Top5✋ | Tecnología, talento y cultura marcaron la semana en la UNI.
+
+Robótica, formación internacional, danzas, congresos y actividades por nuestros 150 años fueron parte de estos cinco momentos. 🌎
+
+¿Cuál fue tu favorito? 👇
+
+#Top5UNI #UNI #TalentoUNI #Innovación"
+,
+        "shortcode": "DdurwEunXB6",
+        "thumbnail": "https://scontent.cdninstagram.com/v/t51.82787-15/825269648_18385508770228519_569333257667517723_n.jpg",
+        "type": "video",
+        "url": "https://www.instagram.com/reel/DdurwEunXB6/",
+      },
+      {
+        "author": "uni_oficial",
+        "caption": 
+"#NoticiasUNI | UNI impulsa nuevo espacio para la investigación y formación en Huacho 🌱
+
+La UNI avanza en su expansión académica hacia el Norte Chico con la firma de un convenio con la Asociación de Vivienda Pinos del Norte, que permitirá desarrollar el futuro Centro UNI en Huacho. Como parte del acuerdo, la UNI contará con un área de 10 000 m², transferida de manera perpetua y gratuita, para impulsar la investigación, innovación y formación especializada.
+
+La jornada incluyó el reconocimiento del terreno, una romería en memoria del exrector Ing. Roberto Morales Morales y la Conferencia Magistral «Ciencia, Tecnología y Descentralización para el Desarrollo del Norte Chico de Lima», cargo del rector, Dr. Arturo Talledo Coronado. 
+
+#UNIInforma #ConvenioUNI #UNI"
+,
+        "shortcode": "DdugpVIlVmb",
+        "thumbnail": "https://scontent.cdninstagram.com/v/t39.30808-6/825267872_1438855568338947_5357171847028536262_n.jpg",
+        "type": "carousel",
+        "url": "https://www.instagram.com/p/DdugpVIlVmb/",
+      },
+      {
+        "author": "uni_oficial",
+        "caption": 
+"🌎 #OrgulloUNI | Innovación UNI destacó en Vietnam
+
+El equipo CIRCUPLAST obtuvo el cuarto lugar en la final internacional de Bach Khoa Innovation 2026, realizada en Vietnam, con Smart Circular Plastics, proyecto que transforma residuos plásticos en materiales con propiedades antimicrobianas mediante inteligencia artificial, inducción electromagnética y nanotecnología. 🔬♻️
+
+El equipo está integrado por el Dr. Harry Rivera, líder del proyecto; la Dra. María Quintana, mentora; la Ing. Pierina Pérez y la M.Sc. Pilar García. La propuesta fue la única representante de Latinoamérica y destacó entre más de 50 participantes de Asia y Europa. Durante la competencia, se presentó el prototipo ante especialistas y representantes empresariales, generando además contactos con universidades e instituciones internacionales.
+
+Tras esta experiencia, CIRCUPLAST continuará trabajando en el escalamiento y validación de la tecnología, con miras a explorar futuras aplicaciones industriales y seguir impulsando desde la UNI soluciones para el aprovechamiento de residuos plásticos. 🇵🇪
+
+#UNI #InnovaciónUNI #Investigación #EconomíaCircular #BachKhoaInnovation2026"
+,
+        "shortcode": "DdrnN5rgcvo",
+        "thumbnail": "https://scontent.cdninstagram.com/v/t39.30808-6/794394856_1437700221787815_5960647436398276816_n.jpg",
+        "type": "carousel",
+        "url": "https://www.instagram.com/p/DdrnN5rgcvo/",
+      },
+      {
+        "author": "uni_oficial",
+        "caption": 
+"🚀 #OrgulloUNI | Estudiantes UNI viajarán a India para formarse en tecnología espacial
+
+Cinco integrantes del equipo COSPAR-UNI, del Grupo de Investigación SAMA-UNI, fueron seleccionados para realizar una pasantía técnica en la empresa aeroespacial HEX20, en India, como parte de la HEX20 Summer School 2026 y del Programa de Fortalecimiento de Capacidades con Pequeños Satélites de COSPAR.
+
+Ellos son Salvador Eduardo Romero de la Roca, Roberto Carlos Future Mendieta, Gabriel Ulises Flores Castañeda, Martin Jesus Rospigliosi Lévano y Jose Andres Flores Castañeda. El equipo está dirigido por el Dr. German Yuri Comina Bellido, profesor principal de la Facultad de Ciencias, y cuenta con Salvador Romero, egresado de Ingeniería Física, como líder estudiantil.
+
+Su participación es parte de un proceso que la UNI inició en 2023 y que hoy la proyecta a la misión satelital internacional COSPAR-1. 👏
+
+#NoticiasUNI #UNI #TalentoUNI"
+,
+        "shortcode": "DdrdcDkIInu",
+        "thumbnail": "https://scontent.cdninstagram.com/v/t39.30808-6/807590216_1437711251786712_7639799583857474483_n.jpg",
+        "type": "carousel",
+        "url": "https://www.instagram.com/p/DdrdcDkIInu/",
+      },
+      {
+        "author": "uni_oficial",
+        "caption": 
+"🎓 #EventosUNI | UNI reconoció a doctores y maestros en ceremonia de graduación de Posgrado
+
+La Escuela de Posgrado de la UNI realizó la Ceremonia de Graduación y Reconocimiento a los Doctores y Maestros del periodo 2018-2026. 
+
+Durante la ceremonia, se entregaron diplomas y medallas a todos los graduados por su aporte a la formación académica, el conocimiento y la investigación.
+
+Una celebración que destaca el compromiso de nuestra comunidad con el conocimiento y la investigación. 👏
+
+#UNI #OrgulloUNI #TalentoUNI"
+,
+        "shortcode": "DdpcLukjFw6",
+        "thumbnail": "https://scontent.cdninstagram.com/v/t39.30808-6/820307949_1436922278532276_3454416278180258336_n.jpg",
+        "type": "carousel",
+        "url": "https://www.instagram.com/p/DdpcLukjFw6/",
+      },
+      {
+        "author": "uni_oficial",
+        "caption": 
+"🔬 #EventosUNI | Tecnologías de la UNI frente al Cambio Climático y el Desarrollo de las Energías Renovables
+
+La jornada fue un espacio para presentar las investigaciones desarrolladas por los doctorandos del Programa Doctoral en Física, con propuestas vinculadas al cambio climático, las energías renovables y el desarrollo tecnológico.
+
+Una oportunidad para compartir conocimiento y mostrar el aporte de la investigación de la UNI frente a los desafíos ambientales y energéticos del país. 🌱
+
+👉 Organizado por el Centro de Energías Renovables de la UNI (CER-UNI). 🌱
+
+#UNI #InvestigaciónUNI #InnovaciónUNI #EnergíasRenovables"
+,
+        "shortcode": "DdpR3ohDSWb",
+        "thumbnail": "https://scontent.cdninstagram.com/v/t39.30808-6/819673101_1436896858534818_1306200153837966078_n.jpg",
+        "type": "carousel",
+        "url": "https://www.instagram.com/p/DdpR3ohDSWb/",
+      },
+      {
+        "author": "ceculturaluni",
+        "caption": 
+"🔥 ¡NUESTRO ARTE Y PASIÓN EN EL ESCENARIO DEL LATIN CHOLA TOUR! 🔥
+
+Seguimos difundiendo la riqueza de nuestros ritmos y dejando el alma en cada presentación. ❤️🇵🇪
+
+Orgullosos de haber formado parte del elenco oficial de danza en el concierto Latin Chola Tour de Milena Warthon, acompañándola en el escenario como cuerpo de baile en los bloques de Tuntuna y Tinkus. 🥁💃🕺
+
+Fue una noche mágica llena de energía, tradición, fuerza e identidad cultural compartida con un público increíble. Agradecemos la confianza y la oportunidad de seguir llevando la fuerza de nuestras danzas a escenarios tan importantes. 🙌✨
+
+📷 ¡Desliza para ver los mejores momentos y la fuerza de nuestro elenco en escena! 👇"
+,
+        "shortcode": "DdozD1igd8s",
+        "thumbnail": "https://scontent.cdninstagram.com/v/t51.82787-15/817903525_18377699326233172_5031933934181380511_n.jpg",
+        "type": "carousel",
+        "url": "https://www.instagram.com/p/DdozD1igd8s/",
+      },
+    ],
+  ],
+}
+`;
+
+exports[`account listing detail snapshot 1`] = `
+{
+  "more": true,
+  "ok": true,
+  "pages": [
+    [
+      {
+        "author": "gft.unmsm",
+        "caption": 
+"¡Continuamos con la segunda charla de los Peruvian Theoretical Physics Seminars 2026-2 (Peruvian TPS 2026)!
+
+Título: Análisis de la interacción de CDM y energía oscura en modelos 𝜔CDM
+
+Speaker: Nelson Mechán (GRACCOC, Universidad Nacional de Trujillo, Perú)
+
+🗓️ Fecha: Miércoles 2 de Setiembre de 2026
+🗓️ Horario: 16:00 pm (Hora de Lima, Perú)
+📌 Ubicación (En línea): https://meet.google.com/nft-upct-ddv
+
+🔗 Más información de los Peruvian TPS 2026: https://sites.google.com/view/peruviantps2026/home
+
+Inscripciones al mailing list para asistir a los seminarios: https://forms.gle/TRYX74dVv9J9jtmPA
+
+¡Comparte esta publicación y ayuda a difundir el conocimiento científico en nuestro país!"
+,
+        "media": [
+          {
+            "filename": "instagram-DcepzLhTqxC.jpg",
+            "type": "image",
+            "url": "https://instagram.flim28-2.fna.fbcdn.net/v/t51.82787-15/785776041_17986239804102492_589192130445848825_n.webp",
+          },
+        ],
+        "shortcode": "DcepzLhTqxC",
+        "thumbnail": "https://scontent.cdninstagram.com/v/t51.82787-15/785776041_17986239804102492_589192130445848825_n.webp",
+        "timestamp": 1787694975,
+        "type": "image",
+        "url": "https://www.instagram.com/p/DcepzLhTqxC/",
+      },
+      {
+        "author": "gft.unmsm",
+        "caption": 
+"¡Empezamos con la primera charla de los Peruvian Theoretical Physics Seminars 2026-2 (Peruvian TPS 2026)!
+
+Título: Interacción del sector oscuro en gravedad de Rastall generalizada
+
+Speaker: Carlos Rodriguez Benites (GRACOCC, Universidad Nacional de Trujillo, Perú)
+
+🗓️ Fecha: Martes 18 de agosto de 2026
+🗓️ Horario: 16:00 pm (Hora de Lima, Perú)
+📌 Ubicación (En línea): https://meet.google.com/nft-upct-ddv
+
+🔗 Más información de los Peruvian TPS 2026: https://sites.google.com/view/peruviantps2026/home
+
+Inscripciones al mailing list: https://forms.gle/TRYX74dVv9J9jtmPA
+
+¡Comparte esta publicación y ayuda a difundir el conocimiento científico en nuestro país!"
+,
+        "media": [
+          {
+            "filename": "instagram-Db_OODPzziJ.jpg",
+            "type": "image",
+            "url": "https://instagram.flim33-1.fna.fbcdn.net/v/t51.82787-15/773155684_17984277471102492_4772902346177702671_n.webp",
+          },
+        ],
+        "shortcode": "Db_OODPzziJ",
+        "thumbnail": "https://scontent.cdninstagram.com/v/t51.82787-15/773155684_17984277471102492_4772902346177702671_n.webp",
+        "timestamp": 1786640328,
+        "type": "image",
+        "url": "https://www.instagram.com/p/Db_OODPzziJ/",
+      },
+      {
+        "author": "gft.unmsm",
+        "caption": 
+"¡Continuamos con la quinta charla de los Peruvian Theoretical Physics Seminars 2026-1 (Peruvian TPS 2026)!
+
+Título: Deformaciones integrables en teoría de cuerdas y AdS/CFT
+
+Speaker: Renato Sánchez (Universidad de Ingeniería y Tecnología - UTEC, Perú)
+
+🗓️ Fecha: 16 de Junio de 2026
+🗓️ Horario: 16:30 pm (Hora de Lima, Perú)
+📌 Ubicación: En línea
+🔗 Más información de los Peruvian TPS 2026: https://sites.google.com/view/peruviantps2026/home
+
+Inscripciones al mailing list para asistir a los seminarios: https://forms.gle/TRYX74dVv9J9jtmPA
+
+¡Comparte esta publicación y ayuda a difundir el conocimiento científico en nuestro país!"
+,
+        "media": [
+          {
+            "filename": "instagram-DZgl5bGzYMM.jpg",
+            "type": "image",
+            "url": "https://instagram.flim33-1.fna.fbcdn.net/v/t51.82787-15/723111231_17974635285102492_6089771036219809184_n.webp",
+          },
+        ],
+        "shortcode": "DZgl5bGzYMM",
+        "thumbnail": "https://scontent.cdninstagram.com/v/t51.82787-15/723111231_17974635285102492_6089771036219809184_n.webp",
+        "timestamp": 1781317586,
+        "type": "image",
+        "url": "https://www.instagram.com/p/DZgl5bGzYMM/",
+      },
+      {
+        "author": "gft.unmsm",
+        "caption": 
+"¡Continuamos con la cuarta charla de los Peruvian Theoretical Physics Seminars 2026-1 (Peruvian TPS 2026)!
+
+Título: Compact stars in $f(R,T,L_m)$ gravity
+
+Speaker: Juan Zárate (Centro Brasileiro de Pesquisas Físicas, Brazil )
+
+🗓️ Fecha: 2 de Junio de 2026
+🗓️ Horario: 16:30 pm (Hora de Lima, Perú)
+📌 Ubicación: En línea
+🔗 Más información de los Peruvian TPS 2026: https://sites.google.com/view/peruviantps2026/home
+
+Inscripciones al mailing list para asistir a los seminarios: https://forms.gle/TRYX74dVv9J9jtmPA
+
+¡Comparte esta publicación y ayuda a difundir el conocimiento científico en nuestro país!"
+,
+        "media": [
+          {
+            "filename": "instagram-DY_GpEhTmCo.jpg",
+            "type": "image",
+            "url": "https://instagram.flim33-1.fna.fbcdn.net/v/t51.82787-15/712523424_17972183925102492_6209810623167222131_n.webp",
+          },
+        ],
+        "shortcode": "DY_GpEhTmCo",
+        "thumbnail": "https://scontent.cdninstagram.com/v/t51.82787-15/712523424_17972183925102492_6209810623167222131_n.webp",
+        "timestamp": 1780193903,
+        "type": "image",
+        "url": "https://www.instagram.com/p/DY_GpEhTmCo/",
+      },
+      {
+        "author": "gft.unmsm",
+        "caption": 
+"¡Continuamos con la tercera charla de los Peruvian Theoretical Physics Seminars 2026-1 (Peruvian TPS 2026)!
+
+Título: Transiciones de fase cosmológicas como fábricas de materia oscura: producción de partículas y ondas gravitacionales
+
+Speaker: Martín Arteaga Tupia (Pontificia Universidad Católica del Perú y Universidad de Lima)
+
+🗓️ Fecha: 26 de Mayo de 2026
+🗓️ Horario: 16:30 pm (Hora de Lima, Perú)
+📌 Ubicación: En línea
+🔗 Más información de los Peruvian TPS 2026: https://sites.google.com/view/peruviantps2026/home
+
+Inscripciones al mailing list para asistir a los seminarios: https://forms.gle/TRYX74dVv9J9jtmPA
+
+¡Comparte esta publicación y ayuda a difundir el conocimiento científico en nuestro país!"
+,
+        "media": [
+          {
+            "filename": "instagram-DYumc3zTiek.jpg",
+            "type": "image",
+            "url": "https://instagram.flim28-1.fna.fbcdn.net/v/t51.82787-15/705771719_17970743775102492_3410590317789992511_n.webp",
+          },
+        ],
+        "shortcode": "DYumc3zTiek",
+        "thumbnail": "https://scontent.cdninstagram.com/v/t51.82787-15/705771719_17970743775102492_3410590317789992511_n.webp",
+        "timestamp": 1779640155,
+        "type": "image",
+        "url": "https://www.instagram.com/p/DYumc3zTiek/",
+      },
+      {
+        "author": "gft.unmsm",
+        "caption": 
+"¡Continuamos con la segunda charla de los Peruvian Theoretical Physics Seminars 2026-1 (Peruvian TPS 2026)!
+
+Título: From Cosmological Puzzles To Inflationary Reconstruction: An E-fold Approach In Rastall Gravity
+
+Speaker: Carlos Ríos Morales (Universidad Católica del Norte, Chile)
+
+🗓️ Fecha: 5 de Mayo de 2026
+🗓️ Horario: 16:30 pm (Hora de Lima, Perú)
+📌 Ubicación: En línea
+🔗 Más información de los Peruvian TPS 2026: https://sites.google.com/view/peruviantps2026/home
+
+Inscripciones al mailing list para asistir a los seminarios: https://forms.gle/TRYX74dVv9J9jtmPA
+
+¡Comparte esta publicación y ayuda a difundir el conocimiento científico en nuestro país!"
+,
+        "media": [
+          {
+            "filename": "instagram-DXxvNhBk3-v.jpg",
+            "type": "image",
+            "url": "https://instagram.flim38-1.fna.fbcdn.net/v/t51.82787-15/681983315_17965414512102492_1201213649124173326_n.webp",
+          },
+        ],
+        "shortcode": "DXxvNhBk3-v",
+        "thumbnail": "https://scontent.cdninstagram.com/v/t51.82787-15/681983315_17965414512102492_1201213649124173326_n.webp",
+        "timestamp": 1777597927,
+        "type": "image",
+        "url": "https://www.instagram.com/p/DXxvNhBk3-v/",
+      },
+      {
+        "author": "gft.unmsm",
+        "caption": 
+"Invitación para el Día Internacional de la Cuántica.
+
+El GFT complace invitar a la comunidad, a este evento sobre computación cuántica.
+
+Entrada libre. 
+
+#fisica #quantum #unmsm"
+,
+        "media": [
+          {
+            "filename": "instagram-DXXm9hhEe7s.jpg",
+            "type": "image",
+            "url": "https://instagram.flim38-1.fna.fbcdn.net/v/t51.82787-15/671181528_17963043627102492_5784499939890738216_n.webp",
+          },
+        ],
+        "shortcode": "DXXm9hhEe7s",
+        "thumbnail": "https://scontent.cdninstagram.com/v/t51.82787-15/671181528_17963043627102492_5784499939890738216_n.webp",
+        "timestamp": 1776721186,
+        "type": "image",
+        "url": "https://www.instagram.com/p/DXXm9hhEe7s/",
+      },
+      {
+        "author": "gft.unmsm",
+        "caption": 
+"¡Empezamos con la primera charla de los Peruvian Theoretical Physics Seminars 2026-1 (Peruvian TPS 2026)!
+
+Título: QED actions for (Anti-)de Sitter in 2D
+
+Speaker: Cristian Rivera (National Central University. Taiwan)
+
+🗓️ Fecha: 21 de abril de 2026
+🗓️ Horario: 16:30 pm (Hora de Lima, Perú)
+📌 Ubicación: En línea
+🔗 Más informacion de los Peruvian TPS 2026: https://sites.google.com/view/peruviantps2026/home
+
+Inscripciones al mailing list para asistir a los seminarios: https://forms.gle/TRYX74dVv9J9jtmPA
+
+¡Comparte esta publicación y ayuda a difundir el conocimiento científico en nuestro país!"
+,
+        "media": [
+          {
+            "filename": "instagram-DXHmE0nE2ja.jpg",
+            "type": "image",
+            "url": "https://instagram.flim28-1.fna.fbcdn.net/v/t51.82787-15/669927745_17961580665102492_6867080958090217038_n.webp",
+          },
+        ],
+        "shortcode": "DXHmE0nE2ja",
+        "thumbnail": "https://scontent.cdninstagram.com/v/t51.82787-15/669927745_17961580665102492_6867080958090217038_n.webp",
+        "timestamp": 1776183851,
+        "type": "image",
+        "url": "https://www.instagram.com/p/DXHmE0nE2ja/",
+      },
+      {
+        "author": "gft.unmsm",
+        "caption": 
+"El GFT invita a la comunidad al:
+Curso introductorio a la física teórica.
+
+Ingreso libre a los cuatro cursos que se desarrollarán desde el 16 hasta el 20 de marzo. 
+Más información en el código QR.
+
+Los esperamos
+
+#fisica
+#clases"
+,
+        "media": [
+          {
+            "filename": "instagram-DVuVkMeja6U.jpg",
+            "type": "image",
+            "url": "https://instagram.flim38-1.fna.fbcdn.net/v/t51.82787-15/649894125_17952936354102492_1867861027527073121_n.webp",
+          },
+        ],
+        "shortcode": "DVuVkMeja6U",
+        "thumbnail": "https://scontent.cdninstagram.com/v/t51.82787-15/649894125_17952936354102492_1867861027527073121_n.webp",
+        "timestamp": 1773188851,
+        "type": "image",
+        "url": "https://www.instagram.com/p/DVuVkMeja6U/",
+      },
+      {
+        "author": "gft.unmsm",
+        "caption": 
+"[LINK CHARLA MAGISTRAL]
+
+Acompáñanos en la Charla Magistral abierta al público en general (presencial y virtual)!
+
+Título: "Lo que sabemos y lo que no sabemos del universo"
+
+Ponente invitado: Guillem Domènech (Institute for Theoretical Physics, Leibniz University Hannover, Germany)
+
+Esta Charla Magistral es un evento especial parte del Workshop Verano TINKUY 2026: "Un Panorama de la Física Teórica en el Perú"🌎
+
+Este evento local reúne a estudiantes y expertos en Física de diversas regiones peruanas para exponer sus investigaciones y desarrollos recientes en Física Teórica. El workshop se viene realizando tanto en línea como presencialmente en el auditorio del Instituto de Investigación de Posgrado de la Facultad de Ciencias Físicas de la Universidad Nacional Mayor de San Marcos, Lima, Perú.
+
+🗓️ Fecha Charla Magistral: Jueves 26 de febrero de 2026
+📌 Ubicación: Lima, Perú / En línea
+🔗 Link Charla Magistral: https://meet.google.com/hts-hnbk-fjf
+🔗 Más información: https://sites.google.com/unmsm.edu.pe/tinkuy-2026-summer-workshop/home
+
+¡Comparte esta publicación y ayuda a difundir el conocimiento científico en nuestro país!"
+,
+        "media": [
+          {
+            "filename": "instagram-DVO10xwEzcr.jpg",
+            "type": "image",
+            "url": "https://instagram.flim38-1.fna.fbcdn.net/v/t51.82787-15/641227075_17949848004102492_5668237571272535027_n.webp",
+          },
+        ],
+        "shortcode": "DVO10xwEzcr",
+        "thumbnail": "https://scontent.cdninstagram.com/v/t51.82787-15/641227075_17949848004102492_5668237571272535027_n.webp",
+        "timestamp": 1772132022,
+        "type": "image",
+        "url": "https://www.instagram.com/p/DVO10xwEzcr/",
+      },
+      {
+        "author": "gft.unmsm",
+        "caption": 
+"🌌 Charla Magistral: "Lo que sabemos y lo que no sabemos del universo"
+
+¿Qué hemos logrado entender y cuáles son los grandes misterios que aún desafían a la cosmología moderna?
+
+Te invitamos a esta charla magistral a cargo del Profesor Guillem Domènech, investigador del Institute for Theoretical Physics, Leibniz University Hannover (Germany), quien nos guiará a través de las fronteras del conocimiento en cosmología y física teórica.
+
+📍 Auditorio del Instituto de Investigación de la Unidad de Posgrado
+Facultad de Ciencias Físicas – Ciudad Universitaria, UNMSM
+📅 Jueves 26 de febrero
+🕖 7:00 p.m.
+
+Una oportunidad única para reflexionar sobre el universo que habitamos: lo que ya comprendemos… y lo que aún nos falta por descubrir.
+
+Ingreso Libre
+
+✨ ¡Los esperamos!
+
+¡Comparte esta publicación y ayuda a difundir el conocimiento científico en nuestro país!
+
+#CharlaMagistral #Cosmología #FísicaTeórica #Universo #UNMSM"
+,
+        "media": [
+          {
+            "filename": "instagram-DU3oHgQk9Cw.jpg",
+            "type": "image",
+            "url": "https://instagram.flim38-1.fna.fbcdn.net/v/t51.82787-15/632859432_17947992450102492_8395249379550642213_n.webp",
+          },
+        ],
+        "shortcode": "DU3oHgQk9Cw",
+        "thumbnail": "https://scontent.cdninstagram.com/v/t51.82787-15/632859432_17947992450102492_8395249379550642213_n.webp",
+        "timestamp": 1771353084,
+        "type": "image",
+        "url": "https://www.instagram.com/p/DU3oHgQk9Cw/",
+      },
+      {
+        "author": "gft.unmsm",
+        "caption": 
+"[Lista de ponentes, lista de participantes y cronograma del workshop actualizados!]
+
+Si estudias Física y estás interesado en conocer la investigación de expertos y estudiantes peruanos trabajando en diversas áreas de la Física Teórica acompáñanos al workshop de verano TINKUY 2026: "Un Panorama de la Física Teórica en el Perú"🌎 
+
+Inscríbete ya! Las inscripciones se cierran el 23 de febrero! 
+
+Inscripciones: https://shorturl.at/Djn5x
+
+🔗 Más información: https://sites.google.com/unmsm.edu.pe/tinkuy-2026-summer-workshop/home
+
+🗓️ Fechas: 25, 26 y 27 de febrero de 2026
+🗓️ Horario: 14:00 pm a 18:40 pm
+📌 Ubicación: Lima, Perú / En línea
+
+¡Comparte esta publicación y ayuda a difundir el conocimiento científico en nuestro país!"
+,
+        "media": [
+          {
+            "filename": "instagram-DU0KLigk4Ry.jpg",
+            "type": "image",
+            "url": "https://instagram.flim28-2.fna.fbcdn.net/v/t51.82787-15/634386422_17947709388102492_6623468552059514422_n.webp",
+          },
+        ],
+        "shortcode": "DU0KLigk4Ry",
+        "thumbnail": "https://scontent.cdninstagram.com/v/t51.82787-15/634386422_17947709388102492_6623468552059514422_n.webp",
+        "timestamp": 1771236725,
+        "type": "image",
+        "url": "https://www.instagram.com/p/DU0KLigk4Ry/",
+      },
+    ],
+  ],
+}
+`;

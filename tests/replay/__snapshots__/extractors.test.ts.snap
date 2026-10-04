@@ -104,23 +104,39 @@ exports[`instagram video_reel 1`] = `
   "result": {
     "headers": {
       "Referer": "https://www.instagram.com/",
-      "User-Agent": "Instagram 309.0.0.15.109 Android (31/12; 480dpi; 1080x2228; samsung; SM-G996B; t2s; qcom; en_US; 544099989)",
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36",
     },
     "meta": {
-      "author": "yeetbrew",
-      "comments": 2534,
-      "description": "Who was better?🤔 #trending #fyp #viral #ziasandblou #zias",
-      "likes": 560214,
+      "author": "uni_oficial",
+      "comments": 2,
+      "description": 
+"#Top5 | Descubre las noticias más destacadas de la semana 📰
+
+Una semana de reconocimientos, investigación, innovación y nuevos logros que siguen marcando nuestra comunidad UNI.
+
+💬 ¿Qué noticia sumarías a nuestro Top 5?
+
+#NoticiasUNI #ComunidadUNI #UNI"
+,
+      "likes": 289,
       "platform": "instagram",
-      "thumbnail": "https://instagram.fjog8-1.fna.fbcdn.net/v/t51.71878-15/572130547_855458617160252_8495325001570874711_n.jpg",
-      "timestamp": 1762073662,
-      "title": "Who was better?🤔 #trending #fyp #viral #ziasandblou #zias",
+      "thumbnail": "https://scontent.cdninstagram.com/v/t51.82787-15/833363157_18386606890228519_4672765839989317671_n.jpg",
+      "timestamp": 1790967712,
+      "title": 
+"#Top5 | Descubre las noticias más destacadas de la semana 📰
+
+Una semana de reconocimientos, investigación, innovación y nuevos logros que siguen marcando nuestra comunidad UNI.
+
+💬 ¿Qué noticia sumarías a nuestro Top 5?
+
+#NoticiasUNI #ComunidadUNI #UNI"
+,
     },
     "urls": [
       {
-        "filename": "instagram-DQjE79kETsb.mp4",
+        "filename": "instagram-DeAL9c0FNDL.mp4",
         "type": "video",
-        "url": "https://instagram.fjog8-1.fna.fbcdn.net/o1/v/t2/f2/m86/AQPEH77FA5WGKavaP45PmhP6Pof4tLzKvdCg3az4Qo9nW03l65Yqgnl3WtFNIMXALnLnaby-rZpuYoLc4S79ScoeYKSuj7S-K2BGsV0.mp4",
+        "url": "https://instagram.flim28-2.fna.fbcdn.net/o1/v/t2/f2/m86/AQM39MC9ug7LJHb3kPbHPKk44hGZg2EkewiNy4xex6OXXAHh4sy_fh5ubEbmi9ziD7sL1ISNUtlPMXuL9KI30pp2ktM_5GSF9aJaNUo.mp4",
       },
     ],
   },
@@ -134,53 +150,210 @@ exports[`instagram carousel 1`] = `
   "result": {
     "headers": {
       "Referer": "https://www.instagram.com/",
-      "User-Agent": "Instagram 309.0.0.15.109 Android (31/12; 480dpi; 1080x2228; samsung; SM-G996B; t2s; qcom; en_US; 544099989)",
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36",
     },
     "meta": {
-      "author": "_imyour_joy",
-      "comments": 2169,
-      "description": "🪽",
-      "likes": 517122,
+      "author": "uni_oficial",
+      "comments": 4,
+      "description": 
+"#OrgulloUNI | 🏆 Primer puesto para estudiantes UNI en IDEATECH
+
+Alexandra Peralta, de Ingeniería de Sistemas (FIIS), y Kevin Pinto, de Ingeniería de Telecomunicaciones (FIEE), lograron el primer puesto en la categoría Universidades de IDEATECH, iniciativa del Women in Technology Council desarrollada en el marco del Women in Technology Summit LATAM 2026.
+
+Junto a su equipo, presentaron HEROW, una propuesta que busca ayudar a jóvenes, especialmente mujeres, a reconocer sus talentos, explorar caminos profesionales y conectar sus habilidades con oportunidades reales.
+
+🥇 Este reconocimiento destaca el talento, la creatividad y la capacidad de nuestros estudiantes para llevar una propuesta desarrollada desde la UNI a un espacio internacional y competir junto a talento universitario de Latinoamérica.
+
+🙌 ¡Felicitaciones, Alexandra y Kevin! Este logro también es motivo de orgullo para nuestra comunidad UNI.
+
+#TalentoUNI #InnovaciónUNI #ComunidadUNI"
+,
+      "likes": 367,
       "platform": "instagram",
-      "thumbnail": "https://instagram.fjog8-1.fna.fbcdn.net/v/t51.2885-15/498698649_18121949554466999_5715260499704601099_n.jpg",
-      "timestamp": 1747842451,
-      "title": "🪽",
+      "thumbnail": "https://scontent.cdninstagram.com/v/t39.30808-6/834392759_1445392894351881_5380248374502743913_n.jpg",
+      "timestamp": 1790964017,
+      "title": 
+"#OrgulloUNI | 🏆 Primer puesto para estudiantes UNI en IDEATECH
+
+Alexandra Peralta, de Ingeniería de Sistemas (FIIS), y Kevin Pinto, de Ingeniería de Telecomunicaciones (FIEE), lograron el primer puesto en la categoría Universidades de IDEATECH, iniciativa del Women in Technology Council desarrollada en el marco del Women in Technology Summit LATAM 2026.
+
+Junto a su equipo, presentaron HEROW, una propuesta que busca ayudar a jóvenes, especialmente mujeres, a reconocer sus talentos, explorar caminos profesionales y conectar sus habilidades con oportunidades reales.
+
+🥇 Este reconocimiento destaca el talento, la creatividad y la capacidad de nuestros estudiantes para llevar una propuesta desarrollada desde la UNI a un espacio internacional y competir junto a talento universitario de Latinoamérica.
+
+🙌 ¡Felicitaciones, Alexandra y Kevin! Este logro también es motivo de orgullo para nuestra comunidad UNI.
+
+#TalentoUNI #InnovaciónUNI #ComunidadUNI"
+,
     },
     "urls": [
       {
-        "filename": "instagram-DJ69JfcSGmL-1.jpg",
+        "filename": "instagram-DeAFAiLjZkk-1.jpg",
         "type": "image",
-        "url": "https://instagram.fjog8-1.fna.fbcdn.net/v/t51.2885-15/498698649_18121949554466999_5715260499704601099_n.jpg",
+        "url": "https://instagram.flim28-2.fna.fbcdn.net/v/t39.30808-6/834392759_1445392894351881_5380248374502743913_n.jpg",
       },
       {
-        "filename": "instagram-DJ69JfcSGmL-2.jpg",
+        "filename": "instagram-DeAFAiLjZkk-2.jpg",
         "type": "image",
-        "url": "https://instagram.fjog8-1.fna.fbcdn.net/v/t51.2885-15/500115018_18121949563466999_6570406411815023586_n.jpg",
+        "url": "https://instagram.flim33-1.fna.fbcdn.net/v/t39.30808-6/825351630_1445392897685214_3718910234207002382_n.jpg",
       },
       {
-        "filename": "instagram-DJ69JfcSGmL-3.jpg",
+        "filename": "instagram-DeAFAiLjZkk-3.jpg",
         "type": "image",
-        "url": "https://instagram.fjog8-1.fna.fbcdn.net/v/t51.2885-15/499448379_18121949572466999_174797400505815203_n.jpg",
+        "url": "https://instagram.flim28-2.fna.fbcdn.net/v/t39.30808-6/830575060_1445392901018547_4163533045875602641_n.jpg",
+      },
+    ],
+  },
+}
+`;
+
+exports[`instagram collab_carousel 1`] = `
+{
+  "error": undefined,
+  "ok": true,
+  "result": {
+    "headers": {
+      "Referer": "https://www.instagram.com/",
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36",
+    },
+    "meta": {
+      "author": "ceculturaluni",
+      "comments": 0,
+      "description": 
+"🌿✨ ¡Así vivimos nuestro Paseo de Integración 2026! ✨🌿
+
+Un día para salir de la rutina, compartir, conocernos y, sobre todo, fortalecer los lazos que nos unen como Elencos Culturales de la UNI. 💛❤️
+
+El pasado domingo 27 de septiembre, nos reunimos para disfrutar de una jornada llena de alegría, juegos, dinámicas y mucha energía en el Club Campestre “Las Retamas”. 🏞️🎶
+
+Más que un paseo, fue una oportunidad para compartir nuevas experiencias y seguir construyendo una comunidad donde el arte y la cultura nos unen. 🤝✨
+
+Porque detrás de cada presentación hay personas, historias y una gran familia cultural. ❤️
+
+📸 Les compartimos la primera parte de las fotografías de este día.
+
+#CentroCulturalUNI #ElencosCulturalesUNI #PaseoDeIntegración2026 #CulturaUNI #SomosUNI MásArteMásCienciaMásCultura"
+,
+      "likes": 526,
+      "platform": "instagram",
+      "thumbnail": "https://scontent.cdninstagram.com/v/t51.82787-15/832777556_18379262587233172_1009159243376536849_n.jpg",
+      "timestamp": 1791046802,
+      "title": 
+"🌿✨ ¡Así vivimos nuestro Paseo de Integración 2026! ✨🌿
+
+Un día para salir de la rutina, compartir, conocernos y, sobre todo, fortalecer los lazos que nos unen como Elencos Culturales de la UNI. 💛❤️
+
+El pasado domingo 27 de septiembre, nos reunimos para disfrutar de una jornada llena de alegría, juegos, dinámicas y mucha energía en el Club Campestre “Las Retamas”. 🏞️🎶
+
+Más que un paseo, fue una oportunidad para compartir nuevas experiencias y seguir construyendo una comunidad donde el arte y la cultura nos unen. 🤝✨
+
+Porque detrás de cada presentación hay personas, historias y una gran familia cultural. ❤️
+
+📸 Les compartimos la primera parte de las fotografías de este día.
+
+#CentroCulturalUNI #ElencosCulturalesUNI #PaseoDeIntegración2026 #CulturaUNI #SomosUNI MásArteMásCienciaMásCultura"
+,
+    },
+    "urls": [
+      {
+        "filename": "instagram-DeCi8E3nBjB-1.jpg",
+        "type": "image",
+        "url": "https://instagram.flim28-2.fna.fbcdn.net/v/t51.82787-15/832777556_18379262587233172_1009159243376536849_n.jpg",
       },
       {
-        "filename": "instagram-DJ69JfcSGmL-4.jpg",
+        "filename": "instagram-DeCi8E3nBjB-2.jpg",
         "type": "image",
-        "url": "https://instagram.fjog8-1.fna.fbcdn.net/v/t51.2885-15/499479357_18121949581466999_2251744631086776048_n.jpg",
+        "url": "https://instagram.flim33-1.fna.fbcdn.net/v/t51.82787-15/830632347_18379262650233172_3820818906668777679_n.jpg",
       },
       {
-        "filename": "instagram-DJ69JfcSGmL-5.jpg",
+        "filename": "instagram-DeCi8E3nBjB-3.jpg",
         "type": "image",
-        "url": "https://instagram.fjog8-1.fna.fbcdn.net/v/t51.2885-15/499682695_18121949599466999_5797874033434251691_n.jpg",
+        "url": "https://instagram.flim38-1.fna.fbcdn.net/v/t51.82787-15/833297911_18379262596233172_1327140621872502417_n.jpg",
       },
       {
-        "filename": "instagram-DJ69JfcSGmL-6.jpg",
+        "filename": "instagram-DeCi8E3nBjB-4.jpg",
         "type": "image",
-        "url": "https://instagram.fjog8-1.fna.fbcdn.net/v/t51.2885-15/499406353_18121949596466999_3932274473304057352_n.jpg",
+        "url": "https://instagram.flim28-2.fna.fbcdn.net/v/t51.82787-15/834767445_18379262611233172_7302181881187917535_n.jpg",
       },
       {
-        "filename": "instagram-DJ69JfcSGmL-7.jpg",
+        "filename": "instagram-DeCi8E3nBjB-5.jpg",
         "type": "image",
-        "url": "https://instagram.fjog8-1.fna.fbcdn.net/v/t51.2885-15/499546452_18121949608466999_6367571451693114436_n.jpg",
+        "url": "https://instagram.flim33-1.fna.fbcdn.net/v/t51.82787-15/832633570_18379262620233172_5690795666516968701_n.jpg",
+      },
+      {
+        "filename": "instagram-DeCi8E3nBjB-6.jpg",
+        "type": "image",
+        "url": "https://instagram.flim33-1.fna.fbcdn.net/v/t51.82787-15/836458661_18379262662233172_7191462041139996748_n.jpg",
+      },
+      {
+        "filename": "instagram-DeCi8E3nBjB-7.jpg",
+        "type": "image",
+        "url": "https://instagram.flim38-1.fna.fbcdn.net/v/t51.82787-15/831400024_18379262653233172_688618286960859846_n.jpg",
+      },
+      {
+        "filename": "instagram-DeCi8E3nBjB-8.jpg",
+        "type": "image",
+        "url": "https://instagram.flim38-1.fna.fbcdn.net/v/t51.82787-15/836259715_18379262647233172_1731049767781302068_n.jpg",
+      },
+      {
+        "filename": "instagram-DeCi8E3nBjB-9.jpg",
+        "type": "image",
+        "url": "https://instagram.flim38-1.fna.fbcdn.net/v/t51.82787-15/834084370_18379262674233172_5998292205963994606_n.jpg",
+      },
+      {
+        "filename": "instagram-DeCi8E3nBjB-10.jpg",
+        "type": "image",
+        "url": "https://instagram.flim38-1.fna.fbcdn.net/v/t51.82787-15/831505046_18379262695233172_4738242881554022675_n.jpg",
+      },
+      {
+        "filename": "instagram-DeCi8E3nBjB-11.jpg",
+        "type": "image",
+        "url": "https://instagram.flim28-1.fna.fbcdn.net/v/t51.82787-15/831354619_18379262791233172_4751716854639116086_n.jpg",
+      },
+      {
+        "filename": "instagram-DeCi8E3nBjB-12.jpg",
+        "type": "image",
+        "url": "https://instagram.flim38-1.fna.fbcdn.net/v/t51.82787-15/831324443_18379262806233172_818941982498523357_n.jpg",
+      },
+      {
+        "filename": "instagram-DeCi8E3nBjB-13.jpg",
+        "type": "image",
+        "url": "https://instagram.flim38-1.fna.fbcdn.net/v/t51.82787-15/833573833_18379262821233172_9180134015479352674_n.jpg",
+      },
+      {
+        "filename": "instagram-DeCi8E3nBjB-14.jpg",
+        "type": "image",
+        "url": "https://instagram.flim38-1.fna.fbcdn.net/v/t51.82787-15/835215952_18379262860233172_9037565020342757350_n.jpg",
+      },
+      {
+        "filename": "instagram-DeCi8E3nBjB-15.jpg",
+        "type": "image",
+        "url": "https://instagram.flim33-1.fna.fbcdn.net/v/t51.82787-15/834677950_18379262914233172_8846382717226594813_n.jpg",
+      },
+      {
+        "filename": "instagram-DeCi8E3nBjB-16.jpg",
+        "type": "image",
+        "url": "https://instagram.flim28-1.fna.fbcdn.net/v/t51.82787-15/833653751_18379262869233172_6489293744014297702_n.jpg",
+      },
+      {
+        "filename": "instagram-DeCi8E3nBjB-17.jpg",
+        "type": "image",
+        "url": "https://instagram.flim38-1.fna.fbcdn.net/v/t51.82787-15/834500440_18379262866233172_3371692179776501279_n.jpg",
+      },
+      {
+        "filename": "instagram-DeCi8E3nBjB-18.jpg",
+        "type": "image",
+        "url": "https://instagram.flim28-1.fna.fbcdn.net/v/t51.82787-15/832633575_18379262896233172_8267755109675323364_n.jpg",
+      },
+      {
+        "filename": "instagram-DeCi8E3nBjB-19.jpg",
+        "type": "image",
+        "url": "https://instagram.flim38-1.fna.fbcdn.net/v/t51.82787-15/836501163_18379262893233172_3255808160402662774_n.jpg",
+      },
+      {
+        "filename": "instagram-DeCi8E3nBjB-20.jpg",
+        "type": "image",
+        "url": "https://instagram.flim38-1.fna.fbcdn.net/v/t51.82787-15/832777563_18379262899233172_7832092208778253249_n.jpg",
       },
     ],
   },
@@ -194,23 +367,101 @@ exports[`instagram single_image 1`] = `
   "result": {
     "headers": {
       "Referer": "https://www.instagram.com/",
-      "User-Agent": "Instagram 309.0.0.15.109 Android (31/12; 480dpi; 1080x2228; samsung; SM-G996B; t2s; qcom; en_US; 544099989)",
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36",
     },
     "meta": {
-      "author": "natgeo",
-      "comments": 207,
-      "description": "Photo by Javier Aznar @javier_aznar_photography I Couch’s spadefoot toads are remarkable desert amphibians known for their explosive breeding strategy. After heavy summer rains, they emerge from underground burrows to breed in ephemeral ponds that may last only a few days. Females deposit eggs that hatch rapidly, and the tadpoles develop at exceptional speed to complete metamorphosis before the ponds dry. This accelerated development is a well‑documented adaptation among spadefoot toads living in highly unpredictable desert environments. Research on related spadefoot species shows that tadpoles can dramatically speed up growth and metamorphosis in response to declining water levels, a crucial survival mechanism in temporary ponds.",
-      "likes": 53403,
+      "author": "gft.unmsm",
+      "comments": 0,
+      "description": 
+"¡Continuamos con la segunda charla de los Peruvian Theoretical Physics Seminars 2026-2 (Peruvian TPS 2026)!
+
+Título: Análisis de la interacción de CDM y energía oscura en modelos 𝜔CDM
+
+Speaker: Nelson Mechán (GRACCOC, Universidad Nacional de Trujillo, Perú)
+
+🗓️ Fecha: Miércoles 2 de Setiembre de 2026
+🗓️ Horario: 16:00 pm (Hora de Lima, Perú)
+📌 Ubicación (En línea): https://meet.google.com/nft-upct-ddv
+
+🔗 Más información de los Peruvian TPS 2026: https://sites.google.com/view/peruviantps2026/home
+
+Inscripciones al mailing list para asistir a los seminarios: https://forms.gle/TRYX74dVv9J9jtmPA
+
+¡Comparte esta publicación y ayuda a difundir el conocimiento científico en nuestro país!"
+,
+      "likes": 15,
       "platform": "instagram",
-      "thumbnail": "https://instagram.fjog8-1.fna.fbcdn.net/v/t51.82787-15/627580743_18625670917019133_6283069350069567563_n.jpg",
-      "timestamp": 1770483601,
-      "title": "Photo by Javier Aznar @javier_aznar_photography I Couch’s spadefoot toads are remarkable desert amphibians known for their explosive breeding strategy. After heavy summer rains, they emerge from underground burrows to breed in ephemeral ponds that may last only a few days. Females deposit eggs that hatch rapidly, and the tadpoles develop at exceptional speed to complete metamorphosis before the ponds dry. This accelerated development is a well‑documented adaptation among spadefoot toads living in highly unpredictable desert environments. Research on related spadefoot species shows that tadpoles can dramatically speed up growth and metamorphosis in response to declining water levels, a crucial survival mechanism in temporary ponds.",
+      "thumbnail": "https://scontent.cdninstagram.com/v/t51.82787-15/785776041_17986239804102492_589192130445848825_n.webp",
+      "timestamp": 1787694975,
+      "title": 
+"¡Continuamos con la segunda charla de los Peruvian Theoretical Physics Seminars 2026-2 (Peruvian TPS 2026)!
+
+Título: Análisis de la interacción de CDM y energía oscura en modelos 𝜔CDM
+
+Speaker: Nelson Mechán (GRACCOC, Universidad Nacional de Trujillo, Perú)
+
+🗓️ Fecha: Miércoles 2 de Setiembre de 2026
+🗓️ Horario: 16:00 pm (Hora de Lima, Perú)
+📌 Ubicación (En línea): https://meet.google.com/nft-upct-ddv
+
+🔗 Más información de los Peruvian TPS 2026: https://sites.google.com/view/peruviantps2026/home
+
+Inscripciones al mailing list para asistir a los seminarios: https://forms.gle/TRYX74dVv9J9jtmPA
+
+¡Comparte esta publicación y ayuda a difundir el conocimiento científico en nuestro país!"
+,
     },
     "urls": [
       {
-        "filename": "instagram-DUbb_owkx0I.jpg",
+        "filename": "instagram-DcepzLhTqxC.jpg",
         "type": "image",
-        "url": "https://instagram.fjog8-1.fna.fbcdn.net/v/t51.82787-15/627580743_18625670917019133_6283069350069567563_n.jpg",
+        "url": "https://instagram.flim28-2.fna.fbcdn.net/v/t51.82787-15/785776041_17986239804102492_589192130445848825_n.webp",
+      },
+    ],
+  },
+}
+`;
+
+exports[`instagram single_image_2 1`] = `
+{
+  "error": undefined,
+  "ok": true,
+  "result": {
+    "headers": {
+      "Referer": "https://www.instagram.com/",
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36",
+    },
+    "meta": {
+      "author": "gft.unmsm",
+      "comments": 3,
+      "description": 
+"Invitación para el Día Internacional de la Cuántica.
+
+El GFT complace invitar a la comunidad, a este evento sobre computación cuántica.
+
+Entrada libre. 
+
+#fisica #quantum #unmsm"
+,
+      "likes": 56,
+      "platform": "instagram",
+      "thumbnail": "https://scontent.cdninstagram.com/v/t51.82787-15/671181528_17963043627102492_5784499939890738216_n.webp",
+      "timestamp": 1776721186,
+      "title": 
+"Invitación para el Día Internacional de la Cuántica.
+
+El GFT complace invitar a la comunidad, a este evento sobre computación cuántica.
+
+Entrada libre. 
+
+#fisica #quantum #unmsm"
+,
+    },
+    "urls": [
+      {
+        "filename": "instagram-DXXm9hhEe7s.jpg",
+        "type": "image",
+        "url": "https://instagram.flim38-1.fna.fbcdn.net/v/t51.82787-15/671181528_17963043627102492_5784499939890738216_n.webp",
       },
     ],
   },

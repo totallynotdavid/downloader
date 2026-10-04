@@ -9,9 +9,11 @@ export const SAMPLES = {
       "https://www.reddit.com/r/neverchangejapan/comments/12spx82/ningen_isu_ringo_no_namida_a_metal_song_about_an/",
   },
   instagram: {
-    video_reel: "https://www.instagram.com/p/DQjE79kETsb/",
-    carousel: "https://www.instagram.com/p/DJ69JfcSGmL/",
-    single_image: "https://www.instagram.com/p/DUbb_owkx0I/",
+    video_reel: "https://www.instagram.com/reel/DeAL9c0FNDL/",
+    carousel: "https://www.instagram.com/p/DeAFAiLjZkk/",
+    collab_carousel: "https://www.instagram.com/p/DeCi8E3nBjB/",
+    single_image: "https://www.instagram.com/p/DcepzLhTqxC/",
+    single_image_2: "https://www.instagram.com/p/DXXm9hhEe7s/",
   },
   twitter: {
     video: "https://x.com/_DaveMullins/status/1129038424130899969",
@@ -39,5 +41,21 @@ export const SAMPLES = {
   facebook: {
     video: "https://www.facebook.com/1551UNMSM/videos/2126724314377208",
     video_short_url: "https://www.facebook.com/share/v/Hr3BZV9JjaKPy28P/",
+  },
+};
+
+// Each account fixture runs for the configured number of pages. `detail` resolves
+// every post on those pages.
+export type AccountSample = {
+  username: string;
+  pages: number;
+  detail?: boolean;
+};
+
+export const ACCOUNTS: Record<string, Record<string, AccountSample>> = {
+  instagram: {
+    // uni_oficial's grid mixes in posts authored by other accounts.
+    collabs: { username: "uni_oficial", pages: 2 },
+    images: { username: "gft.unmsm", pages: 1, detail: true },
   },
 };
