@@ -28,6 +28,31 @@ const response = await fetch(result.urls[0].url, {
 });
 ```
 
+## Instagram accounts
+
+List an account's recent public posts, 12 per page, newest first. No login.
+
+```typescript
+import { listInstagramPosts } from "@totallynotdavid/downloader";
+
+let page = await listInstagramPosts("instagram");
+for (const post of page.posts) console.log(post.shortcode, post.author);
+
+if (page.cursor)
+  page = await listInstagramPosts("instagram", { cursor: page.cursor });
+```
+
+Each post has `shortcode`, `url`, `author`, `caption`, `type` (`image`, `video`
+or `carousel`) and `thumbnail`. `author` is the post's first author, so a collab
+post on this account's grid can name another account.
+
+The grid carries no media URLs or timestamp. Pass `detail: true` to fill `media`
+(full resolution, same items as `resolve`) and `timestamp` (unix seconds). It
+costs one extra request per post.
+
+Instagram blocks datacenter IPs far more often than residential ones. From a
+server, expect `BlockedError` and route requests through a residential proxy.
+
 ## Reference
 
 <details>
@@ -50,14 +75,18 @@ Default timeout is 10 seconds.
 <summary>Errors</summary>
 
 - `PlatformNotSupportedError`: URL hostname not recognized
-- `NetworkError`: request failed (timeout, DNS, HTTP error)
-- `ParseError`: platform response changed, extractor needs update
+- `NetworkError`: request failed (timeout, DNS, HTTP error, not found)
+- `BlockedError`: a `NetworkError` for when the platform refuses anonymous
+  access: redirect to login, rate limit, IP block, or a login-only post
+- `ParseError`: platform response changed or came back empty, extractor needs
+  update
 
 ```typescript
 import {
   resolve,
   PlatformNotSupportedError,
   NetworkError,
+  BlockedError,
   ParseError,
 } from "@totallynotdavid/downloader";
 ```

@@ -15,6 +15,7 @@ bun run test            # offline gate: replay cassettes, assert snapshots
 bun run test:update     # accept intentional snapshot changes
 bun run eval [platform] # human-readable dump of every fixture's media + meta
 bun run record [platform]  # refresh cassettes from live platforms (maintainers)
+bun run eval:live       # hit Instagram live, exit non-zero on any failure
 ```
 
 ## The two signals
@@ -60,6 +61,17 @@ live on a cassette miss, so delete a cassette to force its re-fetch. Configure
 `GEONODE_USERNAME` / `GEONODE_PASSWORD` (the `record` script loads it via
 `--env-file=.env`). Each run pins one sticky residential exit so a multi-request
 flow looks like one user.
+
+`EVAL_PROXY_URL=direct` records without a proxy, for a host whose own IP is not
+flagged. Instagram answers anonymous requests from such a host, and blocks
+datacenter IPs.
+
+`bun run eval:live` is the check for a stale Instagram query id: it runs every
+Instagram fixture and account listing against the live site and fails loudly.
+
+Recording drops response `Set-Cookie` for every host except `reddit.com`, whose
+extractor reads its anonymous priming cookie (`COOKIE_HOSTS` in
+`support/transport.ts`).
 
 Reddit is the exception: its `loid` cookie-prime works on a direct connection
 but the residential exits are 403-blocked, so Reddit must be recorded without
