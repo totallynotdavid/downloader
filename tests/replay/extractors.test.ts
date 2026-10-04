@@ -3,7 +3,7 @@
 //
 // Snapshots are strict: frozen cassette bytes in, exact result out, so the
 // .snap diff is the reviewable artifact for any parser change. Live drift is
-// caught separately by `bun run record` (see tests/readme.md).
+// caught by recording against the platform.
 
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { SAMPLES } from "../fixtures.ts";

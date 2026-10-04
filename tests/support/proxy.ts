@@ -1,14 +1,10 @@
 // Proxy resolution is only called by record mode. Replay must not touch the
 // network.
 //
-// Precedence:
-//   1. EVAL_PROXY_URL: full "http://user:pass@host:port" (explicit, wins).
-//   2. GEONODE_USERNAME/PASSWORD -> assembled into the Geonode residential
-//      gateway at a sticky exit port.
-//   3. EVAL_PROXY_URL=direct: no proxy for a host with a clean residential IP.
-//      A flagged or datacenter IP records block pages instead of responses.
-// Recording without any of them is a hard error: a direct exit gets
+// Recording with no proxy setting is a hard error: a direct exit gets
 // rate-limited and IP-flagged, which would only produce poisoned cassettes.
+// Set EVAL_PROXY_URL=direct only for a host with a clean residential IP.
+// A flagged or datacenter IP records block pages instead of responses.
 
 import { env } from "./env.ts";
 
