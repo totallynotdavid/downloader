@@ -52,6 +52,7 @@ instagram: add account post listing
 ## Where to read next
 
 - [Documentation index](../docs/readme.md)
+- [Architecture](../architecture.md)
 - [Writing an extractor](../docs/extractors.md)
 - [Tests and cassettes](../docs/testing.md)
 - [Live eval](../docs/eval.md)

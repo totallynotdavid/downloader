@@ -1,8 +1,7 @@
 # Using the library
 
-`resolve` takes a post URL and returns the direct media URLs, the headers needed
-to fetch them, and the post's metadata. It makes plain HTTP requests and keeps
-no state between calls.
+`resolve(url, options?)` returns direct media URLs, the headers needed to fetch
+them, and metadata for one public post. It does not download the media.
 
 ```typescript
 import { resolve } from "@totallynotdavid/downloader";
@@ -13,7 +12,7 @@ console.log(result.meta.author, result.urls.length);
 
 ## The result
 
-The types live in [`src/types.ts`](../src/types.ts).
+The public types are declared in [`src/types.ts`](../src/types.ts).
 
 ```typescript
 type MediaResult = {
@@ -41,22 +40,18 @@ type MediaItem = {
 };
 ```
 
-- `title`, `author` and `platform` are always set.
-- The other `meta` fields are set only when the platform returns them.
-- `timestamp` is Unix seconds.
-- `filename` is a suggested name such as `instagram-DcepzLhTqxC.jpg`.
+`title`, `author`, and `platform` are always present. Other metadata fields are
+present only when the platform returns them. `timestamp` is Unix time in
+seconds. `filename` is a suggested name, not a guarantee about the media format.
 
-One post can give several items:
-
-- A gallery or carousel gives one item per image.
-- Facebook gives its video track and audio track as separate items.
-- YouTube adds a separate video item and audio item when a wider video-only
-  stream exists than the combined one. Merge them yourself, for example with
-  ffmpeg.
+A post can return more than one item. Galleries and carousels return one item
+per image. Facebook can return separate video and audio items. YouTube can
+return separate video-only and audio-only items when no single stream has the
+best video quality.
 
 ## Download the media
 
-`resolve` does not download anything. Fetch each URL and send `result.headers`.
+Pass `result.headers` to each media request.
 
 ```typescript
 import { writeFile } from "node:fs/promises";
@@ -71,51 +66,44 @@ for (const item of result.urls) {
 }
 ```
 
-Instagram, TikTok and Facebook return headers. The other platforms return an
-empty object.
-
 ## Options
 
 ```typescript
 await resolve(url, {
-  timeout: 15000,
+  timeout: 15_000,
   headers: { "Accept-Language": "es-PE" },
 });
 ```
 
-| Option    | Meaning                                                              |
-| --------- | -------------------------------------------------------------------- |
-| `timeout` | Milliseconds per request. Default 10000. YouTube defaults to 15000.  |
-| `headers` | Extra headers for every request the extractor makes. See the caveat. |
+| Option    | Meaning                                                                                                                       |
+| --------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `timeout` | Milliseconds allowed for each request. The default is 10,000. YouTube uses 15,000 for its requests when no value is supplied. |
+| `headers` | Additional request headers. Extractors that require an app-specific user agent may override it.                               |
 
-An extractor that imitates an app client keeps its own `User-Agent`. YouTube
-player requests ignore a `User-Agent` set here.
-
-A post can take several requests. `timeout` applies to each one, not to the
-whole call.
+Some posts require several requests. `timeout` applies to each request, not to
+the complete `resolve` call.
 
 ## Supported URLs
 
-The router matches the hostname exactly after it drops a leading `www.`. Only
-Pinterest also matches subdomains. Any other hostname, including `m.youtube.com`
-and `vm.tiktok.com`, rejects with `PlatformNotSupportedError`. The routing table
-is [`src/router.ts`](../src/router.ts).
+The router removes a leading `www.` and matches the remaining hostname. It also
+accepts any Pinterest subdomain. Other hostnames must match the table.
 
-| Platform  | Hostnames                          | URL forms                                                       |
-| --------- | ---------------------------------- | --------------------------------------------------------------- |
-| Instagram | `instagram.com`                    | `/p/<code>/`, `/reel/<code>/`, `/tv/<code>/`                    |
-| TikTok    | `tiktok.com`                       | `/@user/video/<id>`, `/@user/photo/<id>`                        |
-| Twitter/X | `twitter.com`, `x.com`             | `/<user>/status/<id>`                                           |
-| YouTube   | `youtube.com`, `youtu.be`          | `/watch?v=<id>`, `/shorts/<id>`, `/embed/<id>`, `youtu.be/<id>` |
-| Reddit    | `reddit.com`, `redd.it`            | The post permalink                                              |
-| Facebook  | `facebook.com`, `fb.com`           | Video, photo and share URLs                                     |
-| Imgur     | `imgur.com`, `i.imgur.com`         | `/<id>`, `/a/<id>`, `/gallery/<id>`, `i.imgur.com/<id>.<ext>`   |
-| Pinterest | `pinterest.com`, `*.pinterest.com` | `/pin/<id>/`                                                    |
+| Platform  | Hostnames                          | URL examples                                                             |
+| --------- | ---------------------------------- | ------------------------------------------------------------------------ |
+| Instagram | `instagram.com`                    | `/p/<code>/`, `/reel/<code>/`, `/tv/<code>/`                             |
+| TikTok    | `tiktok.com`                       | `/@user/video/<id>`, `/@user/photo/<id>`                                 |
+| Twitter/X | `twitter.com`, `x.com`             | `/<user>/status/<id>`                                                    |
+| YouTube   | `youtube.com`, `youtu.be`          | `/watch?v=<id>`, `/shorts/<id>`, `/embed/<id>`, or a `youtu.be/<id>` URL |
+| Reddit    | `reddit.com`, `redd.it`            | A post permalink                                                         |
+| Facebook  | `facebook.com`, `fb.com`           | A video, photo, or share URL                                             |
+| Imgur     | `imgur.com`, `i.imgur.com`         | An image, album, or gallery URL                                          |
+| Pinterest | `pinterest.com`, `*.pinterest.com` | `/pin/<id>/` or `/pin/<slug>--<id>/`                                     |
 
-`resolve` takes a post, not an account. An Instagram account URL rejects with a
-`ParseError`. To list an account's posts, see [Instagram](./instagram.md).
+`resolve` accepts a post URL, not an account URL. Use
+[`listInstagramPosts`](./instagram.md#list-an-accounts-posts) for Instagram
+account pages.
 
-## Errors
+## Request failures
 
-Every failure is one of four error classes, or a `TypeError` for a string that
-is not a URL. See [Errors](./errors.md).
+The call can reject with a `TypeError` for an invalid URL, or with one of the
+exported error classes. See [Errors](./errors.md) for handling them.

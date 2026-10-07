@@ -11,6 +11,7 @@ not copy its rules here.
 - Documentation index: [docs/readme.md](../docs/readme.md)
 - Adding or changing an extractor: [docs/extractors.md](../docs/extractors.md)
 - Tests, cassettes and recording: [docs/testing.md](../docs/testing.md)
+- Fixture output and live checks: [docs/eval.md](../docs/eval.md)
 - Error types: [docs/errors.md](../docs/errors.md)
 - Instagram: [docs/instagram.md](../docs/instagram.md)
 

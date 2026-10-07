@@ -1,8 +1,8 @@
 # Writing an extractor
 
-An extractor turns one platform's post URL into a `MediaResult`. There is one
-file per platform in [`src/extractors/`](../src/extractors/). The router in
-[`src/router.ts`](../src/router.ts) picks the extractor by hostname.
+An extractor turns one platform's post URL into a `MediaResult`. Each platform
+has a module in [`src/extractors/`](../src/extractors/), and
+[`src/router.ts`](../src/router.ts) selects one by hostname.
 
 ```text
 resolve(url) -> route(url) -> extractor(url, options) -> MediaResult
@@ -11,30 +11,26 @@ resolve(url) -> route(url) -> extractor(url, options) -> MediaResult
 ## Add an extractor
 
 1. Create `src/extractors/<platform>.ts`.
-2. Register its hostnames in `src/router.ts`.
-3. Add fixtures and record cassettes. See [Tests and cassettes](./testing.md).
-4. Document the platform in [Platforms](./platforms.md) and add a row to the
-   table in [Using the library](./usage.md#supported-urls).
+2. Register each supported hostname in `src/router.ts`.
+3. Add fixtures and cassettes. See [Tests and cassettes](./testing.md).
+4. Add the URL forms to [Using the library](./usage.md#supported-urls).
 
-### The file
+## Extractor shape
 
-An extractor default-exports one function.
+An extractor default-exports a function that accepts the URL and
+`ResolveOptions`.
 
 ```typescript
 import { http_get } from "../http.ts";
 import { NetworkError, ParseError } from "../errors.ts";
 import type { MediaResult, ResolveOptions } from "../types.ts";
 
-const ID_REGEX = /\/post\/(\d+)/;
-
 export default async function resolve(
   url: string,
   options: ResolveOptions,
 ): Promise<MediaResult> {
-  const id = url.match(ID_REGEX)?.[1];
-  if (!id) {
-    throw new ParseError("Could not parse post id", "example");
-  }
+  const id = url.match(/\/post\/(\d+)/)?.[1];
+  if (!id) throw new ParseError("Could not parse post id", "example");
 
   try {
     const response = await http_get(
@@ -45,43 +41,33 @@ export default async function resolve(
       video_url?: string;
       title?: string;
       author?: string;
-      likes?: number;
     };
 
-    if (!data.video_url) {
-      throw new ParseError("No media found", "example");
-    }
-
-    const meta: MediaResult["meta"] = {
-      title: data.title || "Example post",
-      author: data.author || "Unknown",
-      platform: "example",
-    };
-    if (data.likes !== undefined) meta.likes = data.likes;
+    if (!data.video_url) throw new ParseError("No media found", "example");
 
     return {
       urls: [
         { type: "video", url: data.video_url, filename: `example-${id}.mp4` },
       ],
       headers: {},
-      meta,
+      meta: {
+        title: data.title || "Example post",
+        author: data.author || "Unknown",
+        platform: "example",
+      },
     };
-  } catch (e: unknown) {
-    if (e instanceof NetworkError || e instanceof ParseError) throw e;
-    const message = e instanceof Error ? e.message : "Unknown error";
+  } catch (error: unknown) {
+    if (error instanceof NetworkError || error instanceof ParseError) {
+      throw error;
+    }
+    const message = error instanceof Error ? error.message : "Unknown error";
     throw new ParseError(message, "example");
   }
 }
 ```
 
-### The router
-
-Add one entry per hostname to `EXTRACTORS` in
-[`src/router.ts`](../src/router.ts). Write the hostname without `www.`, because
-the router drops it before the lookup. The sample is an excerpt of that file.
-`ExtractorFn` is the type declared there, so it needs no import.
-`./extractors/example.ts` is a placeholder for the file you create in the steps
-above.
+Register the extractor with the hostname written without `www.`. The router
+removes that prefix before it looks up the hostname.
 
 ```typescript
 import example from "./extractors/example.ts";
@@ -93,29 +79,21 @@ const EXTRACTORS = new Map<string, ExtractorFn>([
 ]);
 ```
 
-## Rules
+## Contracts
 
-- **Requests.** Use `http_get` and `http_post` from
-  [`src/http.ts`](../src/http.ts). They apply the timeout and a default
-  `User-Agent`, and they turn a non-2xx status into a `NetworkError` with
-  `statusCode`. Pass `options` through so the caller's `timeout` and `headers`
-  apply.
-- **Errors.** Throw `ParseError` with the platform name when the URL or the
-  response is unusable. Rethrow `NetworkError` and `ParseError` as they are, and
-  wrap anything else in a `ParseError`, as the example does. Throw
-  `BlockedError` only when the platform refuses anonymous access. See
-  [Errors](./errors.md).
-- **Filenames.** Use `<platform>-<id>.<ext>`. A post with several items adds an
-  index, `-1`, `-2`. Separate tracks use `-video` and `-audio`. Facebook is the
-  exception and uses the `fb-` prefix.
-- **Headers.** Put the headers the CDN needs for the download in
-  `result.headers`. Use an empty object when it needs none.
-- **Optional metadata.** The tsconfig sets `exactOptionalPropertyTypes`, so an
-  optional field cannot hold `undefined`. Assign each optional `meta` field only
-  when the platform returned a value, as the example does with `likes`. The
-  field names are in [`src/types.ts`](../src/types.ts).
-- **Independence.** An extractor for one platform does not import another
-  platform's extractor. Only the Instagram files import each other, because they
-  share one API. See [Instagram](./instagram.md).
+- Use `http_get` and `http_post` from [`src/http.ts`](../src/http.ts). Pass
+  `options` through so the caller's timeout and headers apply.
+- Throw `ParseError` with the platform name when the URL or response is not
+  usable. Rethrow `NetworkError` and `ParseError`; wrap other errors in a
+  `ParseError`.
+- Put CDN request headers in `result.headers`. Use `{}` when no headers are
+  required.
+- Use `<platform>-<id>.<ext>` filenames. Add `-1`, `-2` for additional media,
+  and `-video` or `-audio` for separate tracks. Facebook uses the `fb-` prefix.
+- Assign optional metadata only when the platform returned a value. The
+  `exactOptionalPropertyTypes` setting does not allow `undefined` values in
+  optional fields.
+- Keep platform extractors independent. The Instagram modules share their
+  GraphQL client and media parser.
 
 Code style is in [Contributing](../.github/CONTRIBUTING.md#code-style).

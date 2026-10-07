@@ -1,22 +1,14 @@
 # Documentation
 
-The library resolves social post URLs to direct media URLs. Start with the
-[README](../readme.md) for install and a first example.
+Start with the [README](../readme.md) for installation and the first working
+example.
 
-Use the library:
-
-- [Using the library](./usage.md): `resolve`, the result, options, and supported
-  URLs.
-- [Instagram](./instagram.md): the anonymous query, account listing, and
-  blocking.
-- [Errors](./errors.md): the four error classes and when each is thrown.
-
-Work on the library:
-
-- [Writing an extractor](./extractors.md): add a platform.
-- [Platforms](./platforms.md): what each extractor requests and reads.
-- [Tests and cassettes](./testing.md): replay tests, snapshots, and recording.
-- [Live eval](./eval.md): dump fixture results and check Instagram live.
-
-[Contributing](../.github/CONTRIBUTING.md) covers setup, checks, and commit
-rules.
+1. [Using the library](./usage.md) explains `resolve`, the result, options, and
+   supported URL forms.
+2. [Instagram](./instagram.md) explains post resolution, account listing, and
+   anonymous access.
+3. [Errors](./errors.md) explains the exported error classes and their fields.
+4. [Writing an extractor](./extractors.md) explains how to add a platform.
+5. [Tests and cassettes](./testing.md) explains replay, recording, and
+   snapshots.
+6. [Live eval](./eval.md) explains fixture output and live checks.
