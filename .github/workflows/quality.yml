@@ -21,12 +21,12 @@ jobs:
       contents: read
 
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v7.0.1
         with:
           persist-credentials: false
 
-      - uses: biomejs/setup-biome@21f9d12eb1adf00171b25b251de1539a153e416f # v2.7.1
+      - uses: biomejs/setup-biome@4c91541eaada48f67d7dbd7833600ce162b68f51 # v2.7.1
         with:
-          version: "2.5.2"
+          version: "2.5.15"
 
       - run: biome ci .
