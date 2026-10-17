@@ -9,7 +9,6 @@ const SHORTCODE_ALPHABET =
 type ImageVersions = { candidates?: Array<{ url?: string }> };
 
 export interface MediaNode {
-  pk?: string;
   code?: string;
   media_type?: number;
   product_type?: string;
