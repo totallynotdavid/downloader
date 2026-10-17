@@ -1,0 +1,46 @@
+name: ci
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - "master"
+  pull_request:
+    branches:
+      - "master"
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: jdx/mise-action@9b200bcecbfd6303e69a4a261b2e09e3757440a7 # v5.2.0
+
+      - run: mise run install
+
+      - run: mise run check
+
+  coverage:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: jdx/mise-action@9b200bcecbfd6303e69a4a261b2e09e3757440a7 # v5.2.0
+
+      - run: mise run install
+
+      - run: mise run test:coverage
+
+      - uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 #v7.1.1
+        with:
+          file: ./coverage/lcov.info
