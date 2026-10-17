@@ -8,10 +8,11 @@
   },
   "main": "dist/index.js",
   "devDependencies": {
+    "@biomejs/biome": "2.5.15",
     "@types/bun": "^1.4.2",
     "@types/node": "^26.6.5",
     "bunup": "^0.16.32",
-    "shx": "^0.4.0"
+    "typescript": "7.0.2"
   },
   "bugs": {
     "url": "https://github.com/totallynotdavid/downloader/issues"
@@ -34,20 +35,6 @@
     "downloader"
   ],
   "license": "MIT",
-  "scripts": {
-    "clean": "bun x shx rm -rf dist",
-    "format": "biome format --write . && bun x prettier \"**/*.{md,yml}\" --write --print-width=80 --prose-wrap=always",
-    "lint": "biome check .",
-    "typecheck": "bun x tsc -p tsconfig.json --noEmit",
-    "check": "bun run lint && bun run typecheck",
-    "build": "bun run check && bun x bunup",
-    "test": "bun test tests/replay",
-    "test:update": "bun test tests/replay --update-snapshots",
-    "eval": "bun scripts/eval.ts",
-    "eval:live": "bun scripts/eval.ts --live instagram",
-    "record": "bun --env-file=.env scripts/record.ts",
-    "prepublishOnly": "bun run clean && bun run build"
-  },
   "type": "module",
   "types": "dist/index.d.ts"
 }
