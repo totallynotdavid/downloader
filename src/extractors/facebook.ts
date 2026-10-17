@@ -6,15 +6,11 @@ const USER_AGENT =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36";
 
 function decode_unicode(text: string): string {
-  try {
-    return text
-      .replace(/\\u([\dA-Fa-f]{4})/g, (_, hex) =>
-        String.fromCharCode(Number.parseInt(hex, 16)),
-      )
-      .replace(/\\\//g, "/");
-  } catch {
-    return text;
-  }
+  return text
+    .replace(/\\u([\dA-Fa-f]{4})/g, (_, hex) =>
+      String.fromCharCode(Number.parseInt(hex, 16)),
+    )
+    .replace(/\\\//g, "/");
 }
 
 function extract_text(text: string, start: string, end: string): string {
@@ -97,10 +93,8 @@ export default async function resolve(
   options: ResolveOptions,
 ): Promise<MediaResult> {
   try {
-    const request_options: {
-      headers: Record<string, string>;
-      timeout?: number;
-    } = {
+    const response = await http_get(url, {
+      ...options,
       headers: {
         "User-Agent": USER_AGENT,
         Accept:
@@ -111,12 +105,7 @@ export default async function resolve(
         "Sec-Fetch-Site": "none",
         ...options.headers,
       },
-    };
-    if (options.timeout !== undefined) {
-      request_options.timeout = options.timeout;
-    }
-
-    const response = await http_get(url, request_options);
+    });
 
     const html = await response.text();
     const is_video = html.includes('\\"video_id\\":\\"');
