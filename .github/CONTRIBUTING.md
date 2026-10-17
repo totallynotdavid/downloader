@@ -2,30 +2,33 @@
 
 ## Setup
 
-[mise](https://mise.jdx.dev) installs the pinned Bun and Biome from
-[`mise.toml`](../mise.toml).
+[mise](https://mise.jdx.dev) installs the pinned Bun, Node and oxfmt from
+[`mise.toml`](../mise.toml). Every command below is a mise task.
 
 ```sh
 mise install
-bun install
+mise run install
 ```
 
 ## Checks
 
-Run these before you commit. CI runs Biome and the tests on every pull request
-that changes a `.ts` file.
+Run `mise run check` before you commit. CI runs the same task on every pull
+request.
 
 ```sh
-bun run check   # Biome lint and the TypeScript typecheck
-bun run test    # offline replay tests
-bun run format  # Biome for code, Prettier for Markdown and YAML
+mise run check      # lint, typecheck, test and build
+mise run fix        # safe Biome fixes, then format code, Markdown and YAML
+mise run test       # offline replay tests
+mise run build      # bundle to dist/
 ```
 
-`bun run build` runs `check`, then bundles to `dist/`.
+`mise run release` runs `check`, then publishes to npm. The release workflow
+calls it on a version tag.
 
 ## Code style
 
-Biome enforces formatting and lint. The rest is convention:
+Biome enforces formatting and lint for code and JSON. oxfmt formats Markdown and
+YAML. The rest is convention:
 
 - Internal functions and variables use `snake_case`. Types and error classes use
   `PascalCase`.
@@ -52,7 +55,7 @@ instagram: add account post listing
 ## Where to read next
 
 - [Documentation index](../docs/readme.md)
-- [Architecture](../architecture.md)
+- [Architecture](../docs/architecture.md)
 - [Writing an extractor](../docs/extractors.md)
 - [Tests and cassettes](../docs/testing.md)
 - [Live eval](../docs/eval.md)

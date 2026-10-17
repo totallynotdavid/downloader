@@ -1,7 +1,7 @@
 # Architecture
 
 The package accepts a public post URL and returns a normalized `MediaResult`.
-The public entry points are exported from [`src/index.ts`](src/index.ts).
+The public entry points are exported from [`src/index.ts`](../src/index.ts).
 
 ## Request path
 
@@ -14,14 +14,14 @@ resolve(url, options)
   -> MediaResult
 ```
 
-[`src/resolve.ts`](src/resolve.ts) selects an extractor through
-[`src/router.ts`](src/router.ts). The router removes a leading `www.` and
+[`src/resolve.ts`](../src/resolve.ts) selects an extractor through
+[`src/router.ts`](../src/router.ts). The router removes a leading `www.` and
 matches the hostname. Pinterest also accepts subdomains. An unmatched hostname
 produces `PlatformNotSupportedError`.
 
 The extractor parses the platform response into the common types in
-[`src/types.ts`](src/types.ts). [`src/http.ts`](src/http.ts) supplies default
-request headers, applies the per-request timeout, and turns failed HTTP
+[`src/types.ts`](../src/types.ts). [`src/http.ts`](../src/http.ts) supplies
+default request headers, applies the per-request timeout, and turns failed HTTP
 responses into `NetworkError`.
 
 ## Source map
@@ -42,13 +42,13 @@ responses into `NetworkError`.
 
 ## Instagram listing
 
-[`src/extractors/instagram-posts.ts`](src/extractors/instagram-posts.ts) uses
+[`src/extractors/instagram-posts.ts`](../src/extractors/instagram-posts.ts) uses
 the Instagram extractor's shared media lookup for `detail: true`. It validates
 the username before the first request, returns pages of up to 12 posts, and uses
 the returned cursor for later pages.
 
 ## Build boundary
 
-[`bunup.config.ts`](bunup.config.ts) builds `src/index.ts` into `dist/index.js`
-and `dist/index.d.ts`. The package publishes `dist`, `readme.md`, and `LICENSE`,
-as declared in [`package.json`](package.json).
+[`bunup.config.ts`](../bunup.config.ts) builds `src/index.ts` into
+`dist/index.js` and `dist/index.d.ts`. The package publishes `dist`,
+`readme.md`, and `LICENSE`, as declared in [`package.json`](../package.json).

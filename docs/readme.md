@@ -12,3 +12,4 @@ example.
 5. [Tests and cassettes](./testing.md) explains replay, recording, and
    snapshots.
 6. [Live eval](./eval.md) explains fixture output and live checks.
+7. [Architecture](./architecture.md) maps the source modules and request path.

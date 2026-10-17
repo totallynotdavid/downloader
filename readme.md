@@ -39,7 +39,7 @@ through `listInstagramPosts`.
   URL forms.
 - [Instagram](docs/instagram.md) covers post resolution and account listing.
 - [Errors](docs/errors.md) covers the exported error classes.
-- [Architecture](architecture.md) maps the source modules and request path.
+- [Architecture](docs/architecture.md) maps the source modules and request path.
 
 [Contributing](.github/CONTRIBUTING.md) covers local setup and checks.
 
