@@ -5,26 +5,6 @@ import type { MediaResult, ResolveOptions } from "../types.ts";
 const EMBED_STATE_REGEX =
   /<script id="__FRONTITY_CONNECT_STATE__" type="application\/json">([\s\S]*?)<\/script>/;
 
-type TiktokMediaPayload = {
-  id?: string;
-  desc?: string;
-  author?: { nickname?: string; uniqueId?: string };
-  stats?: {
-    diggCount?: number;
-    playCount?: number;
-    commentCount?: number;
-    shareCount?: number;
-  };
-  createTime?: number | string;
-  covers?: string[];
-  imagePost?: { images?: Array<{ imageURL?: { urlList?: string[] } }> };
-  music?: { playUrl?: string };
-  video?: {
-    playAddr?: string;
-    bitrateInfo?: Array<{ PlayAddr?: { UrlList?: string[] } }>;
-  };
-};
-
 type AuthorInfos = { nickName?: string; uniqueId?: string };
 
 type ItemInfos = {
@@ -64,7 +44,7 @@ function normalize_tiktok_url_entities(url: string): string {
 function extract_media(
   html: string,
   post_id: string,
-): TiktokMediaPayload | undefined {
+): { info: ItemInfos; author: AuthorInfos | undefined } | undefined {
   const match = html.match(EMBED_STATE_REGEX);
   if (!match?.[1]) return undefined;
 
@@ -77,50 +57,8 @@ function extract_media(
   const info = video_data?.itemInfos;
   if (!info) return undefined;
 
-  // authorInfos lives at the videoData level, not inside itemInfos; fall back to
-  // the itemInfos copy for older embed payloads.
-  const author_infos = video_data?.authorInfos ?? info.authorInfos;
-
-  const play_addr = info.video?.urls?.[0];
-  const music_url = info.musicInfos?.playUrl?.[0];
-  const item: TiktokMediaPayload = {
-    ...(info.id && { id: info.id }),
-    ...(info.text && { desc: info.text }),
-    ...(info.covers && { covers: info.covers }),
-    ...(play_addr && { video: { playAddr: play_addr } }),
-    ...(music_url && { music: { playUrl: music_url } }),
-    ...(info.createTime !== undefined && { createTime: info.createTime }),
-  };
-
-  const images = info.imagePostInfo?.displayImages?.map((img) => ({
-    imageURL: { urlList: img.urlList ?? [] },
-  }));
-  if (images?.length) item.imagePost = { images };
-
-  if (author_infos?.nickName || author_infos?.uniqueId) {
-    item.author = {
-      ...(author_infos.nickName && { nickname: author_infos.nickName }),
-      ...(author_infos.uniqueId && { uniqueId: author_infos.uniqueId }),
-    };
-  }
-
-  if (
-    info.diggCount !== undefined ||
-    info.playCount !== undefined ||
-    info.commentCount !== undefined ||
-    info.shareCount !== undefined
-  ) {
-    item.stats = {
-      ...(info.diggCount !== undefined && { diggCount: info.diggCount }),
-      ...(info.playCount !== undefined && { playCount: info.playCount }),
-      ...(info.commentCount !== undefined && {
-        commentCount: info.commentCount,
-      }),
-      ...(info.shareCount !== undefined && { shareCount: info.shareCount }),
-    };
-  }
-
-  return item;
+  // authorInfos sits beside itemInfos; older embed payloads nest it inside.
+  return { info, author: video_data?.authorInfos ?? info.authorInfos };
 }
 
 export default async function resolve(
@@ -135,15 +73,14 @@ export default async function resolve(
   try {
     const embed_url = `https://www.tiktok.com/embed/v2/${post_id}`;
     const html = await http_get(embed_url, options).then((r) => r.text());
-    const item = extract_media(html, post_id);
+    const embed = extract_media(html, post_id);
 
-    if (!item) {
+    if (!embed) {
       throw new ParseError("Metadata not found", "tiktok");
     }
+    const { info, author } = embed;
 
-    const video_url =
-      item.video?.bitrateInfo?.[0]?.PlayAddr?.UrlList?.[0] ||
-      item.video?.playAddr;
+    const video_url = info.video?.urls?.[0];
 
     const carousel_urls =
       html.match(/https:\/\/[^"\s]+tplv-photomode-image[^"\s]*/g) || [];
@@ -157,35 +94,36 @@ export default async function resolve(
 
     const image_urls = [
       ...new Set([
-        ...(item.imagePost?.images
-          ?.map((img) => img.imageURL?.urlList?.[0])
+        ...(info.imagePostInfo?.displayImages
+          ?.map((img) => img.urlList?.[0])
           .filter((u): u is string => Boolean(u)) || []),
-        ...(item.covers || []),
+        ...(info.covers || []),
         ...carousel_images,
       ]),
     ];
 
     const urls: MediaResult["urls"] = [];
+    const music_url = info.musicInfos?.playUrl?.[0];
     if (image_urls.length > 0 && !video_url) {
       image_urls.forEach((url, i) => {
         urls.push({
           type: "image",
           url,
-          filename: `tiktok-${item.id}-${i + 1}.jpg`,
+          filename: `tiktok-${info.id}-${i + 1}.jpg`,
         });
       });
-      if (item.music?.playUrl) {
+      if (music_url) {
         urls.push({
           type: "audio",
-          url: item.music.playUrl,
-          filename: `tiktok-${item.id}-audio.mp3`,
+          url: music_url,
+          filename: `tiktok-${info.id}-audio.mp3`,
         });
       }
     } else if (video_url) {
       urls.push({
         type: "video",
         url: video_url,
-        filename: `tiktok-${item.id}.mp4`,
+        filename: `tiktok-${info.id}.mp4`,
       });
     }
 
@@ -194,26 +132,18 @@ export default async function resolve(
     }
 
     const meta: MediaResult["meta"] = {
-      title: item.desc || "TikTok Post",
-      author: item.author?.nickname || item.author?.uniqueId || "Unknown",
+      title: info.text || "TikTok Post",
+      author: author?.nickName || author?.uniqueId || "Unknown",
       platform: "tiktok",
     };
-    if (item.createTime !== undefined) {
-      const ts = Number(item.createTime);
+    if (info.createTime !== undefined) {
+      const ts = Number(info.createTime);
       if (Number.isFinite(ts) && ts > 0) meta.timestamp = ts;
     }
-    if (item.stats?.diggCount !== undefined) {
-      meta.likes = item.stats.diggCount;
-    }
-    if (item.stats?.playCount !== undefined) {
-      meta.views = item.stats.playCount;
-    }
-    if (item.stats?.commentCount !== undefined) {
-      meta.comments = item.stats.commentCount;
-    }
-    if (item.stats?.shareCount !== undefined) {
-      meta.shares = item.stats.shareCount;
-    }
+    if (info.diggCount !== undefined) meta.likes = info.diggCount;
+    if (info.playCount !== undefined) meta.views = info.playCount;
+    if (info.commentCount !== undefined) meta.comments = info.commentCount;
+    if (info.shareCount !== undefined) meta.shares = info.shareCount;
 
     return {
       urls,
