@@ -1,6 +1,3 @@
-// Print fixture output for human review. Replay committed cassettes by default.
-// The --live option sends requests to the platforms and exits non-zero on failure.
-
 import { run_fixtures, run_listings } from "../tests/support/runner.ts";
 import { install_replay } from "../tests/support/transport.ts";
 
@@ -19,7 +16,6 @@ const META_FIELDS = [
   "shares",
   "timestamp",
   "reposts",
-  "quoteTweet",
 ];
 
 function summarize_meta(meta: Record<string, unknown>): string {
