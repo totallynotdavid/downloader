@@ -2,8 +2,6 @@ import { http_get, http_post } from "../http.ts";
 import { NetworkError, ParseError } from "../errors.ts";
 import type { MediaItem, MediaResult, ResolveOptions } from "../types.ts";
 
-// The public WEB innertube key is stable enough to hardcode. Avoid scraping
-// watch-page HTML before player requests.
 const INNERTUBE_KEY = "AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8";
 const INNERTUBE_PLAYER_URL = `https://www.youtube.com/youtubei/v1/player?key=${INNERTUBE_KEY}`;
 const INNERTUBE_NEXT_URL = `https://www.youtube.com/youtubei/v1/next?key=${INNERTUBE_KEY}`;
@@ -29,9 +27,7 @@ const IOS_CLIENT = {
     "com.google.ios.youtube/20.10.4 (iPhone16,2; U; CPU iOS 18_3_2 like Mac OS X)",
 };
 
-// The player response carries no engagement counts; the TVHTML5 /next endpoint
-// does (likeCount, commentCount), so we fetch it in parallel and treat it as
-// best-effort enrichment.
+// The player response carries no like or comment counts. /next provides them.
 const TV_CLIENT = {
   clientName: "TVHTML5",
   clientVersion: "7.20240101",
@@ -87,9 +83,8 @@ function extract_publish_timestamp(html: string): number | undefined {
   return Number.isFinite(ts) ? ts : undefined;
 }
 
-// The /next response nests engagement counts deep inside renderer trees whose
-// exact path shifts across clients, so we search by key rather than hard-code a
-// brittle path. Returns the first match in traversal order.
+// The path to the engagement counts in /next shifts across clients, so search
+// by key and take the first match.
 function deep_find(obj: unknown, key: string): unknown {
   if (typeof obj !== "object" || obj === null) return undefined;
   for (const [k, v] of Object.entries(obj as Record<string, unknown>)) {

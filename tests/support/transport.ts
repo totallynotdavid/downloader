@@ -1,6 +1,3 @@
-// Record/replay transport for extractor tests. Callers own the returned
-// uninstall function so the fetch interceptor never leaks into live tests.
-
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -32,14 +29,10 @@ type Cassette = {
   recorded_at: string;
 };
 
-// content-encoding/length describe the on-the-wire bytes; we store the decoded
-// body, so replaying these headers would corrupt text()/json(). Drop them.
-//
-// set-cookie is dropped from the flat map and stored as cassette.set_cookies
-// instead: Headers.entries() folds multiple Set-Cookie into one comma-joined
-// value, and rebuilding from that collapses getSetCookie() to a single broken
-// cookie. Reddit's loid cookie prime depends on getSetCookie() returning each
-// cookie intact, so we round-trip them as a list and re-append on replay.
+// The cassette stores the decoded body, so replaying content-encoding or
+// content-length would corrupt text() and json(). Headers.entries() folds
+// repeated Set-Cookie into one value, so cookies live in set_cookies instead
+// and replay re-appends each one.
 const VOLATILE_HEADERS = new Set([
   "content-encoding",
   "content-length",
@@ -55,9 +48,8 @@ function strip_headers(h: Record<string, string>): Record<string, string> {
   return out;
 }
 
-// Cassettes are committed, so recording drops Set-Cookie for every host except
-// these. The Reddit extractor reads Set-Cookie from a priming request, so replay
-// needs it. It is an anonymous session cookie, not a credential.
+// Cassettes are committed, so recording drops Set-Cookie except for hosts whose
+// extractor reads it. Reddit's is an anonymous session cookie, not a credential.
 const COOKIE_HOSTS = ["reddit.com"];
 
 function keeps_cookies(url: string): boolean {
@@ -65,8 +57,6 @@ function keeps_cookies(url: string): boolean {
   return COOKIE_HOSTS.some((h) => host === h || host.endsWith(`.${h}`));
 }
 
-// Rebuild a Response with set-cookie restored as discrete headers so
-// getSetCookie() sees each cookie, not one folded value.
 function build_response(
   body: Buffer,
   rec: Pick<Cassette, "status" | "status_text" | "headers" | "set_cookies">,
@@ -117,7 +107,6 @@ function request_key(
   return { url, method, path: cassette_path(url, method, body) };
 }
 
-// Cassette misses are mode-specific: replay fails loudly, record goes live.
 function cassette_hit(key: RequestKey): Response | undefined {
   if (!existsSync(key.path)) return undefined;
   const rec = read_cassette(key.path);
@@ -159,10 +148,7 @@ export function install_replay(): () => void {
   }) as typeof fetch);
 }
 
-// Reddit serves its cookie-primed JSON to a direct connection but 403s the
-// residential proxy exits, so record reddit hosts direct. Every other platform
-// goes through the proxy to avoid rate-limits / IP flagging when hammering the
-// same fixtures repeatedly.
+// Record Reddit directly because residential proxy exits return 403.
 const DIRECT_RECORD_HOSTS = ["reddit.com"];
 
 function record_proxy(url: string, proxy: string): string | undefined {
@@ -187,9 +173,6 @@ export function install_record(): () => void {
     const hit = cassette_hit(key);
     if (hit) return hit;
 
-    // record_proxy returns undefined for direct-record hosts. Omit the proxy
-    // key entirely rather than passing proxy: undefined so the request goes
-    // direct instead of through the sticky exit.
     const exit = record_proxy(key.url, proxy);
     const res = await real_fetch(key.url, {
       ...init,

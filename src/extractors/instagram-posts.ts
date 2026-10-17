@@ -65,8 +65,6 @@ async function add_detail(
   }
 }
 
-// Return an empty page for an intact account response with no posts. Reject
-// redirects, rate limits, login walls, and malformed responses with typed errors.
 export async function listInstagramPosts(
   username: string,
   options: ListPostsOptions = {},

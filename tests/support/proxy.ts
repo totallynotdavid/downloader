@@ -1,10 +1,5 @@
-// Proxy resolution is only called by record mode. Replay must not touch the
-// network.
-//
-// Recording with no proxy setting is a hard error: a direct exit gets
-// rate-limited and IP-flagged, which would only produce poisoned cassettes.
-// Set EVAL_PROXY_URL=direct only for a host with a clean residential IP.
-// A flagged or datacenter IP records block pages instead of responses.
+// A flagged or datacenter IP records block pages as cassettes, so recording
+// without a proxy setting is an error.
 
 import { env } from "./env.ts";
 

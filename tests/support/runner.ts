@@ -1,6 +1,3 @@
-// Runs resolve() over every fixture and returns normalized outcomes.
-// Assumes a transport is already installed (replay or record) by the caller.
-
 import { listInstagramPosts } from "../../src/extractors/instagram-posts.ts";
 import { resolve } from "../../src/resolve.ts";
 import type { Post } from "../../src/types.ts";
@@ -14,7 +11,7 @@ export type Outcome = {
   ok: boolean;
   result?: NormalizedResult;
   error?: { name: string; message: string };
-  reqs: string; // request trace, e.g. "cassette,cassette"
+  reqs: string;
   ms: number;
 };
 

@@ -1,5 +1,3 @@
-// Refresh cassettes from live platforms.
-
 import { run_fixtures, run_listings } from "../tests/support/runner.ts";
 import { install_record, net_log } from "../tests/support/transport.ts";
 

@@ -1,13 +1,8 @@
 import type { MediaResult, Post } from "../src/types.ts";
 
-// Replay snapshots compare asset identity, not signed CDN params. Most
-// platforms encode identity in the path, so keep origin + pathname and drop the
-// query. YouTube is the exception: every googlevideo stream shares the same
-// /videoplayback path and carries its format identity (itag, mime) in the
-// query, so dropping the whole query would collapse every video/audio stream to
-// one indistinguishable URL. Keep those two keys; everything else in the query
-// is signed/ephemeral (expire, sig, ip, and the o-... `id` render token) and
-// churns on every re-record, so it stays stripped.
+// Snapshots drop signed CDN query params, which change on every re-record.
+// googlevideo streams share one /videoplayback path and differ only by itag
+// and mime, so those two keys stay.
 const STABLE_QUERY_KEYS = new Set(["itag", "mime"]);
 
 function strip_query(u: string): string {

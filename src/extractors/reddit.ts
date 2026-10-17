@@ -79,9 +79,6 @@ export default async function resolve(
       author: post.author,
       platform: "reddit",
     };
-    // view_count is a deprecated field that the public JSON returns as null;
-    // only surface likes/views when they are real numbers so we never write a
-    // null into a number-typed meta field.
     if (typeof post.score === "number" && Number.isFinite(post.score)) {
       meta.likes = post.score;
     }
