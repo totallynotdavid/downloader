@@ -7,29 +7,26 @@ const DEFAULT_TIMEOUT = 10_000;
 type FetchOptions = {
   headers?: Record<string, string>;
   timeout?: number;
+};
+
+type PostOptions = FetchOptions & {
   // "manual" turns a redirect into a thrown NetworkError instead of following it.
   redirect?: "manual";
 };
 
-export async function http_get(
+async function send(
   url: string,
-  options: FetchOptions = {},
+  init: RequestInit,
+  timeout_ms: number | undefined,
 ): Promise<Response> {
   const controller = new AbortController();
   const timeout = setTimeout(
     () => controller.abort(),
-    options.timeout ?? DEFAULT_TIMEOUT,
+    timeout_ms ?? DEFAULT_TIMEOUT,
   );
 
   try {
-    const res = await fetch(url, {
-      headers: {
-        "User-Agent": DEFAULT_USER_AGENT,
-        "Accept-Language": "en-US,en;q=0.9",
-        ...options.headers,
-      },
-      signal: controller.signal,
-    });
+    const res = await fetch(url, { ...init, signal: controller.signal });
 
     if (!res.ok) {
       throw new NetworkError(
@@ -51,19 +48,31 @@ export async function http_get(
   }
 }
 
-export async function http_post(
+export function http_get(
   url: string,
-  body: string | URLSearchParams,
   options: FetchOptions = {},
 ): Promise<Response> {
-  const controller = new AbortController();
-  const timeout = setTimeout(
-    () => controller.abort(),
-    options.timeout ?? DEFAULT_TIMEOUT,
+  return send(
+    url,
+    {
+      headers: {
+        "User-Agent": DEFAULT_USER_AGENT,
+        "Accept-Language": "en-US,en;q=0.9",
+        ...options.headers,
+      },
+    },
+    options.timeout,
   );
+}
 
-  try {
-    const res = await fetch(url, {
+export function http_post(
+  url: string,
+  body: string | URLSearchParams,
+  options: PostOptions = {},
+): Promise<Response> {
+  return send(
+    url,
+    {
       method: "POST",
       headers: {
         "User-Agent": DEFAULT_USER_AGENT,
@@ -75,25 +84,7 @@ export async function http_post(
       },
       body: body.toString(),
       ...(options.redirect ? { redirect: options.redirect } : {}),
-      signal: controller.signal,
-    });
-
-    if (!res.ok) {
-      throw new NetworkError(
-        `HTTP ${res.status}: ${res.statusText}`,
-        res.status,
-      );
-    }
-
-    return res;
-  } catch (e: unknown) {
-    if (e instanceof Error && e.name === "AbortError") {
-      throw new NetworkError("Request timeout", 408);
-    }
-    if (e instanceof NetworkError) throw e;
-    const message = e instanceof Error ? e.message : "Unknown error";
-    throw new NetworkError(message);
-  } finally {
-    clearTimeout(timeout);
-  }
+    },
+    options.timeout,
+  );
 }

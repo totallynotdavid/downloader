@@ -2,7 +2,6 @@ import { http_post } from "../http.ts";
 import { BlockedError, NetworkError, ParseError } from "../errors.ts";
 import type { ResolveOptions } from "../types.ts";
 
-// Instagram rejects stale document IDs for anonymous web queries.
 export const QUERIES = {
   post: {
     doc_id: "27130156389949648",
@@ -80,8 +79,8 @@ export async function graphql(
   let text: string;
   try {
     const response = await http_post(ENDPOINT, body, {
+      ...options,
       redirect: "manual",
-      ...(options.timeout !== undefined ? { timeout: options.timeout } : {}),
       headers: {
         Accept: "*/*",
         "User-Agent": USER_AGENT,
