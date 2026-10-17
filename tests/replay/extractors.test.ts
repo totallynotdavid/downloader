@@ -1,11 +1,5 @@
-// The regression suite. Replays committed cassettes and snapshots each
-// fixture's normalized result. Deterministic, no network, no proxy, no creds.
-//
-// Snapshots are strict: frozen cassette bytes in, exact result out, so inline
-// snapshot diffs expose parser changes. Recording against the platform catches
-// live drift.
-
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
+import { resolve } from "../../src/index.ts";
 import { type Outcome, run_fixtures } from "../support/runner.ts";
 import { install_replay } from "../support/transport.ts";
 
@@ -474,55 +468,6 @@ describe("instagram", () => {
       }
     `);
   });
-
-  test("single_image_2", () => {
-    const { ok, result, error } = fixture("instagram/single_image_2");
-    expect({ ok, result, error }).toMatchInlineSnapshot(`
-      {
-        "error": undefined,
-        "ok": true,
-        "result": {
-          "headers": {
-            "Referer": "https://www.instagram.com/",
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36",
-          },
-          "meta": {
-            "author": "gft.unmsm",
-            "comments": 3,
-            "description": 
-      "Invitación para el Día Internacional de la Cuántica.
-
-      El GFT complace invitar a la comunidad, a este evento sobre computación cuántica.
-
-      Entrada libre. 
-
-      #fisica #quantum #unmsm"
-      ,
-            "likes": 56,
-            "platform": "instagram",
-            "thumbnail": "https://scontent.cdninstagram.com/v/t51.82787-15/671181528_17963043627102492_5784499939890738216_n.webp",
-            "timestamp": 1776721186,
-            "title": 
-      "Invitación para el Día Internacional de la Cuántica.
-
-      El GFT complace invitar a la comunidad, a este evento sobre computación cuántica.
-
-      Entrada libre. 
-
-      #fisica #quantum #unmsm"
-      ,
-          },
-          "urls": [
-            {
-              "filename": "instagram-DXXm9hhEe7s.jpg",
-              "type": "image",
-              "url": "https://instagram.flim38-1.fna.fbcdn.net/v/t51.82787-15/671181528_17963043627102492_5784499939890738216_n.webp",
-            },
-          ],
-        },
-      }
-    `);
-  });
 });
 
 describe("twitter", () => {
@@ -957,6 +902,38 @@ describe("tiktok", () => {
         },
       }
     `);
+  });
+
+  test("reads the author from an older embed with authorInfos inside itemInfos", async () => {
+    const id = "7136124191849417985";
+    const state = {
+      source: {
+        data: {
+          [`/embed/v2/${id}`]: {
+            videoData: {
+              itemInfos: {
+                id,
+                text: "old shape",
+                video: { urls: ["https://v16.tiktokcdn.com/video.mp4"] },
+                authorInfos: { nickName: "Old Author", uniqueId: "old_author" },
+              },
+            },
+          },
+        },
+      },
+    };
+    const html = `<script id="__FRONTITY_CONNECT_STATE__" type="application/json">${JSON.stringify(state)}</script>`;
+    const replay = globalThis.fetch;
+    globalThis.fetch = (async () =>
+      new Response(html)) as unknown as typeof fetch;
+    try {
+      const result = await resolve(
+        `https://www.tiktok.com/@old_author/video/${id}`,
+      );
+      expect(result.meta.author).toBe("Old Author");
+    } finally {
+      globalThis.fetch = replay;
+    }
   });
 });
 

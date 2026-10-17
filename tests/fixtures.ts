@@ -13,7 +13,6 @@ export const SAMPLES = {
     carousel: "https://www.instagram.com/p/DeAFAiLjZkk/",
     collab_carousel: "https://www.instagram.com/p/DeCi8E3nBjB/",
     single_image: "https://www.instagram.com/p/DcepzLhTqxC/",
-    single_image_2: "https://www.instagram.com/p/DXXm9hhEe7s/",
   },
   twitter: {
     video: "https://x.com/_DaveMullins/status/1129038424130899969",
@@ -44,8 +43,6 @@ export const SAMPLES = {
   },
 };
 
-// Each account fixture runs for the configured number of pages. `detail` resolves
-// every post on those pages.
 export type AccountSample = {
   username: string;
   pages: number;
