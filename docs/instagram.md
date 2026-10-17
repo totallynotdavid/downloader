@@ -75,8 +75,9 @@ An unknown account rejects with a `NetworkError` whose `statusCode` is `404`. An
 account with no posts returns `{ posts: [] }`.
 
 `url` is an Instagram reel URL for reels and a post URL for other items.
-`author` is the first author returned for that grid item. `caption` is absent
-when the post has no caption. `thumbnail` is the cover image URL.
+`author` is the first author returned for that grid item, so a collab post can
+belong to another account. `caption` is absent when the post has no caption.
+`thumbnail` is the cover image URL.
 
 ### Detail
 
