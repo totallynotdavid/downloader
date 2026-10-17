@@ -11,6 +11,16 @@ const VIDEO_QUALITY_PRIORITY = [
   "V_EXP4",
 ];
 
+function best_video_url(
+  video_list: Record<string, { url: string }> | undefined,
+): string | undefined {
+  for (const quality of VIDEO_QUALITY_PRIORITY) {
+    const url = video_list?.[quality]?.url;
+    if (url && !url.endsWith(".m3u8")) return url;
+  }
+  return undefined;
+}
+
 export default async function resolve(
   url: string,
   options: ResolveOptions,
@@ -30,20 +40,13 @@ export default async function resolve(
         }),
       );
 
-    const request_options: {
-      headers: Record<string, string>;
-      timeout?: number;
-    } = {
+    const response = await http_get(api_url, {
+      ...options,
       headers: {
         "X-Pinterest-PWS-Handler": "www/[username].js",
         ...options.headers,
       },
-    };
-    if (options.timeout !== undefined) {
-      request_options.timeout = options.timeout;
-    }
-
-    const response = await http_get(api_url, request_options);
+    });
 
     const json = (await response.json()) as {
       resource_response?: {
@@ -77,53 +80,26 @@ export default async function resolve(
       data.pinner?.username ||
       "Unknown";
 
-    const story_pages = data.story_pin_data?.pages;
-    if (story_pages) {
-      for (const page of story_pages) {
-        const blocks = page.blocks;
-        if (!blocks) continue;
-
-        for (const block of blocks) {
-          const video_list = block.video?.video_list;
-          if (!video_list) continue;
-
-          for (const quality of VIDEO_QUALITY_PRIORITY) {
-            const video = video_list[quality];
-            if (video?.url && !video.url.endsWith(".m3u8")) {
-              return {
-                urls: [
-                  {
-                    type: "video",
-                    url: video.url,
-                    filename: `pinterest-${pin_id}.mp4`,
-                  },
-                ],
-                headers: {},
-                meta: { title, author, platform: "pinterest" },
-              };
-            }
-          }
-        }
-      }
-    }
-
-    const video_list = data.videos?.video_list;
-    if (video_list) {
-      for (const quality of VIDEO_QUALITY_PRIORITY) {
-        const video = video_list[quality];
-        if (video?.url && !video.url.endsWith(".m3u8")) {
-          return {
-            urls: [
-              {
-                type: "video",
-                url: video.url,
-                filename: `pinterest-${pin_id}.mp4`,
-              },
-            ],
-            headers: {},
-            meta: { title, author, platform: "pinterest" },
-          };
-        }
+    const video_lists = [
+      ...(data.story_pin_data?.pages ?? []).flatMap((page) =>
+        (page.blocks ?? []).map((block) => block.video?.video_list),
+      ),
+      data.videos?.video_list,
+    ];
+    for (const video_list of video_lists) {
+      const video_url = best_video_url(video_list);
+      if (video_url) {
+        return {
+          urls: [
+            {
+              type: "video",
+              url: video_url,
+              filename: `pinterest-${pin_id}.mp4`,
+            },
+          ],
+          headers: {},
+          meta: { title, author, platform: "pinterest" },
+        };
       }
     }
 
