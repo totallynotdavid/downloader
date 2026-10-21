@@ -7,6 +7,20 @@
     "url": "git+https://github.com/totallynotdavid/downloader.git"
   },
   "main": "dist/index.js",
+  "scripts": {
+    "build": "rm -rf dist && bun x bunup",
+    "check": "bun run lint && bun run typecheck && bun run test && bun run build",
+    "eval": "bun scripts/eval.ts",
+    "eval:live": "bun scripts/eval.ts --live instagram",
+    "fix": "bun x biome check --write . && oxfmt '**/*.md' '**/*.yml'",
+    "lint": "bun x biome check . && oxfmt --check '**/*.md' '**/*.yml'",
+    "record": "bun --env-file=.env scripts/record.ts",
+    "release": "bun run check && npm publish",
+    "test": "bun test tests/replay",
+    "test:coverage": "bun test tests/replay --coverage --coverage-reporter=lcov",
+    "test:update": "bun test tests/replay --update-snapshots",
+    "typecheck": "bun x tsc -p tsconfig.json --noEmit"
+  },
   "devDependencies": {
     "@biomejs/biome": "2.5.15",
     "@types/bun": "^1.4.2",

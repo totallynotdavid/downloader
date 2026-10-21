@@ -143,7 +143,7 @@ export function install_replay(): () => void {
     });
     return new Response(`[cassette miss] ${key.method} ${key.url}`, {
       status: 504,
-      statusText: "Cassette miss (run `mise run record` to capture)",
+      statusText: "Cassette miss (run `bun run record` to capture)",
     });
   }) as typeof fetch);
 }

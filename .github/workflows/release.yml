@@ -28,9 +28,9 @@ jobs:
 
       - uses: jdx/mise-action@fc42bcc7ddbf51124c30f95a877a0c5168a3bfde # v5.2.1
 
-      - run: mise run install
+      - run: bun install --frozen-lockfile
 
-      - run: mise run release
+      - run: bun run release
 
   github:
     needs: publish
