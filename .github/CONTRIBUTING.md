@@ -22,8 +22,32 @@ bun run test       # offline replay tests
 bun run build      # bundle to dist/
 ```
 
-`bun run release` runs `check`, then publishes to npm. The release workflow
-calls it on a version tag.
+## Releases
+
+The [release workflow](workflows/release.yml) publishes to npm and creates the
+GitHub release when you push a `v*` tag. It runs on every pull request to
+`master` and on manual runs too. Those runs build, check and pack the package as
+a tag would, and skip only the publish and the GitHub release.
+
+To release:
+
+1. Set `version` in `package.json`.
+2. Write `.github/release-notes.md`. Its first line is
+   `<package name> <version> is out.`
+3. Open a pull request. The `release` workflow must pass. It fails if the notes
+   do not match the version, if a check or the build fails, or if an environment
+   the workflow names is missing.
+4. Merge, then tag the merge commit `v<version>` and push the tag. The tag must
+   equal `v<version>`.
+
+The workflow publishes with npm trusted publishing. It holds no npm token. To
+set it up for a fork:
+
+1. Create an environment named `publishing` in the repository settings under
+   Environments.
+2. On npmjs.com open the package, then Settings, then Trusted publisher, and
+   choose GitHub Actions. Enter the repository owner, the repository name, the
+   workflow filename `release.yml` and the environment `publishing`.
 
 ## Code style
 
