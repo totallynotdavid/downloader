@@ -15,7 +15,6 @@
     "fix": "bun x biome check --write . && oxfmt '**/*.md' '**/*.yml'",
     "lint": "bun x biome check . && oxfmt --check '**/*.md' '**/*.yml'",
     "record": "bun --env-file=.env scripts/record.ts",
-    "release": "bun run check && npm publish",
     "test": "bun test tests/replay",
     "test:coverage": "bun test tests/replay --coverage --coverage-reporter=lcov",
     "test:update": "bun test tests/replay --update-snapshots",
