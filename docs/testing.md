@@ -1,6 +1,6 @@
 # Tests and cassettes
 
-The replay tests run every extractor against recorded responses. `mise run test`
+The replay tests run every extractor against recorded responses. `bun run test`
 does not contact a platform. Recording is the separate workflow that refreshes
 those responses from live platforms.
 
@@ -10,13 +10,13 @@ tests/fixtures.ts -> runner -> transport -> cassette -> snapshot
 
 ## Commands
 
-| Command                      | Purpose                                                                         |
-| ---------------------------- | ------------------------------------------------------------------------------- |
-| `mise run test`              | Replay cassettes and assert snapshots.                                          |
-| `mise run test:update`       | Accept intended snapshot changes.                                               |
-| `mise run record [platform]` | Refresh cassettes from a live platform.                                         |
-| `mise run eval [platform]`   | Print fixture results. See [Live eval](./eval.md).                              |
-| `mise run eval:live`         | Check the Instagram fixtures against the live site. See [Live eval](./eval.md). |
+| Command                     | Purpose                                                                         |
+| --------------------------- | ------------------------------------------------------------------------------- |
+| `bun run test`              | Replay cassettes and assert snapshots.                                          |
+| `bun run test:update`       | Accept intended snapshot changes.                                               |
+| `bun run record [platform]` | Refresh cassettes from a live platform.                                         |
+| `bun run eval [platform]`   | Print fixture results. See [Live eval](./eval.md).                              |
+| `bun run eval:live`         | Check the Instagram fixtures against the live site. See [Live eval](./eval.md). |
 
 The optional platform filters for `record` and `eval` match the keys in
 [`tests/fixtures.ts`](../tests/fixtures.ts). The test command runs the files in
@@ -25,9 +25,9 @@ The optional platform filters for `record` and `eval` match the keys in
 ## Review a parser change
 
 1. Change the extractor.
-2. Run `mise run test`.
+2. Run `bun run test`.
 3. Read the snapshot diff.
-4. If the change is intended, run `mise run test:update`.
+4. If the change is intended, run `bun run test:update`.
 
 The snapshot is the review artifact. Replay separates a parser change from a
 platform response change.
@@ -40,8 +40,8 @@ platform response change.
 - `ACCOUNTS` maps Instagram accounts to page counts and optional detail mode.
 
 Add a post to `SAMPLES`, or an account to `ACCOUNTS`, before recording it. Then
-run `mise run record <platform>`, inspect the result with
-`mise run eval <platform>`, and run `mise run test:update` when the snapshot is
+run `bun run record <platform>`, inspect the result with
+`bun run eval <platform>`, and run `bun run test:update` when the snapshot is
 correct.
 
 ## Replay transport
@@ -82,7 +82,7 @@ cookie-priming request rejects the residential exits.
 Without a proxy setting, recording stops before its first request:
 
 ```text
-$ mise run record
+$ bun run record
 error: GEONODE_USERNAME is required for this command. Set it in .env or the environment.
 ```
 

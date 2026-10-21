@@ -3,10 +3,10 @@
 [`scripts/eval.ts`](../scripts/eval.ts) runs the fixtures and prints each
 result. Replay is the default. The `--live` flag sends requests to platforms.
 
-| Command                    | Mode                                                |
-| -------------------------- | --------------------------------------------------- |
-| `mise run eval [platform]` | Replays committed cassettes without network access. |
-| `mise run eval:live`       | Runs the Instagram fixtures against the live site.  |
+| Command                   | Mode                                                |
+| ------------------------- | --------------------------------------------------- |
+| `bun run eval [platform]` | Replays committed cassettes without network access. |
+| `bun run eval:live`       | Runs the Instagram fixtures against the live site.  |
 
 ## Output
 
@@ -40,7 +40,7 @@ one or more fixtures fail and prints the count of failed checks.
 
 Instagram can retire the persisted query IDs used by the library. A retired ID
 causes a `ParseError` that says the query ID may be stale. Run
-`mise run eval:live` to check the post and account fixtures against Instagram.
+`bun run eval:live` to check the post and account fixtures against Instagram.
 
 The live check does not configure a proxy. From a datacenter IP, a
 `BlockedError` means the network path was refused, not that the query IDs are

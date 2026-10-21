@@ -3,26 +3,26 @@
 ## Setup
 
 [mise](https://mise.jdx.dev) installs the pinned Bun, Node and oxfmt from
-[`mise.toml`](../mise.toml). Every command below is a mise task.
+[`mise.toml`](../mise.toml). Every command below is a `package.json` script.
 
 ```sh
 mise install
-mise run install
+bun install --frozen-lockfile
 ```
 
 ## Checks
 
-Run `mise run check` before you commit. CI runs the same task on every pull
+Run `bun run check` before you commit. CI runs the same script on every pull
 request.
 
 ```sh
-mise run check      # lint, typecheck, test and build
-mise run fix        # safe Biome fixes, then format code, Markdown and YAML
-mise run test       # offline replay tests
-mise run build      # bundle to dist/
+bun run check      # lint, typecheck, test and build
+bun run fix        # safe Biome fixes, then format code, Markdown and YAML
+bun run test       # offline replay tests
+bun run build      # bundle to dist/
 ```
 
-`mise run release` runs `check`, then publishes to npm. The release workflow
+`bun run release` runs `check`, then publishes to npm. The release workflow
 calls it on a version tag.
 
 ## Code style

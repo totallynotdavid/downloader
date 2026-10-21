@@ -15,4 +15,4 @@ not copy its rules here.
 - Error types: [docs/errors.md](../docs/errors.md)
 - Instagram: [docs/instagram.md](../docs/instagram.md)
 
-Run `mise run check` before you finish.
+Run `bun run check` before you finish.
