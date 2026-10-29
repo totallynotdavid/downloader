@@ -21,9 +21,9 @@
     "typecheck": "bun x tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.5.15",
-    "@types/bun": "^1.4.2",
-    "@types/node": "^26.6.5",
+    "@biomejs/biome": "2.6.4",
+    "@types/bun": "^1.4.4",
+    "@types/node": "^26.6.6",
     "bunup": "^0.16.32",
     "typescript": "7.0.2"
   },
