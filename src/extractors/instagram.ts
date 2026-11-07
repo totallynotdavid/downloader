@@ -2,7 +2,8 @@ import { BlockedError, NetworkError, ParseError } from "../errors.ts";
 import type { MediaItem, MediaResult, ResolveOptions } from "../types.ts";
 import { graphql, QUERIES, USER_AGENT } from "./instagram-graphql.ts";
 
-const SHORTCODE_REGEX = /(?:p|reel|tv)\/([A-Za-z0-9_-]+)/;
+const SHORTCODE_REGEX =
+  /^\/(?:[A-Za-z0-9._]+\/)?(?:p|reel|tv)\/([A-Za-z0-9_-]+)/;
 const SHORTCODE_ALPHABET =
   "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
 
@@ -90,7 +91,7 @@ export default async function resolve(
   url: string,
   options: ResolveOptions,
 ): Promise<MediaResult> {
-  const shortcode = url.match(SHORTCODE_REGEX)?.[1];
+  const shortcode = new URL(url).pathname.match(SHORTCODE_REGEX)?.[1];
   if (!shortcode) {
     throw new ParseError("Could not parse post shortcode", "instagram");
   }

@@ -18,7 +18,7 @@ import {
   resolve,
 } from "../../src/index.ts";
 import { type ListingOutcome, run_listings } from "../support/runner.ts";
-import { install_replay } from "../support/transport.ts";
+import { install_replay, net_log } from "../support/transport.ts";
 
 const listings = new Map<string, ListingOutcome>();
 let uninstall: () => void;
@@ -983,5 +983,24 @@ describe("failures are typed errors", () => {
       'for (;;);{"__ar":1,"error":1357054,"errorSummary":"Your Request Couldn\'t be Processed"}',
     );
     await expect(post()).rejects.toThrow(/stale/);
+  });
+});
+
+describe("post URL forms", () => {
+  test("a post under an account path resolves the post", async () => {
+    const result = await resolve(
+      "https://www.instagram.com/someone/p/DcepzLhTqxC/?img_index=1",
+    );
+    expect(result.urls[0]?.filename).toBe("instagram-DcepzLhTqxC.jpg");
+  });
+
+  test.each([
+    "https://www.instagram.com/ap/tagged/",
+    "https://www.instagram.com/shop/reels/",
+    "https://www.instagram.com/explore/?next=/p/DcepzLhTqxC/",
+  ])("%s is rejected before a request", async (url) => {
+    const before = net_log.length;
+    await expect(resolve(url)).rejects.toBeInstanceOf(ParseError);
+    expect(net_log.length).toBe(before);
   });
 });
