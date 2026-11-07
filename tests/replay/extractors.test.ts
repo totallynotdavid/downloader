@@ -798,7 +798,7 @@ describe("youtube", () => {
             "platform": "youtube",
             "thumbnail": "https://i.ytimg.com/vi/9RrdDM_9Cqk/sddefault.jpg",
             "timestamp": 1764105004,
-            "title": "How was the Thoughtworks Radar created",
+            "title": "How was the Thoughtworks Radar created?",
             "views": 2357,
           },
           "urls": [
@@ -821,6 +821,15 @@ describe("youtube", () => {
         },
       }
     `);
+  });
+});
+
+describe("youtube URL forms", () => {
+  test("a watch URL with v after another parameter resolves the video", async () => {
+    const result = await resolve(
+      "https://www.youtube.com/watch?feature=shared&v=jNQXAC9IVRw",
+    );
+    expect(result.urls[0]?.filename).toBe("youtube-jNQXAC9IVRw.mp4");
   });
 });
 

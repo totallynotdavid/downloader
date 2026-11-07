@@ -60,20 +60,21 @@ type YoutubeFormat = {
   audioChannels?: number;
 };
 
-function extract_video_id(url: string): string | null {
-  const patterns = [
-    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})/,
-    /youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/,
-  ];
-  for (const pattern of patterns) {
-    const match = url.match(pattern);
-    if (match?.[1]) return match[1];
-  }
-  return null;
-}
+const VIDEO_ID_REGEX = /^[a-zA-Z0-9_-]{11}/;
+const VIDEO_PATH_REGEX = /^\/(?:shorts|embed)\/([^/]+)/;
 
-function sanitize_filename(title: string): string {
-  return title.replace(/[<>:"/\\|?*]/g, "").trim();
+function extract_video_id(url: string): string | null {
+  const parsed = new URL(url);
+  const hostname = parsed.hostname.replace(/^www\./, "");
+  let candidate: string | null | undefined;
+  if (hostname === "youtu.be") {
+    candidate = parsed.pathname.split("/")[1];
+  } else if (parsed.pathname === "/watch") {
+    candidate = parsed.searchParams.get("v");
+  } else {
+    candidate = parsed.pathname.match(VIDEO_PATH_REGEX)?.[1];
+  }
+  return candidate?.match(VIDEO_ID_REGEX)?.[0] ?? null;
 }
 
 function extract_publish_timestamp(html: string): number | undefined {
@@ -279,7 +280,7 @@ export default async function resolve(
       : undefined;
 
     const meta: MediaResult["meta"] = {
-      title: sanitize_filename(title),
+      title,
       author,
       platform: "youtube",
     };
