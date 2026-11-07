@@ -21,7 +21,11 @@ export default async function resolve(
 ): Promise<MediaResult> {
   try {
     const cookie = await reddit_cookie(options);
-    const json_url = `${url.replace(/\/$/, "")}.json`;
+    const post_url = new URL(url);
+    post_url.search = "";
+    post_url.hash = "";
+    post_url.pathname = `${post_url.pathname.replace(/\/$/, "")}.json`;
+    const json_url = post_url.toString();
     const response = await http_get(json_url, {
       ...options,
       headers: { ...options.headers, Cookie: cookie },
