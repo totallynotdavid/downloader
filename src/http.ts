@@ -14,9 +14,24 @@ type PostOptions = FetchOptions & {
   redirect?: "manual";
 };
 
+type SendInit = {
+  method?: string;
+  headers: Record<string, string>;
+  body?: string;
+  redirect?: "manual";
+};
+
+function merge_headers(headers: Record<string, string>): Headers {
+  const merged = new Headers();
+  for (const [name, value] of Object.entries(headers)) {
+    merged.set(name, value);
+  }
+  return merged;
+}
+
 async function send(
   url: string,
-  init: RequestInit,
+  init: SendInit,
   timeout_ms: number | undefined,
 ): Promise<Response> {
   const controller = new AbortController();
@@ -26,16 +41,26 @@ async function send(
   );
 
   try {
-    const res = await fetch(url, { ...init, signal: controller.signal });
+    const res = await fetch(url, {
+      ...init,
+      headers: merge_headers(init.headers),
+      signal: controller.signal,
+    });
 
     if (!res.ok) {
+      await res.body?.cancel();
       throw new NetworkError(
         `HTTP ${res.status}: ${res.statusText}`,
         res.status,
       );
     }
 
-    return res;
+    const body = await res.arrayBuffer();
+    return new Response(body.byteLength > 0 ? body : null, {
+      status: res.status,
+      statusText: res.statusText,
+      headers: res.headers,
+    });
   } catch (e: unknown) {
     if (e instanceof Error && e.name === "AbortError") {
       throw new NetworkError("Request timeout", 408);
